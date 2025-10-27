@@ -187,17 +187,17 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
   );
 
   return (
-    <div className="bg-card border-b border-border sticky top-[73px] z-40 backdrop-blur-lg bg-opacity-90">
+    <div className="bg-card border-b border-border">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">
             {language === 'en' ? 'Filters' : 'फिल्टर्स'}
           </h2>
           
-          {/* Mobile Filter Sheet */}
+          {/* Filter Sheet for all devices */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="md:hidden">
+              <Button variant="outline" size="sm">
                 <Filter className="mr-2 w-4 h-4" />
                 {language === 'en' ? 'Filters' : 'फिल्टर्स'}
                 {activeFilterCount > 0 && (
@@ -207,7 +207,7 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="overflow-y-auto">
+            <SheetContent side="left" className="overflow-y-auto w-[90vw] sm:w-[400px]">
               <SheetHeader>
                 <SheetTitle>
                   {language === 'en' ? 'Filter Recipes' : 'रेसिपी फिल्टर करा'}
@@ -223,12 +223,26 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
               </div>
             </SheetContent>
           </Sheet>
-
-          {/* Desktop Filters */}
-          <div className="hidden md:flex items-center gap-2 flex-wrap">
-            <FilterContent />
-          </div>
         </div>
+        
+        {/* Active filters display */}
+        {activeFilterCount > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {Object.entries(filters).map(([category, values]) =>
+              (values as string[]).map((value) => (
+                <Badge
+                  key={`${category}-${value}`}
+                  variant="secondary"
+                  className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                  onClick={() => toggleFilter(category as keyof FilterOptions, value)}
+                >
+                  {getDisplayText(value)}
+                  <X className="ml-1 w-3 h-3" />
+                </Badge>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -57,17 +57,31 @@ export const RecipeCard = ({ recipe, language }: RecipeCardProps) => {
           <span className="font-medium">{creator}</span>
         </div>
 
-        <div className="flex flex-wrap gap-1 mb-3">
-          {recipe.tasteProfile.slice(0, 2).map((taste) => (
-            <Badge key={taste} variant="outline" className="text-xs">
-              {taste}
-            </Badge>
-          ))}
-          {recipe.cuisine.slice(0, 1).map((cuisine) => (
-            <Badge key={cuisine} variant="outline" className="text-xs">
-              {cuisine}
-            </Badge>
-          ))}
+        <div className="space-y-2 mb-3">
+          <div className="flex flex-wrap gap-1">
+            {recipe.mealType.map((meal) => (
+              <Badge key={meal} variant="default" className="text-xs">
+                {meal}
+              </Badge>
+            ))}
+            {recipe.mood.slice(0, 2).map((mood) => (
+              <Badge key={mood} variant="secondary" className="text-xs">
+                {mood}
+              </Badge>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {recipe.tasteProfile.slice(0, 3).map((taste) => (
+              <Badge key={taste} variant="outline" className="text-xs">
+                {taste}
+              </Badge>
+            ))}
+            {recipe.cuisine.map((cuisine) => (
+              <Badge key={cuisine} variant="outline" className="text-xs">
+                {cuisine}
+              </Badge>
+            ))}
+          </div>
         </div>
       </CardContent>
       
