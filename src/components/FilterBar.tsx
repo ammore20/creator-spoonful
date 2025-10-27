@@ -89,7 +89,7 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
   const activeFilterCount = Object.values(filters).flat().length;
 
   const FilterContent = () => (
-    <div className="space-y-4">
+    <>
       {/* Creator */}
       <div className="space-y-2">
         <Label className="text-sm font-semibold text-foreground">
@@ -205,62 +205,31 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
           ))}
         </div>
       </div>
-
-      {activeFilterCount > 0 && (
-        <Button
-          variant="outline"
-          onClick={clearAllFilters}
-          className="w-full"
-        >
-          <X className="mr-2 w-4 h-4" />
-          {language === 'en' ? 'Clear All Filters' : 'सर्व फिल्टर्स साफ करा'}
-        </Button>
-      )}
-    </div>
+    </>
   );
 
   return (
     <div className="bg-card border-b border-border">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
             {language === 'en' ? 'Filters' : 'फिल्टर्स'}
           </h2>
-          
-          {/* Filter Sheet for all devices */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 w-4 h-4" />
-                {language === 'en' ? 'Filters' : 'फिल्टर्स'}
-                {activeFilterCount > 0 && (
-                  <Badge variant="default" className="ml-2 px-2 py-0.5 text-xs">
-                    {activeFilterCount}
-                  </Badge>
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="overflow-y-auto w-[90vw] sm:w-[400px]">
-              <SheetHeader>
-                <SheetTitle>
-                  {language === 'en' ? 'Filter Recipes' : 'रेसिपी फिल्टर करा'}
-                </SheetTitle>
-                <SheetDescription>
-                  {language === 'en' 
-                    ? 'Refine your recipe search with smart filters'
-                    : 'स्मार्ट फिल्टर्ससह तुमचा रेसिपी शोध सुधारा'}
-                </SheetDescription>
-              </SheetHeader>
-              <div className="mt-6">
-                <FilterContent />
-              </div>
-            </SheetContent>
-          </Sheet>
+          {activeFilterCount > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              {activeFilterCount} {language === 'en' ? 'active' : 'सक्रिय'}
+            </Badge>
+          )}
+        </div>
+        
+        {/* Direct Filter Display */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <FilterContent />
         </div>
         
         {/* Active filters display */}
         {activeFilterCount > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
+          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
             {Object.entries(filters).map(([category, values]) =>
               (values as string[]).map((value) => (
                 <Badge
