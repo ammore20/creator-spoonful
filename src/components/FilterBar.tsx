@@ -1,7 +1,7 @@
 import { FilterOptions, TasteProfile, MealType, Cuisine, Mood } from '@/types/recipe';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Filter } from 'lucide-react';
+import { X, Filter, ChevronDown } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -10,6 +10,15 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 interface FilterBarProps {
   filters: FilterOptions;
@@ -80,95 +89,119 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
   const activeFilterCount = Object.values(filters).flat().length;
 
   const FilterContent = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Creator */}
-      <div>
-        <h3 className="font-semibold mb-3 text-foreground">
+      <div className="space-y-2">
+        <Label className="text-sm font-semibold text-foreground">
           {language === 'en' ? 'Creator' : 'क्रिएटर'}
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          <Badge
-            variant={filters.creator.includes("Sarita's Kitchen") ? 'default' : 'outline'}
-            className="cursor-pointer hover:shadow-warm transition-all"
-            onClick={() => toggleFilter('creator', "Sarita's Kitchen")}
+        </Label>
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="creator-sarita"
+            checked={filters.creator.includes("Sarita's Kitchen")}
+            onCheckedChange={() => toggleFilter('creator', "Sarita's Kitchen")}
+          />
+          <label
+            htmlFor="creator-sarita"
+            className="text-sm cursor-pointer text-foreground"
           >
             {language === 'en' ? "Sarita's Kitchen" : 'सरिताज किचन'}
-          </Badge>
+          </label>
         </div>
       </div>
 
       {/* Taste Profile */}
-      <div>
-        <h3 className="font-semibold mb-3 text-foreground">
+      <div className="space-y-2">
+        <Label className="text-sm font-semibold text-foreground">
           {language === 'en' ? 'Taste Profile' : 'चव प्रोफाइल'}
-        </h3>
-        <div className="flex flex-wrap gap-2">
+        </Label>
+        <div className="space-y-2">
           {tasteProfiles.map((taste) => (
-            <Badge
-              key={taste}
-              variant={filters.tasteProfile.includes(taste) ? 'default' : 'outline'}
-              className="cursor-pointer hover:shadow-warm transition-all"
-              onClick={() => toggleFilter('tasteProfile', taste)}
-            >
-              {getDisplayText(taste)}
-            </Badge>
+            <div key={taste} className="flex items-center space-x-2">
+              <Checkbox
+                id={`taste-${taste}`}
+                checked={filters.tasteProfile.includes(taste)}
+                onCheckedChange={() => toggleFilter('tasteProfile', taste)}
+              />
+              <label
+                htmlFor={`taste-${taste}`}
+                className="text-sm cursor-pointer text-foreground"
+              >
+                {getDisplayText(taste)}
+              </label>
+            </div>
           ))}
         </div>
       </div>
 
       {/* Meal Type */}
-      <div>
-        <h3 className="font-semibold mb-3 text-foreground">
+      <div className="space-y-2">
+        <Label className="text-sm font-semibold text-foreground">
           {language === 'en' ? 'Meal Type' : 'जेवणाचा प्रकार'}
-        </h3>
-        <div className="flex flex-wrap gap-2">
+        </Label>
+        <div className="space-y-2">
           {mealTypes.map((meal) => (
-            <Badge
-              key={meal}
-              variant={filters.mealType.includes(meal) ? 'default' : 'outline'}
-              className="cursor-pointer hover:shadow-warm transition-all"
-              onClick={() => toggleFilter('mealType', meal)}
-            >
-              {getDisplayText(meal)}
-            </Badge>
+            <div key={meal} className="flex items-center space-x-2">
+              <Checkbox
+                id={`meal-${meal}`}
+                checked={filters.mealType.includes(meal)}
+                onCheckedChange={() => toggleFilter('mealType', meal)}
+              />
+              <label
+                htmlFor={`meal-${meal}`}
+                className="text-sm cursor-pointer text-foreground"
+              >
+                {getDisplayText(meal)}
+              </label>
+            </div>
           ))}
         </div>
       </div>
 
       {/* Cuisine */}
-      <div>
-        <h3 className="font-semibold mb-3 text-foreground">
+      <div className="space-y-2">
+        <Label className="text-sm font-semibold text-foreground">
           {language === 'en' ? 'Cuisine' : 'पाककृती'}
-        </h3>
-        <div className="flex flex-wrap gap-2">
+        </Label>
+        <div className="space-y-2">
           {cuisines.map((cuisine) => (
-            <Badge
-              key={cuisine}
-              variant={filters.cuisine.includes(cuisine) ? 'default' : 'outline'}
-              className="cursor-pointer hover:shadow-warm transition-all"
-              onClick={() => toggleFilter('cuisine', cuisine)}
-            >
-              {getDisplayText(cuisine)}
-            </Badge>
+            <div key={cuisine} className="flex items-center space-x-2">
+              <Checkbox
+                id={`cuisine-${cuisine}`}
+                checked={filters.cuisine.includes(cuisine)}
+                onCheckedChange={() => toggleFilter('cuisine', cuisine)}
+              />
+              <label
+                htmlFor={`cuisine-${cuisine}`}
+                className="text-sm cursor-pointer text-foreground"
+              >
+                {getDisplayText(cuisine)}
+              </label>
+            </div>
           ))}
         </div>
       </div>
 
       {/* Mood */}
-      <div>
-        <h3 className="font-semibold mb-3 text-foreground">
+      <div className="space-y-2">
+        <Label className="text-sm font-semibold text-foreground">
           {language === 'en' ? 'Mood' : 'मूड'}
-        </h3>
-        <div className="flex flex-wrap gap-2">
+        </Label>
+        <div className="space-y-2">
           {moods.map((mood) => (
-            <Badge
-              key={mood}
-              variant={filters.mood.includes(mood) ? 'default' : 'outline'}
-              className="cursor-pointer hover:shadow-warm transition-all"
-              onClick={() => toggleFilter('mood', mood)}
-            >
-              {getDisplayText(mood)}
-            </Badge>
+            <div key={mood} className="flex items-center space-x-2">
+              <Checkbox
+                id={`mood-${mood}`}
+                checked={filters.mood.includes(mood)}
+                onCheckedChange={() => toggleFilter('mood', mood)}
+              />
+              <label
+                htmlFor={`mood-${mood}`}
+                className="text-sm cursor-pointer text-foreground"
+              >
+                {getDisplayText(mood)}
+              </label>
+            </div>
           ))}
         </div>
       </div>
