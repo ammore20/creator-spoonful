@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { mockRecipes } from '@/data/recipes';
+import { useState, useMemo, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { FilterOptions } from '@/types/recipe';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
@@ -9,6 +9,8 @@ import { RecipeCard } from '@/components/RecipeCard';
 const Index = () => {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
   const [searchQuery, setSearchQuery] = useState('');
+  const [recipes, setRecipes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterOptions>({
     creator: [],
     tasteProfile: [],
@@ -17,8 +19,57 @@ const Index = () => {
     mood: [],
   });
 
+  useEffect(() => {
+    fetchRecipes();
+  }, []);
+
+  const fetchRecipes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('videos')
+        .select(`
+          *,
+          creators (name)
+        `)
+        .eq('status', 'done')
+        .order('published_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform database records to recipe format
+      const transformedRecipes = data?.map((video: any) => {
+        const recipe = video.extracted_recipe_json as any || {};
+        return {
+          id: video.video_id,
+          title: recipe.title || video.title,
+          creator: video.creators?.name || 'Unknown',
+          description: video.description || '',
+          youtubeUrl: `https://www.youtube.com/watch?v=${video.video_id}`,
+          videoId: video.video_id,
+          thumbnailUrl: video.thumbnail_url,
+          tasteProfile: Array.isArray(recipe.taste_tags) ? recipe.taste_tags : [],
+          mealType: recipe.meal_type ? [recipe.meal_type] : [],
+          cuisine: recipe.cuisine ? [recipe.cuisine] : [],
+          mood: [],
+          difficulty: recipe.difficulty || 'Medium',
+          cookTime: recipe.prep_time || '30 mins',
+          servings: recipe.servings || 4,
+          ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
+          steps: Array.isArray(recipe.steps) ? recipe.steps : [],
+          isPremium: false
+        };
+      }) || [];
+
+      setRecipes(transformedRecipes);
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredRecipes = useMemo(() => {
-    return mockRecipes.filter((recipe) => {
+    return recipes.filter((recipe) => {
       // Search filter
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
@@ -62,7 +113,7 @@ const Index = () => {
         matchesMood
       );
     });
-  }, [mockRecipes, searchQuery, filters]);
+  }, [recipes, searchQuery, filters]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -90,7 +141,11 @@ const Index = () => {
           </p>
         </div>
 
-        {filteredRecipes.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-20">
+            <p className="text-xl text-muted-foreground">Loading recipes...</p>
+          </div>
+        ) : filteredRecipes.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRecipes.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} language={language} />

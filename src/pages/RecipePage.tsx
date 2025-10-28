@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
-import { mockRecipes } from '@/data/recipes';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +14,71 @@ import { Navbar } from '@/components/Navbar';
 const RecipePage = () => {
   const { id } = useParams();
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
-  const recipe = mockRecipes.find((r) => r.id === id);
+  const [recipe, setRecipe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRecipe();
+  }, [id]);
+
+  const fetchRecipe = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('videos')
+        .select(`
+          *,
+          creators (name)
+        `)
+        .eq('video_id', id)
+        .eq('status', 'done')
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const recipeJson = data.extracted_recipe_json as any || {};
+        const transformedRecipe = {
+          id: data.video_id,
+          title: recipeJson.title || data.title,
+          creator: data.creators?.name || 'Unknown',
+          description: data.description || '',
+          youtubeUrl: `https://www.youtube.com/watch?v=${data.video_id}`,
+          videoId: data.video_id,
+          thumbnailUrl: data.thumbnail_url,
+          tasteProfile: Array.isArray(recipeJson.taste_tags) ? recipeJson.taste_tags : [],
+          mealType: recipeJson.meal_type ? [recipeJson.meal_type] : [],
+          cuisine: recipeJson.cuisine ? [recipeJson.cuisine] : [],
+          mood: [],
+          difficulty: recipeJson.difficulty || 'Medium',
+          cookTime: recipeJson.prep_time || '30 mins',
+          servings: recipeJson.servings || 4,
+          ingredients: Array.isArray(recipeJson.ingredients) ? recipeJson.ingredients : [],
+          steps: Array.isArray(recipeJson.steps) ? recipeJson.steps : [],
+          isPremium: false
+        };
+        setRecipe(transformedRecipe);
+      }
+    } catch (error) {
+      console.error('Error fetching recipe:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar 
+          onSearch={() => {}} 
+          language={language}
+          onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}
+        />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <h1 className="text-4xl font-bold mb-4">Loading...</h1>
+        </div>
+      </div>
+    );
+  }
 
   if (!recipe) {
     return (
