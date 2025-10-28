@@ -14,7 +14,220 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cost_tracking: {
+        Row: {
+          actual_cost: number | null
+          created_at: string | null
+          estimated_cost: number | null
+          id: string
+          operation_type: string
+          tokens_used: number | null
+          video_id: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          created_at?: string | null
+          estimated_cost?: number | null
+          id?: string
+          operation_type: string
+          tokens_used?: number | null
+          video_id?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          created_at?: string | null
+          estimated_cost?: number | null
+          id?: string
+          operation_type?: string
+          tokens_used?: number | null
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cost_tracking_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creators: {
+        Row: {
+          channel_id: string
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      processing_jobs: {
+        Row: {
+          batch_size: number
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          failed_count: number | null
+          id: string
+          job_type: string
+          processed_count: number | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          batch_size: number
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          failed_count?: number | null
+          id?: string
+          job_type: string
+          processed_count?: number | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          batch_size?: number
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          failed_count?: number | null
+          id?: string
+          job_type?: string
+          processed_count?: number | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      processing_queue: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          id: string
+          job_id: string | null
+          last_error: string | null
+          status: string
+          updated_at: string | null
+          video_id: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          job_id?: string | null
+          last_error?: string | null
+          status?: string
+          updated_at?: string | null
+          video_id?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          job_id?: string | null
+          last_error?: string | null
+          status?: string
+          updated_at?: string | null
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_queue_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "processing_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processing_queue_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          created_at: string | null
+          creator_id: string | null
+          description: string | null
+          duration: string | null
+          error_message: string | null
+          extracted_recipe_json: Json | null
+          id: string
+          manual_reviewed: boolean | null
+          published_at: string | null
+          raw_transcript: string | null
+          retry_count: number | null
+          status: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          video_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          creator_id?: string | null
+          description?: string | null
+          duration?: string | null
+          error_message?: string | null
+          extracted_recipe_json?: Json | null
+          id?: string
+          manual_reviewed?: boolean | null
+          published_at?: string | null
+          raw_transcript?: string | null
+          retry_count?: number | null
+          status?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          video_id: string
+        }
+        Update: {
+          created_at?: string | null
+          creator_id?: string | null
+          description?: string | null
+          duration?: string | null
+          error_message?: string | null
+          extracted_recipe_json?: Json | null
+          id?: string
+          manual_reviewed?: boolean | null
+          published_at?: string | null
+          raw_transcript?: string | null
+          retry_count?: number | null
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
