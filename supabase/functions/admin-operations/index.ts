@@ -12,43 +12,81 @@ serve(async (req) => {
   }
 
   try {
-    const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const authHeader = req.headers.get('Authorization');
 
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create client with user's JWT for auth check
+    const supabaseAuth = createClient(
+      SUPABASE_URL!,
+      SUPABASE_SERVICE_ROLE_KEY!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
     
-    const { operation, email, ...params } = await req.json();
-    
-    // Verify admin access
-    if (email !== ADMIN_EMAIL) {
+    if (authError || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create service role client for operations
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+
+    // Check if user has admin role
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+
+    if (roleError || !roleData) {
+      return new Response(
+        JSON.stringify({ error: 'Insufficient permissions' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    const { operation, ...params } = await req.json();
 
     console.log(`Admin operation: ${operation}`, params);
 
     switch (operation) {
       case 'backfill': {
-        const { channelId, batchSize = 10 } = params;
+        const { batchSize = 10 } = params;
+        
+        // Get the channel ID from creators table
+        const { data: creator } = await supabase
+          .from('creators')
+          .select('channel_id')
+          .single();
+
+        if (!creator) {
+          throw new Error('No creator configured');
+        }
         
         // Call ingest function
-        const ingestResponse = await fetch(`${SUPABASE_URL}/functions/v1/ingest-youtube`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            channelId,
+        const { data: ingestData, error: ingestError } = await supabase.functions.invoke('ingest-youtube', {
+          body: {
+            channelId: creator.channel_id,
             maxResults: batchSize,
             jobType: 'backfill'
-          })
+          }
         });
 
-        const ingestData = await ingestResponse.json();
+        if (ingestError) throw ingestError;
+
         return new Response(
           JSON.stringify(ingestData),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -171,17 +209,11 @@ serve(async (req) => {
         const results = [];
         for (const item of queueItems) {
           try {
-            const processResponse = await fetch(`${SUPABASE_URL}/functions/v1/process-video`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ queueItemId: item.id })
+            const { data: processData, error: processError } = await supabase.functions.invoke('process-video', {
+              body: { queueItemId: item.id }
             });
 
-            const processData = await processResponse.json();
-            results.push({ id: item.id, success: processResponse.ok, data: processData });
+            results.push({ id: item.id, success: !processError, data: processData, error: processError });
           } catch (err) {
             results.push({ id: item.id, success: false, error: err instanceof Error ? err.message : 'Unknown' });
           }

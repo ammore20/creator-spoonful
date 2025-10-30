@@ -1,8 +1,12 @@
-import { useState } from 'react';
-import { Search, Menu, X, ChefHat } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Search, Menu, X, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.png';
+import type { User } from '@supabase/supabase-js';
 
 interface NavbarProps {
   onSearch: (query: string) => void;
@@ -13,6 +17,28 @@ interface NavbarProps {
 export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: 'Signed out',
+      description: 'You have been signed out successfully'
+    });
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,12 +86,21 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
             >
               {language === 'en' ? 'मराठी' : 'English'}
             </Button>
-            <Button variant="outline" size="sm">
-              {language === 'en' ? 'Login' : 'लॉगिन'}
-            </Button>
-            <Button size="sm" className="bg-gradient-hero shadow-warm">
-              {language === 'en' ? 'Subscribe' : 'सदस्यता घ्या'}
-            </Button>
+            {user ? (
+              <>
+                <span className="text-sm text-muted-foreground">{user.email}</span>
+                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {language === 'en' ? 'Sign Out' : 'साइन आउट'}
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" size="sm">
+                  {language === 'en' ? 'Sign In' : 'साइन इन'}
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -104,12 +139,21 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
             >
               {language === 'en' ? 'मराठी' : 'English'}
             </Button>
-            <Button variant="outline" size="sm">
-              {language === 'en' ? 'Login' : 'लॉगिन'}
-            </Button>
-            <Button size="sm" className="bg-gradient-hero">
-              {language === 'en' ? 'Subscribe' : 'सदस्यता घ्या'}
-            </Button>
+            {user ? (
+              <>
+                <div className="text-sm text-muted-foreground px-3 py-2">{user.email}</div>
+                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {language === 'en' ? 'Sign Out' : 'साइन आउट'}
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" size="sm" className="w-full">
+                  {language === 'en' ? 'Sign In' : 'साइन इन'}
+                </Button>
+              </Link>
+            )}
           </div>
         )}
       </div>

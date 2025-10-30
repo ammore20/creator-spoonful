@@ -1,33 +1,86 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/Navbar';
-import { RefreshCw, Play, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { RefreshCw, Play, Loader2 } from 'lucide-react';
+import type { User, Session } from '@supabase/supabase-js';
 
 const Admin = () => {
-  const [email, setEmail] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [queueItems, setQueueItems] = useState<any[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const checkAuth = async () => {
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-    if (email === adminEmail) {
-      setIsAuthorized(true);
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (!session?.user) {
+          navigate('/auth');
+        } else {
+          setTimeout(() => {
+            checkAdminRole(session.user.id);
+          }, 0);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (!session?.user) {
+        navigate('/auth');
+      } else {
+        checkAdminRole(session.user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const checkAdminRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .single();
+
+      if (error || !data) {
+        toast({
+          title: 'Access Denied',
+          description: 'You do not have admin privileges',
+          variant: 'destructive'
+        });
+        navigate('/');
+        return;
+      }
+
+      setIsAdmin(true);
+      setLoading(false);
       loadStats();
       loadQueue();
-    } else {
+    } catch (error) {
       toast({
-        title: 'Unauthorized',
-        description: 'Invalid admin email',
+        title: 'Error',
+        description: 'Failed to verify admin access',
         variant: 'destructive'
       });
+      navigate('/');
     }
   };
 
@@ -67,23 +120,18 @@ const Admin = () => {
   };
 
   const runBackfill = async (batchSize: number) => {
+    if (!session) return;
+    
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-operations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('admin-operations', {
+        body: {
           operation: 'backfill',
-          email,
-          channelId: 'UCxxxxxxxxxxxxxx', // Replace with actual channel ID
           batchSize
-        })
+        }
       });
 
-      const data = await response.json();
+      if (error) throw error;
       
       if (data.success) {
         toast({
@@ -107,22 +155,18 @@ const Admin = () => {
   };
 
   const processBatch = async (batchSize: number = 5) => {
+    if (!session) return;
+    
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-operations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('admin-operations', {
+        body: {
           operation: 'process_batch',
-          email,
           batchSize
-        })
+        }
       });
 
-      const data = await response.json();
+      if (error) throw error;
       
       if (data.success) {
         toast({
@@ -146,21 +190,17 @@ const Admin = () => {
   };
 
   const reprocessVideo = async (videoId: string) => {
+    if (!session) return;
+    
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-operations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('admin-operations', {
+        body: {
           operation: 'reprocess',
-          email,
           videoId
-        })
+        }
       });
 
-      const data = await response.json();
+      if (error) throw error;
       
       if (data.success) {
         toast({
@@ -178,29 +218,16 @@ const Admin = () => {
     }
   };
 
-  if (!isAuthorized) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Admin Access</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Input
-                type="email"
-                placeholder="Admin Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <Button onClick={checkAuth} className="w-full">
-                Access Admin Panel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
+  }
+
+  if (!isAdmin) {
+    return null;
   }
 
   return (
@@ -240,7 +267,7 @@ const Admin = () => {
             <CardTitle>Processing Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               <Button 
                 onClick={() => runBackfill(20)}
                 disabled={loading}
