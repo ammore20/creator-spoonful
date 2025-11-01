@@ -14,6 +14,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSettingUpAdmin, setIsSettingUpAdmin] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const { toast } = useToast();
@@ -154,6 +155,48 @@ const Auth = () => {
     }
   };
 
+  const handleSetupAdmin = async () => {
+    setIsSettingUpAdmin(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: 'Error',
+          description: 'Please sign in first',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('setup-admin', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success!',
+        description: data.message
+      });
+      
+      // Redirect to admin page after successful setup
+      setTimeout(() => {
+        navigate("/admin");
+      }, 1500);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to setup admin access',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSettingUpAdmin(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -233,6 +276,27 @@ const Auth = () => {
               </form>
             </TabsContent>
           </Tabs>
+          
+          <div className="mt-6 pt-6 border-t">
+            <CardDescription className="mb-4">
+              If you're the admin, click below to grant yourself admin access:
+            </CardDescription>
+            <Button 
+              onClick={handleSetupAdmin} 
+              disabled={isSettingUpAdmin}
+              variant="secondary"
+              className="w-full"
+            >
+              {isSettingUpAdmin ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Setting up admin access...
+                </>
+              ) : (
+                'Setup Admin Access'
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
