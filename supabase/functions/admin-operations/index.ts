@@ -13,6 +13,7 @@ serve(async (req) => {
 
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const authHeader = req.headers.get('Authorization');
 
@@ -26,7 +27,7 @@ serve(async (req) => {
     // Create client with user's JWT for auth check
     const supabaseAuth = createClient(
       SUPABASE_URL!,
-      SUPABASE_SERVICE_ROLE_KEY!,
+      SUPABASE_ANON_KEY!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
@@ -34,11 +35,14 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
     
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', details: authError?.message }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('Authenticated user:', user.id);
 
     // Create service role client for operations
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
