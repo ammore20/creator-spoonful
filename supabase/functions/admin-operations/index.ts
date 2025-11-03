@@ -70,15 +70,18 @@ serve(async (req) => {
       case 'backfill': {
         const { batchSize = 10 } = params;
         
-        // Get the channel ID from creators table
-        const { data: creator } = await supabase
+        // Get the most recent channel ID from creators table
+        const { data: creators, error: creatorError } = await supabase
           .from('creators')
           .select('channel_id')
-          .single();
+          .order('created_at', { ascending: false })
+          .limit(1);
 
-        if (!creator) {
+        if (creatorError || !creators || creators.length === 0) {
           throw new Error('No creator configured');
         }
+        
+        const creator = creators[0];
         
         // Call ingest function
         const { data: ingestData, error: ingestError } = await supabase.functions.invoke('ingest-youtube', {
