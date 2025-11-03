@@ -32,6 +32,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let queueItemId: string | undefined;
+  let supabase: any;
+
   try {
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -39,9 +42,10 @@ serve(async (req) => {
 
     if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
 
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
     
-    const { queueItemId } = await req.json();
+    const requestData = await req.json();
+    queueItemId = requestData.queueItemId;
     
     console.log(`Processing queue item: ${queueItemId}`);
 
@@ -189,38 +193,41 @@ serve(async (req) => {
 
     // Update queue and video status on error
     try {
-      const { queueItemId } = await req.json();
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      );
+      if (!supabase) {
+        supabase = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        );
+      }
 
-      const { data: queueItem } = await supabase
-        .from('processing_queue')
-        .select('video_id, attempts')
-        .eq('id', queueItemId)
-        .single();
-
-      if (queueItem) {
-        const maxRetries = 3;
-        const shouldRetry = queueItem.attempts < maxRetries;
-
-        await supabase
+      if (queueItemId) {
+        const { data: queueItem } = await supabase
           .from('processing_queue')
-          .update({
-            status: shouldRetry ? 'queued' : 'failed',
-            last_error: error instanceof Error ? error.message : 'Unknown error'
-          })
-          .eq('id', queueItemId);
+          .select('video_id, attempts')
+          .eq('id', queueItemId)
+          .single();
 
-        await supabase
-          .from('videos')
-          .update({
-            status: 'error',
-            error_message: error instanceof Error ? error.message : 'Unknown error',
-            retry_count: queueItem.attempts
-          })
-          .eq('id', queueItem.video_id);
+        if (queueItem) {
+          const maxRetries = 3;
+          const shouldRetry = queueItem.attempts < maxRetries;
+
+          await supabase
+            .from('processing_queue')
+            .update({
+              status: shouldRetry ? 'queued' : 'failed',
+              last_error: error instanceof Error ? error.message : 'Unknown error'
+            })
+            .eq('id', queueItemId);
+
+          await supabase
+            .from('videos')
+            .update({
+              status: 'error',
+              error_message: error instanceof Error ? error.message : 'Unknown error',
+              retry_count: queueItem.attempts
+            })
+            .eq('id', queueItem.video_id);
+        }
       }
     } catch (updateError) {
       console.error('Error updating failure status:', updateError);
