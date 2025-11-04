@@ -20,7 +20,7 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
     
-    const { channelId, maxResults = 20, jobType = 'seed' } = await req.json();
+    const { channelId, maxResults = 20, jobType = 'seed', pageToken } = await req.json();
     
     console.log(`Starting ingestion: channelId=${channelId}, maxResults=${maxResults}, jobType=${jobType}`);
 
@@ -52,8 +52,9 @@ serve(async (req) => {
     }
 
     // Fetch videos from uploads playlist
+    const pageTokenParam = pageToken ? `&pageToken=${pageToken}` : '';
     const videosResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}&key=${YOUTUBE_API_KEY}`
+      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}${pageTokenParam}&key=${YOUTUBE_API_KEY}`
     );
 
     if (!videosResponse.ok) {
@@ -62,8 +63,9 @@ serve(async (req) => {
 
     const videosData = await videosResponse.json();
     const videos = videosData.items || [];
+    const nextPageToken = videosData.nextPageToken;
 
-    console.log(`Found ${videos.length} videos`);
+    console.log(`Found ${videos.length} videos, nextPageToken: ${nextPageToken || 'none'}`);
 
     // Create processing job
     const { data: job, error: jobError } = await supabase
@@ -170,6 +172,7 @@ serve(async (req) => {
         jobId: job.id,
         ingestedCount,
         queuedCount,
+        nextPageToken,
         errors: errors.length > 0 ? errors : undefined
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

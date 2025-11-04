@@ -68,7 +68,7 @@ serve(async (req) => {
 
     switch (operation) {
       case 'backfill': {
-        const { batchSize = 10 } = params;
+        const { batchSize = 10, pageToken } = params;
         
         // Get the most recent channel ID from creators table
         const { data: creators, error: creatorError } = await supabase
@@ -88,7 +88,8 @@ serve(async (req) => {
           body: {
             channelId: creator.channel_id,
             maxResults: batchSize,
-            jobType: 'backfill'
+            jobType: 'backfill',
+            pageToken
           }
         });
 

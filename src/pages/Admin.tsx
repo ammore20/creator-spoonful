@@ -16,6 +16,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [queueItems, setQueueItems] = useState<any[]>([]);
+  const [pageToken, setPageToken] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -127,16 +128,22 @@ const Admin = () => {
       const { data, error } = await supabase.functions.invoke('admin-operations', {
         body: {
           operation: 'backfill',
-          batchSize
+          batchSize,
+          pageToken
         }
       });
 
       if (error) throw error;
       
       if (data.success) {
+        // Update pageToken for next fetch
+        if (data.nextPageToken) {
+          setPageToken(data.nextPageToken);
+        }
+        
         toast({
           title: 'Backfill Started',
-          description: `Queued ${data.queuedCount} videos for processing`
+          description: `Ingested ${data.ingestedCount} new, queued ${data.queuedCount} videos`
         });
         loadStats();
         loadQueue();
@@ -267,20 +274,37 @@ const Admin = () => {
             <CardTitle>Processing Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {pageToken && (
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="text-sm font-medium mb-2">Pagination Active</div>
+                <div className="flex gap-2 items-center">
+                  <code className="text-xs bg-background px-2 py-1 rounded flex-1 truncate">
+                    Token: {pageToken.substring(0, 20)}...
+                  </code>
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPageToken(null)}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </div>
+            )}
             <div className="flex gap-4 flex-wrap">
               <Button 
                 onClick={() => runBackfill(20)}
                 disabled={loading}
               >
                 {loading ? <Loader2 className="mr-2 w-4 h-4 animate-spin" /> : <RefreshCw className="mr-2 w-4 h-4" />}
-                Seed (20 videos)
+                {pageToken ? 'Fetch Next 20' : 'Seed (20 videos)'}
               </Button>
               <Button 
                 onClick={() => runBackfill(10)}
                 disabled={loading}
                 variant="outline"
               >
-                Backfill (10 videos)
+                {pageToken ? 'Fetch Next 10' : 'Backfill (10 videos)'}
               </Button>
             </div>
             <Button 
