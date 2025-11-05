@@ -233,15 +233,24 @@ const Admin = () => {
       // Find videos with status 'done' but missing recipe title
       const { data: incompleteVideos, error: queryError } = await supabase
         .from('videos')
-        .select('id, video_id, title')
-        .eq('status', 'done')
-        .or('extracted_recipe_json is null,extracted_recipe_json->title is null,extracted_recipe_json->>title.eq.');
+        .select('id, video_id, title, extracted_recipe_json')
+        .eq('status', 'done');
 
-      if (queryError) throw queryError;
+      if (queryError) {
+        console.error('Query error:', queryError);
+        throw queryError;
+      }
 
-      console.log(`Found ${incompleteVideos?.length || 0} incomplete videos`);
+      // Filter videos that have null recipe or missing/empty title
+      const videosToReprocess = incompleteVideos?.filter(video => {
+        if (!video.extracted_recipe_json) return true;
+        const recipe = video.extracted_recipe_json as any;
+        return !recipe.title || recipe.title.trim() === '';
+      }) || [];
+
+      console.log(`Found ${videosToReprocess.length} incomplete videos out of ${incompleteVideos?.length || 0} total`);
       
-      if (!incompleteVideos || incompleteVideos.length === 0) {
+      if (videosToReprocess.length === 0) {
         toast({
           title: 'No Incomplete Videos',
           description: 'All videos have complete recipe data'
@@ -250,26 +259,33 @@ const Admin = () => {
       }
 
       // Reprocess each incomplete video
-      for (const video of incompleteVideos) {
-        console.log(`Reprocessing incomplete video: ${video.video_id}`);
-        await supabase.functions.invoke('admin-operations', {
-          body: { 
-            operation: 'reprocess',
-            videoId: video.id 
-          }
-        });
+      let successCount = 0;
+      for (const video of videosToReprocess) {
+        console.log(`Reprocessing incomplete video: ${video.video_id} - ${video.title}`);
+        try {
+          await supabase.functions.invoke('admin-operations', {
+            body: { 
+              operation: 'reprocess',
+              videoId: video.id 
+            }
+          });
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to reprocess ${video.video_id}:`, err);
+        }
       }
 
       toast({
         title: 'Videos Requeued',
-        description: `${incompleteVideos.length} videos queued for reprocessing`
+        description: `${successCount} videos queued for reprocessing`
       });
       loadStats();
       loadQueue();
     } catch (error) {
+      console.error('Reprocess incomplete error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to reprocess incomplete videos',
+        description: error instanceof Error ? error.message : 'Failed to reprocess incomplete videos',
         variant: 'destructive'
       });
     } finally {
