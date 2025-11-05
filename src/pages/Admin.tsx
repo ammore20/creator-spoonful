@@ -225,6 +225,58 @@ const Admin = () => {
     }
   };
 
+  const reprocessIncompleteVideos = async () => {
+    if (!session) return;
+    
+    setLoading(true);
+    try {
+      // Find videos with status 'done' but missing recipe title
+      const { data: incompleteVideos, error: queryError } = await supabase
+        .from('videos')
+        .select('id, video_id, title')
+        .eq('status', 'done')
+        .or('extracted_recipe_json is null,extracted_recipe_json->title is null,extracted_recipe_json->>title.eq.');
+
+      if (queryError) throw queryError;
+
+      console.log(`Found ${incompleteVideos?.length || 0} incomplete videos`);
+      
+      if (!incompleteVideos || incompleteVideos.length === 0) {
+        toast({
+          title: 'No Incomplete Videos',
+          description: 'All videos have complete recipe data'
+        });
+        return;
+      }
+
+      // Reprocess each incomplete video
+      for (const video of incompleteVideos) {
+        console.log(`Reprocessing incomplete video: ${video.video_id}`);
+        await supabase.functions.invoke('admin-operations', {
+          body: { 
+            operation: 'reprocess',
+            videoId: video.id 
+          }
+        });
+      }
+
+      toast({
+        title: 'Videos Requeued',
+        description: `${incompleteVideos.length} videos queued for reprocessing`
+      });
+      loadStats();
+      loadQueue();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to reprocess incomplete videos',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -307,14 +359,23 @@ const Admin = () => {
                 {pageToken ? 'Fetch Next 10' : 'Backfill (10 videos)'}
               </Button>
             </div>
-            <Button 
-              onClick={() => processBatch(5)}
-              disabled={loading}
-              variant="secondary"
-            >
-              {loading ? <Loader2 className="mr-2 w-4 h-4 animate-spin" /> : <Play className="mr-2 w-4 h-4" />}
-              Process Next 5
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => processBatch(5)}
+                disabled={loading}
+                variant="secondary"
+              >
+                {loading ? <Loader2 className="mr-2 w-4 h-4 animate-spin" /> : <Play className="mr-2 w-4 h-4" />}
+                Process Next 5
+              </Button>
+              <Button 
+                onClick={reprocessIncompleteVideos}
+                disabled={loading}
+                variant="outline"
+              >
+                Fix Incomplete Videos
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
