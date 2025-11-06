@@ -46,7 +46,7 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-card border-b border-border backdrop-blur-lg bg-opacity-90">
+    <nav className="sticky top-0 z-50 bg-card/80 border-b border-border backdrop-blur-xl shadow-sm transition-all duration-300">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}

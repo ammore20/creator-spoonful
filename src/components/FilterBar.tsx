@@ -1,24 +1,8 @@
 import { FilterOptions, TasteProfile, MealType, Cuisine, Mood } from '@/types/recipe';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Filter, ChevronDown } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { X, Wand2, RotateCcw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface FilterBarProps {
   filters: FilterOptions;
@@ -26,10 +10,30 @@ interface FilterBarProps {
   language: 'en' | 'mr';
 }
 
-const tasteProfiles: TasteProfile[] = ['Spicy', 'Sweet', 'Sour', 'Bitter', 'Tangy', 'Savory', 'Balanced'];
-const mealTypes: MealType[] = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
-const cuisines: Cuisine[] = ['Maharashtrian', 'South Indian', 'North Indian', 'Fusion', 'Global'];
-const moods: Mood[] = ['Comfort', 'Party', 'Festive', 'Quick Bite', 'Traditional'];
+const filterIcons: Record<string, string> = {
+  'Spicy': '🌶️',
+  'Sweet': '🍰',
+  'Sour': '🍋',
+  'Bitter': '☕',
+  'Tangy': '🍊',
+  'Savory': '🧂',
+  'Balanced': '⚖️',
+  'Breakfast': '🌅',
+  'Lunch': '🍱',
+  'Dinner': '🌙',
+  'Snack': '🍿',
+  'Dessert': '🍨',
+  'Maharashtrian': '🏛️',
+  'South Indian': '🥥',
+  'North Indian': '🍛',
+  'Fusion': '🌍',
+  'Global': '✈️',
+  'Comfort': '🛋️',
+  'Party': '🎉',
+  'Festive': '🪔',
+  'Quick Bite': '⏱️',
+  'Traditional': '👵'
+};
 
 const translations: Record<string, string> = {
   'Spicy': 'तिखट',
@@ -56,7 +60,14 @@ const translations: Record<string, string> = {
   'Traditional': 'पारंपरिक'
 };
 
+const tasteProfiles: TasteProfile[] = ['Spicy', 'Sweet', 'Sour', 'Bitter', 'Tangy', 'Savory', 'Balanced'];
+const mealTypes: MealType[] = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
+const cuisines: Cuisine[] = ['Maharashtrian', 'South Indian', 'North Indian', 'Fusion', 'Global'];
+const moods: Mood[] = ['Comfort', 'Party', 'Festive', 'Quick Bite', 'Traditional'];
+
 export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps) => {
+  const { toast } = useToast();
+  
   const toggleFilter = <K extends keyof FilterOptions>(
     category: K,
     value: FilterOptions[K][number]
@@ -66,10 +77,21 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
       ? currentValues.filter((v) => v !== value)
       : [...currentValues, value as string];
     
-    onFilterChange({
+    const newFilters = {
       ...filters,
       [category]: newValues,
-    });
+    };
+    
+    onFilterChange(newFilters);
+    
+    // Show toast for filter changes
+    const activeCount = Object.values(newFilters).flat().length;
+    if (activeCount > 0) {
+      toast({
+        description: `🍲 ${language === 'en' ? `Showing recipes with ${activeCount} filter${activeCount > 1 ? 's' : ''}` : `${activeCount} फिल्टरसह रेसिपी दाखवत आहे`}`,
+        duration: 2000,
+      });
+    }
   };
 
   const clearAllFilters = () => {
@@ -80,6 +102,18 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
       cuisine: [],
       mood: [],
     });
+    toast({
+      description: language === 'en' ? '✨ All filters cleared' : '✨ सर्व फिल्टर काढले',
+      duration: 2000,
+    });
+  };
+
+  const handleAISuggest = () => {
+    toast({
+      title: language === 'en' ? '🤖 AI Suggest' : '🤖 AI सूचना',
+      description: language === 'en' ? 'Coming soon! AI will suggest recipes based on your preferences.' : 'लवकरच! AI तुमच्या प्राधान्यांवर आधारित रेसिपी सुचवेल.',
+      duration: 3000,
+    });
   };
 
   const getDisplayText = (text: string) => {
@@ -88,146 +122,143 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
 
   const activeFilterCount = Object.values(filters).flat().length;
 
-  const FilterContent = () => (
-    <>
-      {/* Creator */}
-      <div className="space-y-2">
-        <Label className="text-sm font-semibold text-foreground">
-          {language === 'en' ? 'Creator' : 'क्रिएटर'}
-        </Label>
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="creator-sarita"
-            checked={filters.creator.includes("Sarita's Kitchen")}
-            onCheckedChange={() => toggleFilter('creator', "Sarita's Kitchen")}
-          />
-          <label
-            htmlFor="creator-sarita"
-            className="text-sm cursor-pointer text-foreground"
-          >
-            {language === 'en' ? "Sarita's Kitchen" : 'सरिताज किचन'}
-          </label>
-        </div>
-      </div>
-
-      {/* Taste Profile */}
-      <div className="space-y-2">
-        <Label className="text-sm font-semibold text-foreground">
-          {language === 'en' ? 'Taste Profile' : 'चव प्रोफाइल'}
-        </Label>
-        <div className="space-y-2">
-          {tasteProfiles.map((taste) => (
-            <div key={taste} className="flex items-center space-x-2">
-              <Checkbox
-                id={`taste-${taste}`}
-                checked={filters.tasteProfile.includes(taste)}
-                onCheckedChange={() => toggleFilter('tasteProfile', taste)}
-              />
-              <label
-                htmlFor={`taste-${taste}`}
-                className="text-sm cursor-pointer text-foreground"
-              >
-                {getDisplayText(taste)}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Meal Type */}
-      <div className="space-y-2">
-        <Label className="text-sm font-semibold text-foreground">
-          {language === 'en' ? 'Meal Type' : 'जेवणाचा प्रकार'}
-        </Label>
-        <div className="space-y-2">
-          {mealTypes.map((meal) => (
-            <div key={meal} className="flex items-center space-x-2">
-              <Checkbox
-                id={`meal-${meal}`}
-                checked={filters.mealType.includes(meal)}
-                onCheckedChange={() => toggleFilter('mealType', meal)}
-              />
-              <label
-                htmlFor={`meal-${meal}`}
-                className="text-sm cursor-pointer text-foreground"
-              >
-                {getDisplayText(meal)}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Cuisine */}
-      <div className="space-y-2">
-        <Label className="text-sm font-semibold text-foreground">
-          {language === 'en' ? 'Cuisine' : 'पाककृती'}
-        </Label>
-        <div className="space-y-2">
-          {cuisines.map((cuisine) => (
-            <div key={cuisine} className="flex items-center space-x-2">
-              <Checkbox
-                id={`cuisine-${cuisine}`}
-                checked={filters.cuisine.includes(cuisine)}
-                onCheckedChange={() => toggleFilter('cuisine', cuisine)}
-              />
-              <label
-                htmlFor={`cuisine-${cuisine}`}
-                className="text-sm cursor-pointer text-foreground"
-              >
-                {getDisplayText(cuisine)}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Mood */}
-      <div className="space-y-2">
-        <Label className="text-sm font-semibold text-foreground">
-          {language === 'en' ? 'Mood' : 'मूड'}
-        </Label>
-        <div className="space-y-2">
-          {moods.map((mood) => (
-            <div key={mood} className="flex items-center space-x-2">
-              <Checkbox
-                id={`mood-${mood}`}
-                checked={filters.mood.includes(mood)}
-                onCheckedChange={() => toggleFilter('mood', mood)}
-              />
-              <label
-                htmlFor={`mood-${mood}`}
-                className="text-sm cursor-pointer text-foreground"
-              >
-                {getDisplayText(mood)}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-    </>
+  const FilterPillButton = ({ 
+    value, 
+    category, 
+    isActive 
+  }: { 
+    value: string; 
+    category: keyof FilterOptions; 
+    isActive: boolean;
+  }) => (
+    <button
+      onClick={() => toggleFilter(category, value as any)}
+      className={`
+        flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium
+        transition-all duration-300 ease-bounce
+        ${isActive 
+          ? 'bg-primary text-primary-foreground shadow-warm scale-105' 
+          : 'bg-gradient-pill hover:bg-primary/10 text-foreground hover:scale-105 shadow-pill'
+        }
+        border border-border hover:border-primary/50
+        whitespace-nowrap
+      `}
+    >
+      <span className="text-lg">{filterIcons[value]}</span>
+      <span>{getDisplayText(value)}</span>
+    </button>
   );
 
   return (
-    <div className="bg-card border-b border-border">
-      <div className="container mx-auto px-4 py-6">
+    <div className="sticky top-[73px] z-40 bg-card/95 backdrop-blur-lg border-b border-border shadow-sm">
+      <div className="container mx-auto px-4 py-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            {language === 'en' ? 'Filters' : 'फिल्टर्स'}
-          </h2>
-          {activeFilterCount > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {activeFilterCount} {language === 'en' ? 'active' : 'सक्रिय'}
-            </Badge>
-          )}
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold text-foreground">
+              {language === 'en' ? 'Filters' : 'फिल्टर्स'}
+            </h2>
+            {activeFilterCount > 0 && (
+              <Badge className="bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold">
+                {activeFilterCount}
+              </Badge>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={handleAISuggest}
+              className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 shadow-pill ripple"
+            >
+              <Wand2 className="w-4 h-4 mr-1" />
+              {language === 'en' ? 'AI Suggest' : 'AI सूचना'}
+            </Button>
+            {activeFilterCount > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={clearAllFilters}
+                className="hover:bg-destructive/10 hover:text-destructive"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
         
-        {/* Direct Filter Display */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          <FilterContent />
+        {/* Horizontal scrolling filters */}
+        <div className="space-y-4">
+          {/* Taste Profile */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+              {language === 'en' ? 'Taste' : 'चव'}
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {tasteProfiles.map((taste) => (
+                <FilterPillButton
+                  key={taste}
+                  value={taste}
+                  category="tasteProfile"
+                  isActive={filters.tasteProfile.includes(taste)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Meal Type */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+              {language === 'en' ? 'Meal Type' : 'जेवणाचा प्रकार'}
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {mealTypes.map((meal) => (
+                <FilterPillButton
+                  key={meal}
+                  value={meal}
+                  category="mealType"
+                  isActive={filters.mealType.includes(meal)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Cuisine & Mood */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                {language === 'en' ? 'Cuisine' : 'पाककृती'}
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {cuisines.map((cuisine) => (
+                  <FilterPillButton
+                    key={cuisine}
+                    value={cuisine}
+                    category="cuisine"
+                    isActive={filters.cuisine.includes(cuisine)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                {language === 'en' ? 'Mood' : 'मूड'}
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {moods.map((mood) => (
+                  <FilterPillButton
+                    key={mood}
+                    value={mood}
+                    category="mood"
+                    isActive={filters.mood.includes(mood)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-        
-        {/* Active filters display */}
+
+        {/* Active filters with remove option */}
         {activeFilterCount > 0 && (
           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
             {Object.entries(filters).map(([category, values]) =>
@@ -235,17 +266,28 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
                 <Badge
                   key={`${category}-${value}`}
                   variant="secondary"
-                  className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                  className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors px-3 py-1.5"
                   onClick={() => toggleFilter(category as keyof FilterOptions, value)}
                 >
+                  <span className="mr-1">{filterIcons[value]}</span>
                   {getDisplayText(value)}
-                  <X className="ml-1 w-3 h-3" />
+                  <X className="ml-1.5 w-3 h-3" />
                 </Badge>
               ))
             )}
           </div>
         )}
       </div>
+
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };

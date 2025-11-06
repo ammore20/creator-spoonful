@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { FilterOptions } from '@/types/recipe';
+import { FilterOptions, MealType } from '@/types/recipe';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { FilterBar } from '@/components/FilterBar';
 import { RecipeCard } from '@/components/RecipeCard';
+import { Footer } from '@/components/Footer';
 
 const Index = () => {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
@@ -70,7 +71,6 @@ const Index = () => {
 
   const filteredRecipes = useMemo(() => {
     return recipes.filter((recipe) => {
-      // Search filter
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
         !searchQuery ||
@@ -79,27 +79,22 @@ const Index = () => {
         (recipe.titleMr && recipe.titleMr.toLowerCase().includes(searchLower)) ||
         (recipe.descriptionMr && recipe.descriptionMr.toLowerCase().includes(searchLower));
 
-      // Creator filter
       const matchesCreator =
         filters.creator.length === 0 ||
         filters.creator.includes(recipe.creator);
 
-      // Taste profile filter
       const matchesTaste =
         filters.tasteProfile.length === 0 ||
         filters.tasteProfile.some((taste) => recipe.tasteProfile.includes(taste));
 
-      // Meal type filter
       const matchesMeal =
         filters.mealType.length === 0 ||
         filters.mealType.some((meal) => recipe.mealType.includes(meal));
 
-      // Cuisine filter
       const matchesCuisine =
         filters.cuisine.length === 0 ||
         filters.cuisine.some((cuisine) => recipe.cuisine.includes(cuisine));
 
-      // Mood filter
       const matchesMood =
         filters.mood.length === 0 ||
         filters.mood.some((mood) => recipe.mood.includes(mood));
@@ -114,6 +109,25 @@ const Index = () => {
       );
     });
   }, [recipes, searchQuery, filters]);
+
+  // Group recipes by meal type
+  const groupedRecipes = useMemo(() => {
+    const mealTypes: MealType[] = ['Breakfast', 'Snack', 'Lunch', 'Dinner', 'Dessert'];
+    const grouped: Record<string, typeof filteredRecipes> = {};
+    
+    mealTypes.forEach(mealType => {
+      grouped[mealType] = filteredRecipes.filter(recipe => 
+        recipe.mealType.includes(mealType)
+      );
+    });
+    
+    // Add "Other" category for recipes without meal type
+    grouped['Other'] = filteredRecipes.filter(recipe => 
+      recipe.mealType.length === 0
+    );
+    
+    return grouped;
+  }, [filteredRecipes]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,31 +146,79 @@ const Index = () => {
       />
 
       <main className="container mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold text-foreground">
-            {language === 'en' ? 'All Recipes' : 'सर्व रेसिपी'}
-          </h2>
-          <p className="text-muted-foreground">
-            {filteredRecipes.length} {language === 'en' ? 'recipes found' : 'रेसिपी सापडल्या'}
-          </p>
-        </div>
-
         {loading ? (
           <div className="text-center py-20">
-            <p className="text-xl text-muted-foreground">Loading recipes...</p>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+            <p className="text-xl text-muted-foreground mt-4">
+              {language === 'en' ? 'Loading delicious recipes...' : 'स्वादिष्ट रेसिपी लोड करत आहे...'}
+            </p>
           </div>
         ) : filteredRecipes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRecipes.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} language={language} />
-            ))}
+          <div className="space-y-16">
+            {/* Recipe Count */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                {language === 'en' ? 'All Recipes' : 'सर्व रेसिपी'}
+              </h2>
+              <div className="bg-gradient-pill px-4 py-2 rounded-full border border-border">
+                <p className="text-sm font-semibold text-foreground">
+                  {filteredRecipes.length} {language === 'en' ? 'recipes' : 'रेसिपी'}
+                </p>
+              </div>
+            </div>
+
+            {/* Grouped Recipes by Meal Type */}
+            {Object.entries(groupedRecipes).map(([mealType, recipes]) => {
+              if (recipes.length === 0) return null;
+              
+              const mealIcons: Record<string, string> = {
+                'Breakfast': '🌅',
+                'Snack': '🍿',
+                'Lunch': '🍱',
+                'Dinner': '🌙',
+                'Dessert': '🍨',
+                'Other': '🍽️'
+              };
+
+              const mealTranslations: Record<string, string> = {
+                'Breakfast': 'नाश्ता',
+                'Snack': 'चाळण',
+                'Lunch': 'दुपारचे जेवण',
+                'Dinner': 'रात्रीचे जेवण',
+                'Dessert': 'मिठाई',
+                'Other': 'इतर'
+              };
+
+              return (
+                <section key={mealType} className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">{mealIcons[mealType]}</span>
+                    <div>
+                      <h3 className="text-2xl md:text-3xl font-bold text-foreground">
+                        {language === 'en' ? mealType : mealTranslations[mealType]}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {recipes.length} {language === 'en' ? 'recipes' : 'रेसिपी'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {recipes.map((recipe) => (
+                      <RecipeCard key={recipe.id} recipe={recipe} language={language} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <p className="text-xl text-muted-foreground mb-4">
+          <div className="text-center py-20 space-y-4">
+            <div className="text-6xl mb-4">🔍</div>
+            <p className="text-2xl font-bold text-foreground mb-2">
               {language === 'en' 
-                ? 'No recipes found matching your filters'
-                : 'तुमच्या फिल्टर्सशी जुळणाऱ्या रेसिपी सापडल्या नाहीत'}
+                ? 'No recipes found'
+                : 'रेसिपी सापडल्या नाहीत'}
             </p>
             <p className="text-muted-foreground">
               {language === 'en'
@@ -167,21 +229,7 @@ const Index = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-card border-t border-border mt-20">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-muted-foreground">
-            <p className="mb-2">
-              © 2024 RecipeMaker. {language === 'en' ? 'All rights reserved.' : 'सर्व हक्क राखीव.'}
-            </p>
-            <p className="text-sm">
-              {language === 'en' 
-                ? 'AI Recipes by Your Favorite Creators'
-                : 'तुमच्या आवडत्या क्रिएटर्सच्या AI रेसिपी'}
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer language={language} />
     </div>
   );
 };

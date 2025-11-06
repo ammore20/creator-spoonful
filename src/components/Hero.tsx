@@ -1,67 +1,108 @@
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChefHat, Sparkles } from 'lucide-react';
+import { ChefHat, Sparkles, Wand2 } from 'lucide-react';
 import heroImage from '@/assets/hero-food.jpg';
 
 interface HeroProps {
   language: 'en' | 'mr';
 }
 
+const taglines = {
+  en: [
+    "Craving something spicy?",
+    "Need a 10-min snack?",
+    "Try Sarita's trending dishes!",
+    "Looking for comfort food?",
+    "Perfect recipe for any mood!"
+  ],
+  mr: [
+    "तिखट काहीतरी हवं आहे?",
+    "१० मिनिटांचा स्नॅक हवा?",
+    "सरिताच्या ट्रेंडिंग डिशेस!",
+    "कम्फर्ट फूड शोधत आहात?",
+    "प्रत्येक मूडसाठी परफेक्ट रेसिपी!"
+  ]
+};
+
 export const Hero = ({ language }: HeroProps) => {
+  const [currentTagline, setCurrentTagline] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentTagline((prev) => (prev + 1) % taglines[language].length);
+        setIsAnimating(false);
+      }, 500);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [language]);
+
   return (
-    <div className="relative overflow-hidden bg-gradient-hero">
-      <div className="absolute inset-0 bg-black/40" />
+    <div className="relative overflow-hidden bg-gradient-hero-animated animate-gradient">
+      <div className="absolute inset-0 bg-black/30" />
       <div 
-        className="absolute inset-0 bg-cover bg-center opacity-20"
+        className="absolute inset-0 bg-cover bg-center opacity-15 blur-sm"
         style={{ backgroundImage: `url(${heroImage})` }}
       />
       
-      <div className="relative container mx-auto px-4 py-20 md:py-32">
-        <div className="max-w-3xl mx-auto text-center text-white">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/20">
-            <Sparkles className="w-4 h-4" />
+      <div className="relative container mx-auto px-4 py-24 md:py-36">
+        <div className="max-w-4xl mx-auto text-center text-white">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-5 py-2.5 rounded-full mb-8 border border-white/20 shadow-lg animate-zoom-in">
+            <Sparkles className="w-5 h-5 text-accent" />
             <span className="text-sm font-medium">
               {language === 'en' ? 'AI-Powered Recipe Platform' : 'AI-चालित रेसिपी प्लॅटफॉर्म'}
             </span>
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight animate-fade-in">
             {language === 'en' 
               ? 'Discover Recipes from Your Favorite Creators'
               : 'तुमच्या आवडत्या क्रिएटर्सच्या रेसिपी शोधा'}
           </h1>
+
+          {/* Rotating Tagline */}
+          <div className="h-12 mb-10 flex items-center justify-center">
+            <p 
+              className={`text-xl md:text-2xl font-medium text-accent transition-all duration-500 ${
+                isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0 animate-text-slide-up'
+              }`}
+            >
+              {taglines[language][currentTagline]}
+            </p>
+          </div>
           
-          <p className="text-lg md:text-xl mb-8 text-white/90 leading-relaxed">
-            {language === 'en'
-              ? 'AI-transcribed recipes from YouTube food creators. Filter by taste, mood, cuisine, and more. Start cooking with ease!'
-              : 'YouTube फूड क्रिएटर्सच्या AI-प्रतिलेखित रेसिपी. चव, मूड, पाककृती आणि अधिक फिल्टर करा. सहजपणे स्वयंपाक सुरू करा!'}
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-warm text-lg px-8">
-              <ChefHat className="mr-2 w-5 h-5" />
-              {language === 'en' ? 'Explore Recipes' : 'रेसिपी एक्सप्लोर करा'}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Button 
+              size="lg" 
+              className="bg-white text-primary hover:bg-white/90 shadow-warm text-lg px-10 py-6 ripple font-semibold"
+            >
+              <ChefHat className="mr-2 w-6 h-6" />
+              {language === 'en' ? 'Discover Recipes' : 'रेसिपी एक्सप्लोर करा'}
             </Button>
             <Button 
               size="lg" 
-              variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-primary text-lg px-8"
+              className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
             >
-              {language === 'en' ? 'Subscribe for ₹99/mo' : '₹99/महिना सदस्यता घ्या'}
+              <Wand2 className="mr-2 w-6 h-6" />
+              {language === 'en' ? 'Let AI Pick For Me' : 'AI निवडू द्या'}
             </Button>
           </div>
           
-          <div className="mt-12 flex items-center justify-center gap-8 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-accent rounded-full" />
-              <span>{language === 'en' ? '100+ Recipes' : '१००+ रेसिपी'}</span>
+          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 text-sm md:text-base">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+              <div className="w-2.5 h-2.5 bg-accent rounded-full animate-pulse" />
+              <span className="font-medium">{language === 'en' ? '100+ Recipes' : '१००+ रेसिपी'}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-accent rounded-full" />
-              <span>{language === 'en' ? 'AI Transcribed' : 'AI प्रतिलेखित'}</span>
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+              <div className="w-2.5 h-2.5 bg-accent rounded-full animate-pulse" />
+              <span className="font-medium">{language === 'en' ? 'AI Transcribed' : 'AI प्रतिलेखित'}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-accent rounded-full" />
-              <span>{language === 'en' ? 'Smart Filters' : 'स्मार्ट फिल्टर्स'}</span>
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+              <div className="w-2.5 h-2.5 bg-accent rounded-full animate-pulse" />
+              <span className="font-medium">{language === 'en' ? 'Smart Filters' : 'स्मार्ट फिल्टर्स'}</span>
             </div>
           </div>
         </div>

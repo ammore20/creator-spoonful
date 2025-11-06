@@ -61,14 +61,18 @@ export default {
       },
       backgroundImage: {
         'gradient-hero': 'var(--gradient-hero)',
+        'gradient-hero-animated': 'var(--gradient-hero-animated)',
         'gradient-card': 'var(--gradient-card)',
+        'gradient-pill': 'var(--gradient-pill)',
       },
       boxShadow: {
         'warm': 'var(--shadow-warm)',
         'card': 'var(--shadow-card)',
+        'pill': 'var(--shadow-pill)',
       },
       transitionTimingFunction: {
         'smooth': 'var(--transition-smooth)',
+        'bounce': 'var(--transition-bounce)',
       },
       borderRadius: {
         lg: "var(--radius)",
