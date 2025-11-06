@@ -150,7 +150,7 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
   );
 
   return (
-    <div className="sticky top-[73px] z-40 bg-card/95 backdrop-blur-lg border-b border-border shadow-sm">
+    <div className="z-40 bg-card/95 backdrop-blur-lg border-b border-border shadow-sm">
       <div className="container mx-auto px-4 py-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">

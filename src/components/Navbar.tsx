@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Menu, X, LogOut } from 'lucide-react';
+import { Search, Menu, X, LogOut, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,6 +86,13 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
             >
               {language === 'en' ? 'मराठी' : 'English'}
             </Button>
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm"
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
+            </Button>
             {user ? (
               <>
                 <span className="text-sm text-muted-foreground">{user.email}</span>
@@ -138,6 +145,13 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
               className="justify-start"
             >
               {language === 'en' ? 'मराठी' : 'English'}
+            </Button>
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm"
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
             </Button>
             {user ? (
               <>
