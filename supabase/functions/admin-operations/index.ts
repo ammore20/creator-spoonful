@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -62,7 +63,31 @@ serve(async (req) => {
       );
     }
     
-    const { operation, ...params } = await req.json();
+    // Validate request body
+    const requestSchema = z.object({
+      operation: z.enum(['backfill', 'reprocess', 'mark_done', 'update_recipe', 'get_stats', 'process_batch']),
+      channelId: z.string().optional(),
+      maxResults: z.number().int().min(1).max(50).optional(),
+      batchSize: z.number().int().min(1).max(100).optional(),
+      videoId: z.string().optional(),
+      recipe: z.any().optional(),
+      pageToken: z.string().optional(),
+    });
+
+    const rawBody = await req.json();
+    const validationResult = requestSchema.safeParse(rawBody);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid request parameters', 
+          details: validationResult.error.errors 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { operation, ...params } = validationResult.data;
 
     console.log(`Admin operation: ${operation}`, params);
 
