@@ -246,16 +246,29 @@ serve(async (req) => {
           );
         }
 
+        console.log(`Processing batch of ${queueItems.length} videos`);
+
         // Process each item
         const results = [];
         for (const item of queueItems) {
           try {
+            console.log(`Invoking process-video for queue item: ${item.id}`);
             const { data: processData, error: processError } = await supabase.functions.invoke('process-video', {
-              body: { queueItemId: item.id }
+              body: { queueItemId: item.id },
+              headers: {
+                Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+              }
             });
+
+            if (processError) {
+              console.error(`Error processing item ${item.id}:`, processError);
+            } else {
+              console.log(`Successfully processed item ${item.id}`);
+            }
 
             results.push({ id: item.id, success: !processError, data: processData, error: processError });
           } catch (err) {
+            console.error(`Exception processing item ${item.id}:`, err);
             results.push({ id: item.id, success: false, error: err instanceof Error ? err.message : 'Unknown' });
           }
         }
