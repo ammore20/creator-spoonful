@@ -47,7 +47,7 @@ serve(async (req) => {
         throw new Error('Razorpay credentials not configured');
       }
 
-      const amount = 49900; // ₹499 in paise
+      const amount = body.amount || 49900; // Amount in paise from request, default to ₹499
       const currency = 'INR';
 
       // Create order in Razorpay
@@ -134,18 +134,34 @@ serve(async (req) => {
         );
       }
 
-      // Update subscription with payment details
-      const expiresAt = new Date();
-      expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 year validity
+      // Update subscription with payment details and set expiry based on amount
+      let expiresAt: Date | null = null;
+      
+      // Determine expiry based on amount
+      if (body.amount === 9900) {
+        // Monthly plan - 1 month
+        expiresAt = new Date();
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+      } else if (body.amount === 49900) {
+        // Yearly plan - 1 year
+        expiresAt = new Date();
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      }
+      // For lifetime (99900), expiresAt remains null
+
+      const updateData: any = {
+        razorpay_payment_id,
+        razorpay_signature,
+        status: 'active',
+      };
+
+      if (expiresAt) {
+        updateData.expires_at = expiresAt.toISOString();
+      }
 
       const { error: updateError } = await supabaseClient
         .from('subscriptions')
-        .update({
-          razorpay_payment_id,
-          razorpay_signature,
-          status: 'active',
-          expires_at: expiresAt.toISOString(),
-        })
+        .update(updateData)
         .eq('razorpay_order_id', razorpay_order_id)
         .eq('user_id', user.id);
 

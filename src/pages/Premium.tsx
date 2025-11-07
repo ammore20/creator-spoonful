@@ -38,7 +38,7 @@ export default function Premium() {
     setLanguage(prev => prev === 'en' ? 'mr' : 'en');
   };
 
-  const handlePayment = async () => {
+  const handlePayment = async (amount: number, planName: string) => {
     if (!user) {
       toast({
         title: language === 'en' ? 'Authentication Required' : 'प्रमाणीकरण आवश्यक',
@@ -58,7 +58,7 @@ export default function Premium() {
       const { data: orderData, error: orderError } = await supabase.functions.invoke(
         'razorpay-checkout',
         {
-          body: { action: 'create-order' },
+          body: { action: 'create-order', amount },
           headers: {
             Authorization: `Bearer ${session?.access_token}`,
           },
@@ -85,6 +85,7 @@ export default function Premium() {
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
+                  amount: amount, // Pass amount for expiry calculation
                 },
                 headers: {
                   Authorization: `Bearer ${session?.access_token}`,
@@ -141,6 +142,31 @@ export default function Premium() {
       setLoading(false);
     }
   };
+
+  const pricingPlans = [
+    {
+      name: language === 'en' ? 'Monthly Plan' : 'मासिक योजना',
+      price: 99,
+      period: language === 'en' ? '/month' : '/महिना',
+      description: language === 'en' ? 'Billed monthly' : 'मासिक बिल',
+      amount: 9900, // Amount in paise
+    },
+    {
+      name: language === 'en' ? 'Yearly Plan' : 'वार्षिक योजना',
+      price: 499,
+      period: language === 'en' ? '/year' : '/वर्ष',
+      description: language === 'en' ? 'Save 58% with annual billing' : 'वार्षिक बिलिंगसह 58% वाचवा',
+      amount: 49900, // Amount in paise
+      popular: true,
+    },
+    {
+      name: language === 'en' ? 'Lifetime Access' : 'आजीवन प्रवेश',
+      price: 999,
+      period: language === 'en' ? 'one-time' : 'एकवेळ',
+      description: language === 'en' ? 'Pay once, own forever' : 'एकदा पैसे द्या, कायमचे मिळवा',
+      amount: 99900, // Amount in paise
+    },
+  ];
 
   const features = [
     {
@@ -206,58 +232,76 @@ export default function Premium() {
           ))}
         </div>
 
-        <Card className="max-w-md mx-auto bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 border-primary/20 shadow-warm">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl">
-              {language === 'en' ? 'Premium Plan' : 'प्रीमियम योजना'}
-            </CardTitle>
-            <div className="text-4xl font-bold my-4 text-foreground">
-              ₹499
-              <span className="text-lg font-normal text-muted-foreground">
-                {language === 'en' ? '/year' : '/वर्ष'}
-              </span>
-            </div>
-            <CardDescription>
-              {language === 'en' ? 'One-time payment, lifetime access' : 'एकवेळची पेमेंट, आजीवन प्रवेश'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              {[
-                language === 'en' ? 'Unlimited recipe saves' : 'असीम रेसिपी सेव्ह',
-                language === 'en' ? 'AI recipe suggestions' : 'AI रेसिपी सूचना',
-                language === 'en' ? 'Smart cooking timers' : 'स्मार्ट कुकिंग टाइमर',
-                language === 'en' ? 'Print & copy recipes' : 'रेसिपी प्रिंट आणि कॉपी',
-                language === 'en' ? 'Comment & rate recipes' : 'कमेंट आणि रेट रेसिपी',
-                language === 'en' ? 'Ad-free experience' : 'जाहिरात-मुक्त अनुभव',
-                language === 'en' ? 'Priority support' : 'प्राथमिकता समर्थन'
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-sm text-foreground">{item}</span>
-                </div>
-              ))}
-            </div>
-            <Button
-              onClick={handlePayment}
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm h-12 text-lg mt-6"
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {pricingPlans.map((plan, index) => (
+            <Card 
+              key={index} 
+              className={`bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 shadow-warm relative ${
+                plan.popular ? 'border-primary shadow-xl scale-105' : 'border-primary/20'
+              }`}
             >
-              <Crown className="mr-2 w-5 h-5" />
-              {loading 
-                ? (language === 'en' ? 'Processing...' : 'प्रक्रिया करत आहे...') 
-                : (language === 'en' ? 'Upgrade Now' : 'आता अपग्रेड करा')
-              }
-            </Button>
-            <p className="text-xs text-center text-muted-foreground">
-              {language === 'en' 
-                ? 'Secure payment powered by Stripe'
-                : 'Stripe द्वारे सुरक्षित पेमेंट'}
-            </p>
-          </CardContent>
-        </Card>
+              {plan.popular && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+                  {language === 'en' ? 'Most Popular' : 'सर्वाधिक लोकप्रिय'}
+                </div>
+              )}
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">
+                  {plan.name}
+                </CardTitle>
+                <div className="text-4xl font-bold my-4 text-foreground">
+                  ₹{plan.price}
+                  <span className="text-lg font-normal text-muted-foreground block mt-1">
+                    {plan.period}
+                  </span>
+                </div>
+                <CardDescription className="min-h-[40px]">
+                  {plan.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  {[
+                    language === 'en' ? 'Unlimited recipe saves' : 'असीम रेसिपी सेव्ह',
+                    language === 'en' ? 'AI recipe suggestions' : 'AI रेसिपी सूचना',
+                    language === 'en' ? 'Smart cooking timers' : 'स्मार्ट कुकिंग टाइमर',
+                    language === 'en' ? 'Print & copy recipes' : 'रेसिपी प्रिंट आणि कॉपी',
+                    language === 'en' ? 'Comment & rate recipes' : 'कमेंट आणि रेट रेसिपी',
+                    language === 'en' ? 'Ad-free experience' : 'जाहिरात-मुक्त अनुभव',
+                    language === 'en' ? 'Priority support' : 'प्राथमिकता समर्थन'
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3 text-primary" />
+                      </div>
+                      <span className="text-sm text-foreground">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  onClick={() => handlePayment(plan.amount, plan.name)}
+                  disabled={loading}
+                  className={`w-full text-white hover:opacity-90 shadow-warm h-12 text-lg mt-6 ${
+                    plan.popular 
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-600' 
+                      : 'bg-gradient-to-r from-amber-400 to-orange-500'
+                  }`}
+                >
+                  <Crown className="mr-2 w-5 h-5" />
+                  {loading 
+                    ? (language === 'en' ? 'Processing...' : 'प्रक्रिया करत आहे...') 
+                    : (language === 'en' ? 'Upgrade Now' : 'आता अपग्रेड करा')
+                  }
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  {language === 'en' 
+                    ? 'Secure payment powered by Razorpay'
+                    : 'Razorpay द्वारे सुरक्षित पेमेंट'}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </main>
 
       <Footer language={language} />
