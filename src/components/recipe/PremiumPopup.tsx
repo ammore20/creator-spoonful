@@ -1,4 +1,5 @@
 import { Crown, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -57,13 +58,14 @@ export const PremiumPopup = ({ isOpen, onClose, language }: PremiumPopupProps) =
             </div>
           </div>
           <div className="pt-4">
-            <Button
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm h-12 text-lg"
-              onClick={onClose}
-            >
-              <Crown className="mr-2 w-5 h-5" />
-              {language === 'en' ? 'Upgrade for ₹499' : '₹499 ला अपग्रेड करा'}
-            </Button>
+            <Link to="/premium" className="w-full block">
+              <Button
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm h-12 text-lg"
+              >
+                <Crown className="mr-2 w-5 h-5" />
+                {language === 'en' ? 'Upgrade for ₹499' : '₹499 ला अपग्रेड करा'}
+              </Button>
+            </Link>
           </div>
         </div>
       </DialogContent>

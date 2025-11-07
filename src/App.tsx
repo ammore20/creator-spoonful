@@ -8,6 +8,7 @@ import RecipePage from "./pages/RecipePage";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import SetupAdmin from "./pages/SetupAdmin";
+import Premium from "./pages/Premium";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/setup-admin" element={<SetupAdmin />} />
+          <Route path="/premium" element={<Premium />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

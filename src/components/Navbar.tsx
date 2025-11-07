@@ -86,13 +86,15 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
             >
               {language === 'en' ? 'मराठी' : 'English'}
             </Button>
-            <Button
-              size="sm"
-              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm"
-            >
-              <Crown className="w-4 h-4 mr-2" />
-              {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
-            </Button>
+            <Link to="/premium">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
+              </Button>
+            </Link>
             {user ? (
               <>
                 <span className="text-sm text-muted-foreground">{user.email}</span>
@@ -146,13 +148,15 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
             >
               {language === 'en' ? 'मराठी' : 'English'}
             </Button>
-            <Button
-              size="sm"
-              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm"
-            >
-              <Crown className="w-4 h-4 mr-2" />
-              {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
-            </Button>
+            <Link to="/premium" className="w-full">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm w-full"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
+              </Button>
+            </Link>
             {user ? (
               <>
                 <div className="text-sm text-muted-foreground px-3 py-2">{user.email}</div>
