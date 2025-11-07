@@ -12,11 +12,14 @@ const RECIPE_EXTRACTION_PROMPT = `You are a recipe extraction expert. Analyze th
 
 IMPORTANT: The transcript may be in Marathi, English, or a mix. Extract the recipe information regardless of language.
 
+CRITICAL: If the video does NOT contain a proper cooking recipe with clear ingredients and steps, return this exact JSON:
+{ "no_recipe": true }
+
 Return ONLY valid JSON with this exact structure (use English for field values):
 {
-  "title": "Recipe name in English",
-  "ingredients": ["ingredient 1", "ingredient 2"],
-  "steps": ["step 1", "step 2"],
+  "title": "Proper dish name in English (e.g., 'Aloo Paratha', 'Modak')",
+  "ingredients": ["specific ingredient with quantity like '2 cups rice flour'", "1 tsp salt", "more ingredients..."],
+  "steps": ["Detailed step 1 with actual cooking action", "Detailed step 2 with actual cooking action", "more steps..."],
   "taste_tags": ["spicy", "sweet", "savory"], 
   "cuisine": "Maharashtrian",
   "meal_type": "Lunch",
@@ -26,15 +29,12 @@ Return ONLY valid JSON with this exact structure (use English for field values):
 }
 
 CRITICAL RULES:
-1. "title" field is REQUIRED and must be the name of the dish
-2. If you cannot determine a field, use reasonable defaults:
-   - cuisine: "Maharashtrian" (default for Marathi cooking videos)
-   - meal_type: "Lunch"
-   - difficulty: "Medium"
-   - prep_time: "30 mins"
-   - servings: 4
-3. Extract at least 3 ingredients and 3 steps
-4. All fields must be in English even if transcript is in Marathi
+1. "title" must be the ACTUAL DISH NAME (not generic phrases like "recipe", "cooking", "food")
+2. "ingredients" must have at least 5 SPECIFIC ingredients with quantities (not vague like "flour" - say "2 cups wheat flour")
+3. "steps" must have at least 5 DETAILED cooking steps (not generic like "see video" - describe actual actions)
+4. If you cannot extract proper recipe details, return { "no_recipe": true }
+5. All fields must be in English even if transcript is in Marathi
+6. Never use placeholder text or generic descriptions
 
 Valid taste_tags: spicy, sweet, sour, bitter, tangy, savory, balanced
 Valid cuisine: Maharashtrian, South Indian, North Indian, Fusion, Global
@@ -240,24 +240,80 @@ serve(async (req) => {
       
       extractedRecipe = JSON.parse(jsonText);
       
-      // Validate required fields
+      // Check if AI determined no recipe was found
+      if (extractedRecipe.no_recipe === true) {
+        console.log('AI determined this video does not contain a valid recipe');
+        throw new Error('No valid recipe found in video content');
+      }
+      
+      // Validate required fields with strict checks
       if (!extractedRecipe.title || extractedRecipe.title.trim() === '') {
         console.error('Missing or empty title in extracted recipe:', extractedRecipe);
         throw new Error('Recipe extraction missing required title field');
       }
       
-      // Ensure arrays exist
-      if (!extractedRecipe.ingredients || !Array.isArray(extractedRecipe.ingredients)) {
-        extractedRecipe.ingredients = ['See video for ingredients'];
+      // Check for invalid title patterns
+      const invalidTitlePatterns = [
+        /no recipe/i,
+        /not found/i,
+        /not available/i,
+        /^recipe$/i,
+        /^cooking$/i,
+        /^food$/i,
+        /see video/i,
+        /watch video/i
+      ];
+      
+      if (invalidTitlePatterns.some(pattern => pattern.test(extractedRecipe.title))) {
+        console.error('Invalid title pattern detected:', extractedRecipe.title);
+        throw new Error('Recipe title contains invalid or generic text');
       }
-      if (!extractedRecipe.steps || !Array.isArray(extractedRecipe.steps)) {
-        extractedRecipe.steps = ['See video for instructions'];
+      
+      // Validate ingredients
+      if (!extractedRecipe.ingredients || !Array.isArray(extractedRecipe.ingredients) || extractedRecipe.ingredients.length < 5) {
+        console.error('Insufficient ingredients:', extractedRecipe.ingredients);
+        throw new Error('Recipe must have at least 5 ingredients');
       }
-      if (!extractedRecipe.taste_tags || !Array.isArray(extractedRecipe.taste_tags)) {
+      
+      // Check for generic/placeholder ingredients
+      const invalidIngredients = extractedRecipe.ingredients.filter((ing: string) => 
+        /see video/i.test(ing) || 
+        /not available/i.test(ing) ||
+        /ingredient \d+/i.test(ing) ||
+        ing.trim().length < 3
+      );
+      
+      if (invalidIngredients.length > 0) {
+        console.error('Generic or invalid ingredients found:', invalidIngredients);
+        throw new Error('Recipe contains placeholder or invalid ingredients');
+      }
+      
+      // Validate steps
+      if (!extractedRecipe.steps || !Array.isArray(extractedRecipe.steps) || extractedRecipe.steps.length < 5) {
+        console.error('Insufficient steps:', extractedRecipe.steps);
+        throw new Error('Recipe must have at least 5 detailed steps');
+      }
+      
+      // Check for generic/placeholder steps
+      const invalidSteps = extractedRecipe.steps.filter((step: string) => 
+        /see video/i.test(step) || 
+        /watch video/i.test(step) ||
+        /not available/i.test(step) ||
+        /step \d+/i.test(step) ||
+        step.trim().length < 10
+      );
+      
+      if (invalidSteps.length > 0) {
+        console.error('Generic or invalid steps found:', invalidSteps);
+        throw new Error('Recipe contains placeholder or invalid steps');
+      }
+      
+      // Ensure taste_tags exist
+      if (!extractedRecipe.taste_tags || !Array.isArray(extractedRecipe.taste_tags) || extractedRecipe.taste_tags.length === 0) {
         extractedRecipe.taste_tags = ['savory'];
       }
       
-      console.log('Recipe extracted successfully:', extractedRecipe.title);
+      console.log('Recipe extracted and validated successfully:', extractedRecipe.title);
     } catch (parseError) {
       console.error('Failed to parse GPT response:', recipeText);
       console.error('Parse error:', parseError);
