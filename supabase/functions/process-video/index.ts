@@ -228,7 +228,7 @@ serve(async (req) => {
     const recipeText = extractionData.choices[0].message.content;
     
     // Parse JSON response
-    let extractedRecipe;
+    let extractedRecipe: any;
     try {
       // Try to extract JSON from response (handle markdown code blocks)
       let jsonText = recipeText.trim();

@@ -66,12 +66,12 @@ serve(async (req) => {
     // Validate request body
     const requestSchema = z.object({
       operation: z.enum(['backfill', 'reprocess', 'mark_done', 'update_recipe', 'get_stats', 'process_batch']),
-      channelId: z.string().optional(),
-      maxResults: z.number().int().min(1).max(50).optional(),
-      batchSize: z.number().int().min(1).max(100).optional(),
-      videoId: z.string().optional(),
-      recipe: z.any().optional(),
-      pageToken: z.string().optional(),
+      channelId: z.string().nullish(),
+      maxResults: z.number().int().min(1).max(50).nullish(),
+      batchSize: z.number().int().min(1).max(100).nullish(),
+      videoId: z.string().nullish(),
+      recipe: z.any().nullish(),
+      pageToken: z.string().nullish(),
     });
 
     const rawBody = await req.json();
@@ -93,7 +93,8 @@ serve(async (req) => {
 
     switch (operation) {
       case 'backfill': {
-        const { batchSize = 10, pageToken } = params;
+        const { batchSize, pageToken } = params;
+        const actualBatchSize = batchSize ?? 10;
         
         // Get the most recent channel ID from creators table
         const { data: creators, error: creatorError } = await supabase
@@ -112,9 +113,9 @@ serve(async (req) => {
         const { data: ingestData, error: ingestError } = await supabase.functions.invoke('ingest-youtube', {
           body: {
             channelId: creator.channel_id,
-            maxResults: batchSize,
+            maxResults: actualBatchSize,
             jobType: 'backfill',
-            pageToken
+            pageToken: pageToken ?? undefined
           }
         });
 
@@ -222,14 +223,15 @@ serve(async (req) => {
       }
 
       case 'process_batch': {
-        const { batchSize = 5 } = params;
+        const { batchSize } = params;
+        const actualBatchSize = batchSize ?? 5;
         
         // Get queued items
         const { data: queueItems } = await supabase
           .from('processing_queue')
           .select('id')
           .eq('status', 'queued')
-          .limit(batchSize);
+          .limit(actualBatchSize);
 
         if (!queueItems || queueItems.length === 0) {
           return new Response(
