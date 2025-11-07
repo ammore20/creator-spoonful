@@ -127,9 +127,41 @@ const RecipePage = () => {
 
   const title = language === 'mr' && recipe.titleMr ? recipe.titleMr : recipe.title;
   const creator = language === 'mr' && recipe.creatorMr ? recipe.creatorMr : recipe.creator;
-  const description = language === 'mr' && recipe.descriptionMr ? recipe.descriptionMr : recipe.description;
+  const rawDescription = language === 'mr' && recipe.descriptionMr ? recipe.descriptionMr : recipe.description;
   const ingredients = language === 'mr' && recipe.ingredientsMr ? recipe.ingredientsMr : recipe.ingredients;
   const steps = language === 'mr' && recipe.stepsMr ? recipe.stepsMr : recipe.steps;
+
+  // Clean description: remove URLs, emails, hashtags, and promotional content
+  const cleanDescription = (text: string): string => {
+    if (!text) return '';
+    
+    let cleaned = text
+      // Remove URLs
+      .replace(/https?:\/\/[^\s]+/gi, '')
+      // Remove email addresses
+      .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi, '')
+      // Remove hashtags
+      .replace(/#[^\s#]+/g, '')
+      // Remove multiple spaces
+      .replace(/\s+/g, ' ')
+      // Remove common promotional phrases
+      .replace(/for collaboration[s]?:?/gi, '')
+      .replace(/follow me on/gi, '')
+      .replace(/subscribe to/gi, '')
+      .replace(/check out my/gi, '')
+      // Trim
+      .trim();
+    
+    // Take only first 2-3 sentences or up to 300 characters
+    const sentences = cleaned.match(/[^.!?]+[.!?]+/g) || [cleaned];
+    const firstSentences = sentences.slice(0, 3).join(' ');
+    
+    return firstSentences.length > 300 
+      ? firstSentences.substring(0, 300).trim() + '...'
+      : firstSentences;
+  };
+
+  const description = cleanDescription(rawDescription);
 
   const scaledIngredients = ingredients.map((ingredient: string) => {
     const ratio = servings / originalServings;
