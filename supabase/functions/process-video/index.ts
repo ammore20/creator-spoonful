@@ -53,47 +53,10 @@ serve(async (req) => {
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const authHeader = req.headers.get('Authorization');
-
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
     if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
 
-    // Verify user is authenticated
-    const supabaseAuth = createClient(
-      SUPABASE_URL!,
-      SUPABASE_SERVICE_ROLE_KEY!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
-    
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check if user has admin role
-    const { data: roleData } = await supabaseAuth
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
-
-    if (!roleData) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized: Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    console.log('Process-video function called - public endpoint, no auth required');
 
     // Validate input
     const requestSchema = z.object({
