@@ -226,8 +226,53 @@ const Admin = () => {
     }
   };
 
-  const navigateToPremium = () => {
-    navigate('/premium');
+  const grantPremiumAndNavigate = async () => {
+    if (!session || !user) return;
+    
+    setLoading(true);
+    try {
+      // Check if admin already has an active subscription
+      const { data: existingSub } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .gte('expires_at', new Date().toISOString())
+        .single();
+
+      if (!existingSub) {
+        // Create a premium subscription for the admin (lifetime access)
+        const { error } = await supabase
+          .from('subscriptions')
+          .insert({
+            user_id: user.id,
+            amount: 0,
+            status: 'completed',
+            currency: 'INR',
+            expires_at: new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString(),
+            razorpay_order_id: 'admin_grant',
+            razorpay_payment_id: 'admin_grant',
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: 'Premium Access Granted',
+          description: 'You now have full premium access',
+        });
+      }
+
+      // Navigate to home page with premium access
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to grant premium access',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const reprocessIncompleteVideos = async () => {
@@ -317,9 +362,9 @@ const Admin = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold">Admin Panel</h1>
-          <Button onClick={navigateToPremium} variant="outline" size="lg">
+          <Button onClick={grantPremiumAndNavigate} disabled={loading} variant="outline" size="lg">
             <ArrowLeftRight className="mr-2 h-4 w-4" />
-            Switch to Premium
+            {loading ? 'Granting Access...' : 'Access Premium Site'}
           </Button>
         </div>
 
