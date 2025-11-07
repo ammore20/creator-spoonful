@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChefHat, Sparkles, Wand2 } from 'lucide-react';
+import { ChefHat, Sparkles, Wand2, LogIn } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
 import heroImage from '@/assets/hero-food.jpg';
 
 interface HeroProps {
@@ -27,6 +30,21 @@ const taglines = {
 export const Hero = ({ language }: HeroProps) => {
   const [currentTagline, setCurrentTagline] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check auth state
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -44,12 +62,26 @@ export const Hero = ({ language }: HeroProps) => {
     <div className="relative overflow-hidden bg-gradient-hero-animated animate-gradient">
       <div className="absolute inset-0 bg-black/30" />
       <div 
-        className="absolute inset-0 bg-cover bg-center opacity-15 blur-sm"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        className="absolute inset-0 bg-cover bg-center opacity-15"
+        style={{ 
+          backgroundImage: `url(${heroImage})`,
+          filter: 'blur(3px)'
+        }}
       />
       
       <div className="relative container mx-auto px-4 py-24 md:py-36">
         <div className="max-w-4xl mx-auto text-center text-white">
+          {!user && (
+            <div className="mb-6 animate-fade-in">
+              <div className="inline-flex items-center gap-3 bg-accent/90 backdrop-blur-sm px-6 py-3 rounded-full border border-white/30 shadow-warm hover:scale-105 transition-transform cursor-pointer" onClick={() => navigate('/auth')}>
+                <LogIn className="w-5 h-5" />
+                <span className="text-sm font-semibold">
+                  {language === 'en' ? 'Sign in to save your favorite recipes' : 'तुमच्या आवडत्या रेसिपी सेव्ह करण्यासाठी साइन इन करा'}
+                </span>
+              </div>
+            </div>
+          )}
+          
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-5 py-2.5 rounded-full mb-8 border border-white/20 shadow-lg animate-zoom-in">
             <Sparkles className="w-5 h-5 text-accent" />
             <span className="text-sm font-medium">

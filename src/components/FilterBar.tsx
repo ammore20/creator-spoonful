@@ -222,38 +222,37 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
             </div>
           </div>
 
-          {/* Cuisine & Mood */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                {language === 'en' ? 'Cuisine' : 'पाककृती'}
-              </p>
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {cuisines.map((cuisine) => (
-                  <FilterPillButton
-                    key={cuisine}
-                    value={cuisine}
-                    category="cuisine"
-                    isActive={filters.cuisine.includes(cuisine)}
-                  />
-                ))}
-              </div>
+          {/* Cuisine */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+              {language === 'en' ? 'Cuisine' : 'पाककृती'}
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {cuisines.map((cuisine) => (
+                <FilterPillButton
+                  key={cuisine}
+                  value={cuisine}
+                  category="cuisine"
+                  isActive={filters.cuisine.includes(cuisine)}
+                />
+              ))}
             </div>
+          </div>
 
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                {language === 'en' ? 'Mood' : 'मूड'}
-              </p>
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {moods.map((mood) => (
-                  <FilterPillButton
-                    key={mood}
-                    value={mood}
-                    category="mood"
-                    isActive={filters.mood.includes(mood)}
-                  />
-                ))}
-              </div>
+          {/* Mood */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+              {language === 'en' ? 'Mood' : 'मूड'}
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {moods.map((mood) => (
+                <FilterPillButton
+                  key={mood}
+                  value={mood}
+                  category="mood"
+                  isActive={filters.mood.includes(mood)}
+                />
+              ))}
             </div>
           </div>
         </div>
