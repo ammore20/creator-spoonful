@@ -18,19 +18,46 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState<User | null>(null);
+  const [hasPremium, setHasPremium] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        checkPremiumStatus(session.user.id);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        setTimeout(() => {
+          checkPremiumStatus(session.user.id);
+        }, 0);
+      } else {
+        setHasPremium(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const checkPremiumStatus = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .gte('expires_at', new Date().toISOString())
+        .single();
+
+      setHasPremium(!!data);
+    } catch (error) {
+      setHasPremium(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -86,15 +113,17 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
             >
               {language === 'en' ? 'मराठी' : 'English'}
             </Button>
-            <Link to="/premium">
-              <Button
-                size="sm"
-                className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm"
-              >
-                <Crown className="w-4 h-4 mr-2" />
-                {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
-              </Button>
-            </Link>
+            {!hasPremium && (
+              <Link to="/premium">
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm"
+                >
+                  <Crown className="w-4 h-4 mr-2" />
+                  {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
+                </Button>
+              </Link>
+            )}
             {user ? (
               <>
                 <span className="text-sm text-muted-foreground">{user.email}</span>
@@ -148,15 +177,17 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
             >
               {language === 'en' ? 'मराठी' : 'English'}
             </Button>
-            <Link to="/premium" className="w-full">
-              <Button
-                size="sm"
-                className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm w-full"
-              >
-                <Crown className="w-4 h-4 mr-2" />
-                {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
-              </Button>
-            </Link>
+            {!hasPremium && (
+              <Link to="/premium" className="w-full">
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm w-full"
+                >
+                  <Crown className="w-4 h-4 mr-2" />
+                  {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
+                </Button>
+              </Link>
+            )}
             {user ? (
               <>
                 <div className="text-sm text-muted-foreground px-3 py-2">{user.email}</div>
