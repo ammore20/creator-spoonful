@@ -109,14 +109,20 @@ serve(async (req) => {
         
         const creator = creators[0];
         
+        // Prepare request body, only include pageToken if it exists
+        const requestBody: any = {
+          channelId: creator.channel_id,
+          maxResults: actualBatchSize,
+          jobType: 'backfill'
+        };
+        
+        if (pageToken) {
+          requestBody.pageToken = pageToken;
+        }
+        
         // Call ingest function
         const { data: ingestData, error: ingestError } = await supabase.functions.invoke('ingest-youtube', {
-          body: {
-            channelId: creator.channel_id,
-            maxResults: actualBatchSize,
-            jobType: 'backfill',
-            pageToken: pageToken ?? undefined
-          }
+          body: requestBody
         });
 
         if (ingestError) throw ingestError;
