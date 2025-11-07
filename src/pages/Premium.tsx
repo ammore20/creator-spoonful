@@ -1,16 +1,145 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Crown, Check, ArrowLeft, Sparkles, Clock, Heart, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import type { User } from '@supabase/supabase-js';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export default function Premium() {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const toggleLanguage = () => {
     setLanguage(prev => prev === 'en' ? 'mr' : 'en');
+  };
+
+  const handlePayment = async () => {
+    if (!user) {
+      toast({
+        title: language === 'en' ? 'Authentication Required' : 'प्रमाणीकरण आवश्यक',
+        description: language === 'en' ? 'Please sign in to upgrade to premium' : 'प्रीमियममध्ये अपग्रेड करण्यासाठी कृपया साइन इन करा',
+        variant: 'destructive',
+      });
+      navigate('/auth');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Create Razorpay order
+      const { data: orderData, error: orderError } = await supabase.functions.invoke(
+        'razorpay-checkout',
+        {
+          body: { action: 'create-order' },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        }
+      );
+
+      if (orderError) throw orderError;
+
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'RecipeMaker',
+        description: 'Premium Membership',
+        order_id: orderData.orderId,
+        handler: async function (response: any) {
+          try {
+            // Verify payment
+            const { error: verifyError } = await supabase.functions.invoke(
+              'razorpay-checkout',
+              {
+                body: {
+                  action: 'verify-payment',
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                },
+                headers: {
+                  Authorization: `Bearer ${session?.access_token}`,
+                },
+              }
+            );
+
+            if (verifyError) throw verifyError;
+
+            toast({
+              title: language === 'en' ? 'Payment Successful!' : 'पेमेंट यशस्वी!',
+              description: language === 'en' 
+                ? 'Welcome to Premium! Enjoy all the exclusive features.' 
+                : 'प्रीमियममध्ये आपले स्वागत आहे! सर्व खास वैशिष्ट्यांचा आनंद घ्या.',
+            });
+
+            navigate('/');
+          } catch (err: any) {
+            console.error('Payment verification error:', err);
+            toast({
+              title: language === 'en' ? 'Payment Verification Failed' : 'पेमेंट सत्यापन अयशस्वी',
+              description: err.message,
+              variant: 'destructive',
+            });
+          }
+        },
+        prefill: {
+          email: user.email,
+        },
+        theme: {
+          color: '#f59e0b',
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+
+      razorpay.on('payment.failed', function (response: any) {
+        toast({
+          title: language === 'en' ? 'Payment Failed' : 'पेमेंट अयशस्वी',
+          description: response.error.description,
+          variant: 'destructive',
+        });
+      });
+
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      toast({
+        title: language === 'en' ? 'Error' : 'त्रुटी',
+        description: error.message || (language === 'en' ? 'Failed to initiate payment' : 'पेमेंट सुरू करण्यात अयशस्वी'),
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const features = [
@@ -112,10 +241,15 @@ export default function Premium() {
               ))}
             </div>
             <Button
+              onClick={handlePayment}
+              disabled={loading}
               className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-warm h-12 text-lg mt-6"
             >
               <Crown className="mr-2 w-5 h-5" />
-              {language === 'en' ? 'Upgrade Now' : 'आता अपग्रेड करा'}
+              {loading 
+                ? (language === 'en' ? 'Processing...' : 'प्रक्रिया करत आहे...') 
+                : (language === 'en' ? 'Upgrade Now' : 'आता अपग्रेड करा')
+              }
             </Button>
             <p className="text-xs text-center text-muted-foreground">
               {language === 'en' 
