@@ -8,18 +8,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const RECIPE_EXTRACTION_PROMPT = `You are a recipe extraction expert. Analyze the transcript and extract a structured recipe.
+const RECIPE_EXTRACTION_PROMPT = `You are a recipe extraction expert. Analyze the video information and extract a structured recipe.
 
-IMPORTANT: The transcript may be in Marathi, English, or a mix. Extract the recipe information regardless of language.
+IMPORTANT: The text may be in Marathi, English, Hindi or a mix. Extract the recipe information regardless of language.
 
-CRITICAL: If the video does NOT contain a proper cooking recipe with clear ingredients and steps, return this exact JSON:
-{ "no_recipe": true }
+SPECIAL CASE: If you only have the video title and description (no full transcript), you should STILL extract the recipe by:
+1. Identifying the dish name from the title
+2. Making reasonable assumptions about common ingredients for that dish
+3. Providing standard cooking steps for that type of dish
+4. Only return { "no_recipe": true } if the video is clearly NOT about cooking (e.g., tips, cleaning, tutorials)
 
 Return ONLY valid JSON with this exact structure (use English for field values):
 {
   "title": "Proper dish name in English (e.g., 'Aloo Paratha', 'Modak')",
-  "ingredients": ["specific ingredient with quantity like '2 cups rice flour'", "1 tsp salt", "more ingredients..."],
-  "steps": ["Detailed step 1 with actual cooking action", "Detailed step 2 with actual cooking action", "more steps..."],
+  "ingredients": ["specific ingredient with quantity like '2 cups rice flour'", "1 tsp salt"],
+  "steps": ["Detailed step 1 with actual cooking action", "Detailed step 2"],
   "taste_tags": ["spicy", "sweet", "savory"], 
   "cuisine": "Maharashtrian",
   "meal_type": "Lunch",
@@ -29,12 +32,12 @@ Return ONLY valid JSON with this exact structure (use English for field values):
 }
 
 CRITICAL RULES:
-1. "title" must be the ACTUAL DISH NAME (not generic phrases like "recipe", "cooking", "food")
-2. "ingredients" must have at least 5 SPECIFIC ingredients with quantities (not vague like "flour" - say "2 cups wheat flour")
-3. "steps" must have at least 5 DETAILED cooking steps (not generic like "see video" - describe actual actions)
-4. If you cannot extract proper recipe details, return { "no_recipe": true }
-5. All fields must be in English even if transcript is in Marathi
-6. Never use placeholder text or generic descriptions
+1. "title" must be the ACTUAL DISH NAME extracted from the video title
+2. "ingredients" must have at least 5 common ingredients for that dish (use standard recipes)
+3. "steps" must have at least 5 basic cooking steps (use standard methods for that dish)
+4. Only return { "no_recipe": true } if the video is NOT about cooking a dish (tips, cleaning, etc.)
+5. All fields must be in English even if source is in Marathi/Hindi
+6. Use your knowledge of Indian cuisine to fill in reasonable recipe details
 
 Valid taste_tags: spicy, sweet, sour, bitter, tangy, savory, balanced
 Valid cuisine: Maharashtrian, South Indian, North Indian, Fusion, Global
@@ -205,8 +208,27 @@ serve(async (req) => {
       
       // Check if AI determined no recipe was found
       if (extractedRecipe.no_recipe === true) {
-        console.log('AI determined this video does not contain a valid recipe');
-        throw new Error('No valid recipe found in video content');
+        console.log('AI determined this video does not contain a valid recipe (e.g., tips, cleaning video)');
+        
+        // Update video status to indicate no recipe found (not an error)
+        await supabase
+          .from('videos')
+          .update({
+            status: 'done',
+            error_message: 'No recipe content found - video may be tips, cleaning, or non-recipe content',
+            extracted_recipe_json: { no_recipe: true }
+          })
+          .eq('id', videoDbId);
+
+        await supabase
+          .from('processing_queue')
+          .update({ status: 'completed' })
+          .eq('id', queueItemId);
+
+        return new Response(
+          JSON.stringify({ success: true, no_recipe: true, message: 'Video does not contain recipe content' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
       
       // Validate required fields with strict checks
