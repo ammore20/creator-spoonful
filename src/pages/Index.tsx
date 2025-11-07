@@ -61,7 +61,28 @@ const Index = () => {
         };
       }) || [];
 
-      setRecipes(transformedRecipes);
+      // Filter out invalid recipes
+      const validRecipes = transformedRecipes.filter((recipe) => {
+        const title = recipe.title.toLowerCase();
+        
+        // Check for invalid title patterns
+        const hasInvalidTitle = 
+          title.includes('no recipe') ||
+          title.includes('not found') ||
+          title.includes('no specific') ||
+          title === 'recipe' ||
+          title === 'cooking' ||
+          title === 'food';
+        
+        // Check for minimum content requirements
+        const hasEnoughIngredients = recipe.ingredients.length >= 5;
+        const hasEnoughSteps = recipe.steps.length >= 5;
+        
+        // Only include recipes that pass all validations
+        return !hasInvalidTitle && hasEnoughIngredients && hasEnoughSteps;
+      });
+
+      setRecipes(validRecipes);
     } catch (error) {
       console.error('Error fetching recipes:', error);
     } finally {
