@@ -155,6 +155,30 @@ const Index = () => {
           </div>
         ) : filteredRecipes.length > 0 ? (
           <div className="space-y-16">
+            {/* New Recipe Everyday Section */}
+            {recipes.length > 0 && (
+              <div>
+                <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-2xl p-8 border border-border">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="text-4xl">✨</span>
+                    <div>
+                      <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                        {language === 'en' ? 'New Recipe Everyday' : 'दररोज नवीन रेसिपी'}
+                      </h2>
+                      <p className="text-muted-foreground mt-1">
+                        {language === 'en' ? 'Fresh additions to inspire your cooking' : 'तुमच्या स्वयंपाकाला प्रेरणा देण्यासाठी नवीन रेसिपी'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {recipes.slice(0, 3).map((recipe) => (
+                      <RecipeCard key={recipe.id} recipe={recipe} language={language} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* Recipe Count */}
             <div className="flex items-center justify-between">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
