@@ -127,41 +127,39 @@ const RecipePage = () => {
 
   const title = language === 'mr' && recipe.titleMr ? recipe.titleMr : recipe.title;
   const creator = language === 'mr' && recipe.creatorMr ? recipe.creatorMr : recipe.creator;
-  const rawDescription = language === 'mr' && recipe.descriptionMr ? recipe.descriptionMr : recipe.description;
   const ingredients = language === 'mr' && recipe.ingredientsMr ? recipe.ingredientsMr : recipe.ingredients;
   const steps = language === 'mr' && recipe.stepsMr ? recipe.stepsMr : recipe.steps;
 
-  // Clean description: remove URLs, emails, hashtags, and promotional content
-  const cleanDescription = (text: string): string => {
-    if (!text) return '';
+  // Generate custom recipe description
+  const generateRecipeDescription = (): string => {
+    const cuisine = recipe.cuisine?.[0] || '';
+    const mealType = recipe.mealType?.[0] || '';
+    const difficulty = recipe.difficulty || 'Medium';
+    const cookTime = recipe.cookTime || '30 mins';
+    const tasteProfile = recipe.tasteProfile?.slice(0, 2).join(' and ') || 'delicious';
     
-    let cleaned = text
-      // Remove URLs
-      .replace(/https?:\/\/[^\s]+/gi, '')
-      // Remove email addresses
-      .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi, '')
-      // Remove hashtags
-      .replace(/#[^\s#]+/g, '')
-      // Remove multiple spaces
-      .replace(/\s+/g, ' ')
-      // Remove common promotional phrases
-      .replace(/for collaboration[s]?:?/gi, '')
-      .replace(/follow me on/gi, '')
-      .replace(/subscribe to/gi, '')
-      .replace(/check out my/gi, '')
-      // Trim
-      .trim();
+    if (language === 'mr') {
+      return `एक ${tasteProfile} ${cuisine} पदार्थ जो ${mealType} साठी परिपूर्ण आहे. ${difficulty === 'Easy' ? 'सोपे' : difficulty === 'Hard' ? 'कठीण' : 'मध्यम'} स्तरावरील ही रेसिपी ${cookTime} मध्ये तयार होते आणि कुटुंबासोबत आनंद घेण्यासाठी आदर्श आहे.`;
+    }
     
-    // Take only first 2-3 sentences or up to 300 characters
-    const sentences = cleaned.match(/[^.!?]+[.!?]+/g) || [cleaned];
-    const firstSentences = sentences.slice(0, 3).join(' ');
+    let description = `A ${tasteProfile} ${cuisine} dish`;
     
-    return firstSentences.length > 300 
-      ? firstSentences.substring(0, 300).trim() + '...'
-      : firstSentences;
+    if (mealType) {
+      description += ` perfect for ${mealType.toLowerCase()}`;
+    }
+    
+    description += `. This ${difficulty.toLowerCase()}-level recipe is ready in ${cookTime}`;
+    
+    if (ingredients.length > 0) {
+      description += ` and uses traditional ingredients to create an authentic flavor`;
+    }
+    
+    description += `. Best enjoyed fresh with your family and friends.`;
+    
+    return description;
   };
 
-  const description = cleanDescription(rawDescription);
+  const description = generateRecipeDescription();
 
   const scaledIngredients = ingredients.map((ingredient: string) => {
     const ratio = servings / originalServings;
