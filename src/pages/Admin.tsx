@@ -215,6 +215,7 @@ const Admin = () => {
           description: 'Video has been queued for reprocessing'
         });
         loadQueue();
+        loadStats();
       }
     } catch (error) {
       toast({
@@ -222,6 +223,58 @@ const Admin = () => {
         description: 'Failed to reprocess video',
         variant: 'destructive'
       });
+    }
+  };
+
+  const grantPremiumAccess = async () => {
+    if (!session || !user) return;
+    
+    setLoading(true);
+    try {
+      // Check if admin already has an active subscription
+      const { data: existingSub } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .gte('expires_at', new Date().toISOString())
+        .single();
+
+      if (existingSub) {
+        toast({
+          title: 'Already Premium',
+          description: 'You already have an active premium subscription',
+        });
+        return;
+      }
+
+      // Create a premium subscription for the admin (lifetime access)
+      const { error } = await supabase
+        .from('subscriptions')
+        .insert({
+          user_id: user.id,
+          amount: 0,
+          status: 'completed',
+          currency: 'INR',
+          expires_at: new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString(), // 100 years
+          razorpay_order_id: 'admin_grant',
+          razorpay_payment_id: 'admin_grant',
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Premium Access Granted',
+        description: 'You now have full access to premium features',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to grant premium access',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -266,7 +319,7 @@ const Admin = () => {
           await supabase.functions.invoke('admin-operations', {
             body: { 
               operation: 'reprocess',
-              videoId: video.id 
+              videoId: video.video_id 
             }
           });
           successCount++;
@@ -375,7 +428,7 @@ const Admin = () => {
                 {pageToken ? 'Fetch Next 10' : 'Backfill (10 videos)'}
               </Button>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button 
                 onClick={() => processBatch(5)}
                 disabled={loading}
@@ -390,6 +443,13 @@ const Admin = () => {
                 variant="outline"
               >
                 Fix Incomplete Videos
+              </Button>
+              <Button 
+                onClick={grantPremiumAccess}
+                disabled={loading}
+                variant="default"
+              >
+                Grant Premium Access
               </Button>
             </div>
           </CardContent>
