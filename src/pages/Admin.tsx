@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/Navbar';
-import { RefreshCw, Play, Loader2 } from 'lucide-react';
+import { RefreshCw, Play, Loader2, ArrowLeftRight } from 'lucide-react';
 import type { User, Session } from '@supabase/supabase-js';
 
 const Admin = () => {
@@ -315,7 +315,13 @@ const Admin = () => {
       <Navbar onSearch={() => {}} language="en" onLanguageToggle={() => {}} />
       
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8">Admin Panel</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold">Admin Panel</h1>
+          <Button onClick={navigateToPremium} variant="outline" size="lg">
+            <ArrowLeftRight className="mr-2 h-4 w-4" />
+            Switch to Premium
+          </Button>
+        </div>
 
         {/* Stats */}
         {stats && (
@@ -395,12 +401,6 @@ const Admin = () => {
                 variant="outline"
               >
                 Fix Incomplete Videos
-              </Button>
-              <Button 
-                onClick={navigateToPremium}
-                variant="default"
-              >
-                View Premium Page
               </Button>
             </div>
           </CardContent>

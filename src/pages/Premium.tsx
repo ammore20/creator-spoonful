@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Crown, Check, ArrowLeft, Sparkles, Clock, Heart, MessageSquare } from 'lucide-react';
+import { Crown, Check, ArrowLeft, Sparkles, Clock, Heart, MessageSquare, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navbar } from '@/components/Navbar';
@@ -19,20 +19,44 @@ export default function Premium() {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminRole(session.user.id);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        setTimeout(() => {
+          checkAdminRole(session.user.id);
+        }, 0);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const checkAdminRole = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .single();
+
+      setIsAdmin(!!data);
+    } catch (error) {
+      setIsAdmin(false);
+    }
+  };
 
   const toggleLanguage = () => {
     setLanguage(prev => prev === 'en' ? 'mr' : 'en');
@@ -196,10 +220,18 @@ export default function Premium() {
       <Navbar onSearch={() => {}} language={language} onLanguageToggle={toggleLanguage} />
       
       <main className="flex-1 container mx-auto px-4 py-12">
-        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          {language === 'en' ? 'Back to Recipes' : 'रेसिपीकडे परत'}
-        </Link>
+        <div className="flex justify-between items-center mb-8">
+          <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            {language === 'en' ? 'Back to Recipes' : 'रेसिपीकडे परत'}
+          </Link>
+          {isAdmin && (
+            <Button onClick={() => navigate('/admin')} variant="outline">
+              <ArrowLeftRight className="mr-2 h-4 w-4" />
+              {language === 'en' ? 'Switch to Admin' : 'अॅडमिनकडे जा'}
+            </Button>
+          )}
+        </div>
 
         <div className="max-w-4xl mx-auto text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/10 to-orange-600/10 px-4 py-2 rounded-full mb-6">
