@@ -42,19 +42,14 @@ export const Footer = ({ language }: FooterProps) => {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'en' ? 'About RecipeMaker' : 'RecipeMaker बद्दल'}
-                </a>
+                <Link to="/premium" className="text-muted-foreground hover:text-primary transition-colors">
+                  {language === 'en' ? 'Premium Plans' : 'प्रीमियम योजना'}
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'en' ? 'Become a Creator' : 'क्रिएटर बना'}
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
                   {language === 'en' ? 'Contact Us' : 'आमच्याशी संपर्क साधा'}
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -66,19 +61,19 @@ export const Footer = ({ language }: FooterProps) => {
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
                   {language === 'en' ? 'Privacy Policy' : 'गोपनीयता धोरण'}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
                   {language === 'en' ? 'Terms of Service' : 'सेवा अटी'}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'en' ? 'Cookie Policy' : 'कुकी धोरण'}
-                </a>
+                <Link to="/refund" className="text-muted-foreground hover:text-primary transition-colors">
+                  {language === 'en' ? 'Refund Policy' : 'परतावा धोरण'}
+                </Link>
               </li>
             </ul>
           </div>
