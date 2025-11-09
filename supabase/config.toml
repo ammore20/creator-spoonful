@@ -1,10 +1,4 @@
 project_id = "yaslzerxrbfyspaffxru"
 
-[functions.process-video]
-verify_jwt = false
-
-[functions.ingest-youtube]
-verify_jwt = false
-
 [functions.generate-sitemap]
 verify_jwt = false

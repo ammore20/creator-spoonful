@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Mail, MessageSquare, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
 
 export default function Contact() {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
@@ -22,16 +23,24 @@ export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  const contactSchema = z.object({
+    name: z.string().trim().min(1, { message: 'Name is required' }).max(100, { message: 'Name must be less than 100 characters' }),
+    email: z.string().trim().email({ message: 'Invalid email address' }).max(255, { message: 'Email must be less than 255 characters' }),
+    subject: z.string().max(200, { message: 'Subject must be less than 200 characters' }).optional(),
+    message: z.string().trim().min(1, { message: 'Message is required' }).max(2000, { message: 'Message must be less than 2000 characters' })
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
-    if (!formData.name || !formData.email || !formData.message) {
+    // Validate with Zod
+    const validationResult = contactSchema.safeParse(formData);
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
       toast({
-        title: language === 'en' ? 'Error' : 'त्रुटी',
-        description: language === 'en' 
-          ? 'Please fill in all required fields' 
-          : 'कृपया सर्व आवश्यक फील्ड भरा',
+        title: language === 'en' ? 'Validation Error' : 'वैधता त्रुटी',
+        description: firstError.message,
         variant: 'destructive'
       });
       return;
@@ -121,6 +130,7 @@ export default function Contact() {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder={language === 'en' ? 'Your name' : 'तुमचे नाव'}
+                    maxLength={100}
                     required
                   />
                 </div>
@@ -136,6 +146,7 @@ export default function Contact() {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder={language === 'en' ? 'your@email.com' : 'तुमचा@ईमेल.com'}
+                    maxLength={255}
                     required
                   />
                 </div>
@@ -151,6 +162,7 @@ export default function Contact() {
                     value={formData.subject}
                     onChange={handleChange}
                     placeholder={language === 'en' ? 'What is this regarding?' : 'हे कशाबद्दल आहे?'}
+                    maxLength={200}
                   />
                 </div>
 
@@ -165,6 +177,7 @@ export default function Contact() {
                     onChange={handleChange}
                     placeholder={language === 'en' ? 'Tell us more...' : 'आम्हाला अधिक सांगा...'}
                     rows={5}
+                    maxLength={2000}
                     required
                   />
                 </div>
