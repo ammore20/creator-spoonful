@@ -252,18 +252,54 @@ const Index = () => {
                 'Other': 'इतर'
               };
 
+              const categoryIntros: Record<string, { en: string; mr: string }> = {
+                'Breakfast': {
+                  en: 'Start your day with authentic Marathi breakfast recipes that blend tradition with taste. From quick poha to hearty upma, discover dishes perfect for energizing mornings.',
+                  mr: 'पारंपरिक मराठी नाश्त्याच्या रेसिपींसह तुमचा दिवस सुरू करा. पोहे, उपमा आणि इतर चवदार पदार्थ जे तुमच्या सकाळला ऊर्जा देतील.'
+                },
+                'Snack': {
+                  en: 'Explore delicious Marathi snack recipes perfect for evening tea time or party gatherings. From crispy vada pav to savory bhajiya, find quick bites that satisfy every craving.',
+                  mr: 'संध्याकाळच्या चहासाठी किंवा पार्टीसाठी योग्य मराठी स्नॅक्स रेसिपी शोधा. वडा पाव पासून भजी पर्यंत चवदार पदार्थ.'
+                },
+                'Lunch': {
+                  en: 'Discover wholesome Marathi lunch recipes featuring traditional thalis, fragrant rice dishes, and flavorful curries. Complete meal solutions for family dining and special occasions.',
+                  mr: 'पारंपरिक थाळी, सुगंधी भात आणि चवदार भाज्या असलेल्या पौष्टिक मराठी दुपारच्या जेवणाच्या रेसिपी शोधा.'
+                },
+                'Dinner': {
+                  en: 'Find comforting Marathi dinner recipes that bring families together. From simple dal-bhaat to elaborate festive meals, create memorable evening dining experiences.',
+                  mr: 'कुटुंबाला एकत्र आणणाऱ्या मराठी रात्रीच्या जेवणाच्या रेसिपी शोधा. साध्या डाळ-भातापासून विशेष सणाच्या जेवणापर्यंत.'
+                },
+                'Dessert': {
+                  en: 'Indulge in traditional Marathi dessert recipes and sweet delicacies. From festive modaks to everyday kheer, satisfy your sweet tooth with authentic flavors.',
+                  mr: 'पारंपरिक मराठी गोड पदार्थांची रेसिपी आणि मिठाई शोधा. मोदकापासून खिरापर्यंत, प्रत्येक सणासुदीसाठी गोड पदार्थ.'
+                },
+                'Other': {
+                  en: 'Browse unique Marathi recipes that don\'t fit traditional categories but are equally delicious. Discover fusion dishes and creative cooking ideas from talented creators.',
+                  mr: 'पारंपरिक श्रेणीत न बसणाऱ्या पण तितक्याच चविष्ट मराठी रेसिपी शोधा. फ्यूजन पदार्थ आणि नाविन्यपूर्ण कल्पना.'
+                }
+              };
+
+              const intro = categoryIntros[mealType] || { en: '', mr: '' };
+
               return (
                 <section key={mealType} className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">{mealIcons[mealType]}</span>
-                    <div>
-                      <h3 className="text-2xl md:text-3xl font-bold text-foreground">
-                        {language === 'en' ? mealType : mealTranslations[mealType]}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {recipes.length} {language === 'en' ? 'recipes' : 'रेसिपी'}
-                      </p>
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-4xl">{mealIcons[mealType]}</span>
+                      <div>
+                        <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                          {language === 'en' ? mealType : mealTranslations[mealType]}
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          {recipes.length} {language === 'en' ? 'recipes' : 'रेसिपी'}
+                        </p>
+                      </div>
                     </div>
+                    {intro.en && (
+                      <p className="text-sm text-muted-foreground/90 leading-relaxed max-w-4xl mb-4 font-light">
+                        {language === 'en' ? intro.en : intro.mr}
+                      </p>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

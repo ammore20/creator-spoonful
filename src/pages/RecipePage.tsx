@@ -218,11 +218,16 @@ const RecipePage = () => {
     setRating(value);
   };
 
+  // Truncate description to 150 characters for meta description
+  const metaDescription = description.length > 150 
+    ? description.substring(0, 147) + '...' 
+    : description;
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={`${title} - Personalized Marathi Recipe by ${creator}`}
-        description={`Cook ${title} in authentic Marathi style. Watch video by ${creator}, get ingredients list, step-by-step instructions, and download the recipe instantly. Cook time: ${recipe.cookTime}.`}
+        title={`${title} | Authentic Marathi Recipe by RecipeMaker`}
+        description={metaDescription}
         image={recipe.thumbnailUrl}
         url={`/recipe/${recipe.id}`}
         type="article"
