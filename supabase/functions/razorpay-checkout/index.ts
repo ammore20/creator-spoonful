@@ -134,20 +134,37 @@ serve(async (req) => {
         );
       }
 
-      // Update subscription with payment details and set expiry based on amount
+      // Fetch the original subscription to get the amount from database
+      const { data: subscription, error: fetchError } = await supabaseClient
+        .from('subscriptions')
+        .select('amount')
+        .eq('razorpay_order_id', razorpay_order_id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError || !subscription) {
+        console.error('Failed to fetch subscription:', fetchError);
+        return new Response(
+          JSON.stringify({ error: 'Subscription not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Determine expiry based on amount from database (not client)
       let expiresAt: Date | null = null;
       
-      // Determine expiry based on amount
-      if (body.amount === 9900) {
+      if (subscription.amount === 9900) {
         // Monthly plan - 1 month
         expiresAt = new Date();
         expiresAt.setMonth(expiresAt.getMonth() + 1);
-      } else if (body.amount === 49900) {
+      } else if (subscription.amount === 49900) {
         // Yearly plan - 1 year
         expiresAt = new Date();
         expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       }
       // For lifetime (99900), expiresAt remains null
+
+      console.log(`Payment verified for user ${user.id}, order ${razorpay_order_id}, amount ${subscription.amount}, expiry: ${expiresAt?.toISOString() || 'lifetime'}`);
 
       const updateData: any = {
         razorpay_payment_id,
