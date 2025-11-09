@@ -110,6 +110,12 @@ export const Hero = ({ language }: HeroProps) => {
             <Button 
               size="lg" 
               className="bg-white text-primary hover:bg-white/90 shadow-warm text-lg px-10 py-6 ripple font-semibold"
+              onClick={() => {
+                const recipesSection = document.getElementById('recipes-section');
+                if (recipesSection) {
+                  recipesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
             >
               <ChefHat className="mr-2 w-6 h-6" />
               {language === 'en' ? 'Discover Recipes' : 'रेसिपी एक्सप्लोर करा'}

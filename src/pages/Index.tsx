@@ -184,7 +184,7 @@ const Index = () => {
         language={language}
       />
 
-      <main className="container mx-auto px-4 py-12">
+      <main id="recipes-section" className="container mx-auto px-4 py-12">
         {loading ? (
           <div className="text-center py-20">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
