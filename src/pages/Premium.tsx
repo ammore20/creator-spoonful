@@ -21,6 +21,9 @@ export default function Premium() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasPremium, setHasPremium] = useState(false);
+  const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null);
+  const [checkingPremium, setCheckingPremium] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -29,6 +32,9 @@ export default function Premium() {
       setUser(session?.user ?? null);
       if (session?.user) {
         checkAdminRole(session.user.id);
+        checkPremiumStatus(session.user.id);
+      } else {
+        setCheckingPremium(false);
       }
     });
 
@@ -37,7 +43,12 @@ export default function Premium() {
       if (session?.user) {
         setTimeout(() => {
           checkAdminRole(session.user.id);
+          checkPremiumStatus(session.user.id);
         }, 0);
+      } else {
+        setHasPremium(false);
+        setSubscriptionDetails(null);
+        setCheckingPremium(false);
       }
     });
 
@@ -56,6 +67,44 @@ export default function Premium() {
       setIsAdmin(!!data);
     } catch (error) {
       setIsAdmin(false);
+    }
+  };
+
+  const checkPremiumStatus = async (userId: string) => {
+    try {
+      setCheckingPremium(true);
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking premium status:', error);
+        setHasPremium(false);
+        setSubscriptionDetails(null);
+        return;
+      }
+
+      if (data) {
+        // Check if subscription is still valid
+        const now = new Date();
+        const isValid = !data.expires_at || new Date(data.expires_at) > now;
+        setHasPremium(isValid);
+        setSubscriptionDetails(isValid ? data : null);
+      } else {
+        setHasPremium(false);
+        setSubscriptionDetails(null);
+      }
+    } catch (error) {
+      console.error('Error checking premium status:', error);
+      setHasPremium(false);
+      setSubscriptionDetails(null);
+    } finally {
+      setCheckingPremium(false);
     }
   };
 
@@ -247,17 +296,74 @@ export default function Premium() {
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-hero bg-clip-text text-transparent">
-            {language === 'en' ? 'Unlock Premium Features' : 'प्रीमियम वैशिष्ट्ये अनलॉक करा'}
+            {hasPremium 
+              ? (language === 'en' ? 'You\'re a Premium Member!' : 'तुम्ही प्रीमियम सदस्य आहात!') 
+              : (language === 'en' ? 'Unlock Premium Features' : 'प्रीमियम वैशिष्ट्ये अनलॉक करा')
+            }
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {language === 'en' 
-              ? 'Access 1000+ premium recipes, smart tools, and AI-powered suggestions to enhance your cooking experience.'
-              : '1000+ प्रीमियम रेसिपी, स्मार्ट टूल्स आणि AI-आधारित सूचना मिळवून तुमचा कुकिंग अनुभव वाढवा.'}
+            {hasPremium
+              ? (language === 'en' 
+                  ? 'Thank you for being a premium member! Enjoy all exclusive features.'
+                  : 'प्रीमियम सदस्य असल्याबद्दल धन्यवाद! सर्व खास वैशिष्ट्यांचा आनंद घ्या.')
+              : (language === 'en' 
+                  ? 'Access 1000+ premium recipes, smart tools, and AI-powered suggestions to enhance your cooking experience.'
+                  : '1000+ प्रीमियम रेसिपी, स्मार्ट टूल्स आणि AI-आधारित सूचना मिळवून तुमचा कुकिंग अनुभव वाढवा.')
+            }
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-12">
-          {pricingPlans.map((plan, index) => (
+        {checkingPremium ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">
+              {language === 'en' ? 'Checking subscription status...' : 'सदस्यत्व स्थिती तपासत आहे...'}
+            </p>
+          </div>
+        ) : hasPremium && subscriptionDetails ? (
+          <Card className="max-w-2xl mx-auto mb-12 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 border-primary shadow-xl">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 rounded-full bg-gradient-hero flex items-center justify-center mx-auto mb-4">
+                <Crown className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-2xl">
+                {language === 'en' ? 'Active Premium Subscription' : 'सक्रिय प्रीमियम सदस्यत्व'}
+              </CardTitle>
+              <CardDescription className="text-lg mt-2">
+                {subscriptionDetails.expires_at 
+                  ? (language === 'en' 
+                      ? `Valid until ${new Date(subscriptionDetails.expires_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}`
+                      : `${new Date(subscriptionDetails.expires_at).toLocaleDateString('mr-IN', { year: 'numeric', month: 'long', day: 'numeric' })} पर्यंत वैध`)
+                  : (language === 'en' ? 'Lifetime Access' : 'आजीवन प्रवेश')
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-white/50 dark:bg-black/20 rounded-lg p-4 space-y-3">
+                {[
+                  language === 'en' ? '✓ Unlimited recipe saves' : '✓ असीम रेसिपी सेव्ह',
+                  language === 'en' ? '✓ AI recipe suggestions' : '✓ AI रेसिपी सूचना',
+                  language === 'en' ? '✓ Smart cooking timers' : '✓ स्मार्ट कुकिंग टाइमर',
+                  language === 'en' ? '✓ Print & copy recipes' : '✓ रेसिपी प्रिंट आणि कॉपी',
+                  language === 'en' ? '✓ Comment & rate recipes' : '✓ कमेंट आणि रेट रेसिपी',
+                  language === 'en' ? '✓ Ad-free experience' : '✓ जाहिरात-मुक्त अनुभव',
+                  language === 'en' ? '✓ Priority support' : '✓ प्राथमिकता समर्थन'
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-foreground">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <Button
+                onClick={() => navigate('/')}
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 h-12 text-lg"
+              >
+                {language === 'en' ? 'Start Cooking' : 'कुकिंग सुरू करा'}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-12">
+            {pricingPlans.map((plan, index) => (
             <Card 
               key={index} 
               className={`bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 shadow-warm relative ${
@@ -324,8 +430,9 @@ export default function Premium() {
                 </p>
               </CardContent>
             </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto mt-16">
           {features.map((feature, index) => (
