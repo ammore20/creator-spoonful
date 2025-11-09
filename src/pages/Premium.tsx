@@ -256,21 +256,7 @@ export default function Premium() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto mb-12">
-          {features.map((feature, index) => (
-            <Card key={index} className="bg-card/50 backdrop-blur-sm border-border hover:shadow-warm transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-gradient-hero flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle>{feature.title}</CardTitle>
-                <CardDescription>{feature.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-12">
           {pricingPlans.map((plan, index) => (
             <Card 
               key={index} 
@@ -337,6 +323,20 @@ export default function Premium() {
                     : 'Razorpay द्वारे सुरक्षित पेमेंट'}
                 </p>
               </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto mt-16">
+          {features.map((feature, index) => (
+            <Card key={index} className="bg-card/50 backdrop-blur-sm border-border hover:shadow-warm transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 rounded-lg bg-gradient-hero flex items-center justify-center mb-4">
+                  <feature.icon className="w-6 h-6 text-white" />
+                </div>
+                <CardTitle>{feature.title}</CardTitle>
+                <CardDescription>{feature.description}</CardDescription>
+              </CardHeader>
             </Card>
           ))}
         </div>
