@@ -49,11 +49,18 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
         .from('subscriptions')
         .select('*')
         .eq('user_id', userId)
-        .eq('status', 'completed')
-        .gte('expires_at', new Date().toISOString())
-        .single();
+        .in('status', ['active', 'completed'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      setHasPremium(!!data);
+      if (data) {
+        // Check if subscription is still valid (if expires_at exists)
+        const isValid = !data.expires_at || new Date(data.expires_at) > new Date();
+        setHasPremium(isValid);
+      } else {
+        setHasPremium(false);
+      }
     } catch (error) {
       setHasPremium(false);
     }
