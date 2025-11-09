@@ -117,9 +117,10 @@ export const Hero = ({ language }: HeroProps) => {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
+              onClick={() => navigate('/premium')}
             >
-              <Wand2 className="mr-2 w-6 h-6" />
-              {language === 'en' ? 'Let AI Pick For Me' : 'AI निवडू द्या'}
+              <Sparkles className="mr-2 w-6 h-6" />
+              {language === 'en' ? 'Subscribe at just ₹99/month' : 'फक्त ₹९९/महिना मध्ये सब्सक्राइब करा'}
             </Button>
           </div>
           
