@@ -6,6 +6,7 @@ import { Hero } from '@/components/Hero';
 import { FilterBar } from '@/components/FilterBar';
 import { RecipeCard } from '@/components/RecipeCard';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 
 const Index = () => {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
@@ -152,6 +153,23 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="RecipeMaker - Discover & Personalize Authentic Marathi Recipes"
+        description="RecipeMaker helps you discover and personalize authentic Marathi recipes with step-by-step videos, ingredients, and instructions. Explore recipes from top Marathi creators."
+        url="/"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "RecipeMaker",
+          "url": "https://recipemaker.in",
+          "description": "Discover and personalize authentic Marathi recipes with step-by-step videos",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://recipemaker.in/?search={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }}
+      />
       <Navbar
         onSearch={setSearchQuery}
         language={language}

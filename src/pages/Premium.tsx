@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from '@supabase/supabase-js';
@@ -217,6 +218,11 @@ export default function Premium() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-subtle">
+      <SEO
+        title="Premium Membership - Unlock Exclusive Marathi Recipes"
+        description="Subscribe to RecipeMaker Premium and get access to 1000+ exclusive Marathi recipes, save unlimited favorites, download recipes, AI-powered suggestions, and personalized meal planning. Plans starting at ₹99/month."
+        url="/premium"
+      />
       <Navbar onSearch={() => {}} language={language} onLanguageToggle={toggleLanguage} />
       
       <main className="flex-1 container mx-auto px-4 py-12">

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
@@ -10,6 +11,11 @@ export default function RefundPolicy() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-subtle">
+      <SEO
+        title="Refund & Cancellation Policy - RecipeMaker Premium"
+        description="Understand RecipeMaker's refund and cancellation policy for premium subscriptions. Learn about eligibility, refund process, timelines, and how to cancel your subscription."
+        url="/refund"
+      />
       <Navbar onSearch={() => {}} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} />
       
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">

@@ -16,6 +16,7 @@ import { PremiumPopup } from '@/components/recipe/PremiumPopup';
 import { CreatorCard } from '@/components/recipe/CreatorCard';
 import { CookingTimer } from '@/components/recipe/CookingTimer';
 import { NutritionalInfo } from '@/components/recipe/NutritionalInfo';
+import { SEO } from '@/components/SEO';
 import { toast } from '@/hooks/use-toast';
 import { useToast } from '@/hooks/use-toast';
 
@@ -219,6 +220,47 @@ const RecipePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={`${title} - Personalized Marathi Recipe by ${creator}`}
+        description={`Cook ${title} in authentic Marathi style. Watch video by ${creator}, get ingredients list, step-by-step instructions, and download the recipe instantly. Cook time: ${recipe.cookTime}.`}
+        image={recipe.thumbnailUrl}
+        url={`/recipe/${recipe.id}`}
+        type="article"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Recipe",
+          "name": title,
+          "description": description,
+          "image": recipe.thumbnailUrl,
+          "author": {
+            "@type": "Person",
+            "name": creator
+          },
+          "datePublished": new Date().toISOString(),
+          "prepTime": recipe.cookTime,
+          "cookTime": recipe.cookTime,
+          "totalTime": recipe.cookTime,
+          "recipeYield": `${recipe.servings} servings`,
+          "recipeCategory": recipe.mealType?.[0] || "Main Dish",
+          "recipeCuisine": recipe.cuisine?.[0] || "Marathi",
+          "recipeIngredient": recipe.ingredients,
+          "recipeInstructions": recipe.steps.map((step: string, index: number) => ({
+            "@type": "HowToStep",
+            "position": index + 1,
+            "text": step
+          })),
+          "video": {
+            "@type": "VideoObject",
+            "name": title,
+            "description": description,
+            "thumbnailUrl": recipe.thumbnailUrl,
+            "contentUrl": recipe.youtubeUrl,
+            "embedUrl": `https://www.youtube.com/embed/${recipe.videoId}`,
+            "uploadDate": new Date().toISOString()
+          },
+          "keywords": [...recipe.tasteProfile, ...recipe.mealType, ...recipe.cuisine, recipe.difficulty].join(", ")
+        }}
+      />
       <Navbar 
         onSearch={() => {}} 
         language={language}
