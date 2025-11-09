@@ -31,20 +31,45 @@ export const Hero = ({ language }: HeroProps) => {
   const [currentTagline, setCurrentTagline] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [hasPremium, setHasPremium] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check auth state
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        checkPremiumStatus(session.user.id);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        checkPremiumStatus(session.user.id);
+      } else {
+        setHasPremium(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const checkPremiumStatus = async (userId: string) => {
+    const { data } = await supabase
+      .from('subscriptions')
+      .select('status, expires_at')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .single();
+
+    if (data) {
+      const isExpired = new Date(data.expires_at) < new Date();
+      setHasPremium(!isExpired);
+    } else {
+      setHasPremium(false);
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -113,14 +138,16 @@ export const Hero = ({ language }: HeroProps) => {
               <ChefHat className="mr-2 w-6 h-6" />
               {language === 'en' ? 'Discover Recipes' : 'रेसिपी एक्सप्लोर करा'}
             </Button>
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
-              onClick={() => navigate('/premium')}
-            >
-              <Sparkles className="mr-2 w-6 h-6" />
-              {language === 'en' ? 'Subscribe at just ₹99/month' : 'फक्त ₹९९/महिना मध्ये सब्सक्राइब करा'}
-            </Button>
+            {!hasPremium && (
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
+                onClick={() => navigate('/premium')}
+              >
+                <Sparkles className="mr-2 w-6 h-6" />
+                {language === 'en' ? 'Subscribe at just ₹99/month' : 'फक्त ₹९९/महिना मध्ये सब्सक्राइब करा'}
+              </Button>
+            )}
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 text-sm md:text-base">
