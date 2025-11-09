@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChefHat, Sparkles, Wand2, LogIn } from 'lucide-react';
+import { ChefHat, Sparkles, LogIn } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -82,13 +82,6 @@ export const Hero = ({ language }: HeroProps) => {
             </div>
           )}
           
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-5 py-2.5 rounded-full mb-8 border border-white/20 shadow-lg animate-zoom-in">
-            <Sparkles className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium">
-              {language === 'en' ? 'AI-Powered Recipe Platform' : 'AI-चालित रेसिपी प्लॅटफॉर्म'}
-            </span>
-          </div>
-          
           <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight animate-fade-in">
             {language === 'en' 
               ? 'Discover Recipes from Your Favorite Creators'
@@ -134,10 +127,6 @@ export const Hero = ({ language }: HeroProps) => {
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
               <div className="w-2.5 h-2.5 bg-accent rounded-full animate-pulse" />
               <span className="font-medium">{language === 'en' ? '100+ Recipes' : '१००+ रेसिपी'}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-              <div className="w-2.5 h-2.5 bg-accent rounded-full animate-pulse" />
-              <span className="font-medium">{language === 'en' ? 'AI Transcribed' : 'AI प्रतिलेखित'}</span>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
               <div className="w-2.5 h-2.5 bg-accent rounded-full animate-pulse" />

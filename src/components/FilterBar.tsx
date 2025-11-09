@@ -1,7 +1,7 @@
 import { FilterOptions, TasteProfile, MealType, Cuisine, Mood } from '@/types/recipe';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Wand2, RotateCcw } from 'lucide-react';
+import { X, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface FilterBarProps {
@@ -108,14 +108,6 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
     });
   };
 
-  const handleAISuggest = () => {
-    toast({
-      title: language === 'en' ? '🤖 AI Suggest' : '🤖 AI सूचना',
-      description: language === 'en' ? 'Coming soon! AI will suggest recipes based on your preferences.' : 'लवकरच! AI तुमच्या प्राधान्यांवर आधारित रेसिपी सुचवेल.',
-      duration: 3000,
-    });
-  };
-
   const getDisplayText = (text: string) => {
     return language === 'mr' && translations[text] ? translations[text] : text;
   };
@@ -165,14 +157,6 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
           </div>
           
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              onClick={handleAISuggest}
-              className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 shadow-pill ripple"
-            >
-              <Wand2 className="w-4 h-4 mr-1" />
-              {language === 'en' ? 'AI Suggest' : 'AI सूचना'}
-            </Button>
             {activeFilterCount > 0 && (
               <Button
                 size="sm"
