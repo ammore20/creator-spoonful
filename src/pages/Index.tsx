@@ -7,12 +7,17 @@ import { FilterBar } from '@/components/FilterBar';
 import { RecipeCard } from '@/components/RecipeCard';
 import { Footer } from '@/components/Footer';
 import { SEO } from '@/components/SEO';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
   const [searchQuery, setSearchQuery] = useState('');
   const [recipes, setRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const RECIPES_PER_PAGE = 12;
   const [filters, setFilters] = useState<FilterOptions>({
     creator: [],
     tasteProfile: [],
@@ -22,19 +27,37 @@ const Index = () => {
   });
 
   useEffect(() => {
-    fetchRecipes();
+    fetchRecipes(true);
   }, []);
 
-  const fetchRecipes = async () => {
+  const fetchRecipes = async (reset = false) => {
     try {
-      const { data, error } = await supabase
+      const currentPage = reset ? 0 : page;
+      if (reset) {
+        setLoading(true);
+        setRecipes([]);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const from = currentPage * RECIPES_PER_PAGE;
+      const to = from + RECIPES_PER_PAGE - 1;
+
+      const { data, error, count } = await supabase
         .from('videos')
         .select(`
-          *,
+          id,
+          video_id,
+          title,
+          description,
+          thumbnail_url,
+          published_at,
+          extracted_recipe_json,
           creators (name)
-        `)
+        `, { count: 'exact' })
         .eq('status', 'done')
-        .order('published_at', { ascending: false });
+        .order('published_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
 
@@ -83,11 +106,25 @@ const Index = () => {
         return !hasInvalidTitle && hasEnoughIngredients && hasEnoughSteps;
       });
 
-      setRecipes(validRecipes);
+      if (reset) {
+        setRecipes(validRecipes);
+      } else {
+        setRecipes(prev => [...prev, ...validRecipes]);
+      }
+
+      setHasMore(validRecipes.length === RECIPES_PER_PAGE && (count || 0) > to + 1);
+      setPage(currentPage + 1);
     } catch (error) {
       console.error('Error fetching recipes:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMore = () => {
+    if (!loadingMore && hasMore) {
+      fetchRecipes(false);
     }
   };
 
@@ -209,9 +246,9 @@ const Index = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {recipes.slice(0, 3).map((recipe) => (
-                      <RecipeCard key={recipe.id} recipe={recipe} language={language} />
+                      <RecipeCard key={recipe.id} recipe={recipe} language={language} loading="eager" />
                     ))}
                   </div>
                 </div>
@@ -304,12 +341,33 @@ const Index = () => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {recipes.map((recipe) => (
-                      <RecipeCard key={recipe.id} recipe={recipe} language={language} />
+                      <RecipeCard key={recipe.id} recipe={recipe} language={language} loading="lazy" />
                     ))}
                   </div>
                 </section>
               );
             })}
+
+            {/* Load More Button */}
+            {hasMore && !loading && (
+              <div className="flex justify-center mt-12">
+                <Button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8"
+                >
+                  {loadingMore ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                      {language === 'en' ? 'Loading...' : 'लोड करत आहे...'}
+                    </>
+                  ) : (
+                    language === 'en' ? 'Load More Recipes' : 'अधिक रेसिपी लोड करा'
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-20 space-y-4">

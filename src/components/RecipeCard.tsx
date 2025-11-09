@@ -12,11 +12,13 @@ import logo from '@/assets/logo.png';
 interface RecipeCardProps {
   recipe: Recipe;
   language: 'en' | 'mr';
+  loading?: 'lazy' | 'eager';
 }
 
-export const RecipeCard = ({ recipe, language }: RecipeCardProps) => {
+export const RecipeCard = ({ recipe, language, loading = 'lazy' }: RecipeCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const { toast } = useToast();
 
   const title = language === 'mr' && recipe.titleMr ? recipe.titleMr : recipe.title;
@@ -61,11 +63,18 @@ export const RecipeCard = ({ recipe, language }: RecipeCardProps) => {
     <Card className="group overflow-hidden hover:shadow-warm transition-all duration-500 bg-gradient-card border-border relative">
       <Link to={`/recipe/${recipe.id}`}>
         <CardHeader className="p-0 relative">
-          <div className="aspect-video overflow-hidden relative">
+          <div className="aspect-video overflow-hidden relative bg-muted">
+            {!imageLoaded && (
+              <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted-foreground/10 to-muted"></div>
+            )}
             <img
               src={recipe.thumbnailUrl}
               alt={title}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              loading={loading}
+              onLoad={() => setImageLoaded(true)}
+              className={`w-full h-full object-cover group-hover:scale-110 transition-all duration-500 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
             />
             {/* Overlay on hover */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
