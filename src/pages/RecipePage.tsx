@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Clock, Users, ChefHat, Lock, ArrowLeft, 
   Bookmark, Share2, Play, Copy, Printer, Star,
-  MessageCircle, Timer, Flame, UtensilsCrossed
+  MessageCircle, Timer, Flame, UtensilsCrossed, Heart
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ServingAdjuster } from '@/components/recipe/ServingAdjuster';
@@ -33,15 +33,68 @@ const RecipePage = () => {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [activeTimer, setActiveTimer] = useState<number | null>(null);
   const [rating, setRating] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     fetchRecipe();
     fetchUser();
   }, [id]);
 
+  useEffect(() => {
+    if (user && id) {
+      checkIfFavorited(user.id);
+    }
+  }, [user, id]);
+
   const fetchUser = async () => {
     const { data } = await supabase.auth.getUser();
     setUser(data.user);
+  };
+
+  const checkIfFavorited = async (userId: string) => {
+    const { data } = await supabase
+      .from('user_favorites')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('recipe_id', id)
+      .maybeSingle();
+    
+    setIsFavorite(!!data);
+  };
+
+  const toggleFavorite = async () => {
+    if (!user) {
+      toast({
+        title: language === 'en' ? 'Sign in required' : 'साइन इन आवश्यक',
+        description: language === 'en' ? 'Please sign in to save favorites' : 'फेव्हरिट सेव्ह करण्यासाठी साइन इन करा',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isFavorite) {
+      await supabase
+        .from('user_favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('recipe_id', id);
+      
+      setIsFavorite(false);
+      toast({
+        description: `${language === 'en' ? 'Removed from favorites' : 'फेव्हरिटमधून काढले'}`,
+        duration: 2000,
+      });
+    } else {
+      await supabase
+        .from('user_favorites')
+        .insert({ user_id: user.id, recipe_id: id });
+      
+      setIsFavorite(true);
+      toast({
+        description: `❤️ ${language === 'en' ? 'Added to favorites' : 'फेव्हरिटमध्ये जोडले'}`,
+        duration: 2000,
+      });
+    }
   };
 
   const fetchRecipe = async () => {
@@ -63,8 +116,11 @@ const RecipePage = () => {
         const transformedRecipe = {
           id: data.video_id,
           title: recipeJson.title || data.title,
+          titleMr: recipeJson.title_mr,
           creator: data.creators?.name || 'Unknown',
+          creatorMr: recipeJson.creator_mr,
           description: data.description || '',
+          descriptionMr: recipeJson.description_mr,
           youtubeUrl: `https://www.youtube.com/watch?v=${data.video_id}`,
           videoId: data.video_id,
           thumbnailUrl: data.thumbnail_url,
@@ -76,7 +132,9 @@ const RecipePage = () => {
           cookTime: recipeJson.prep_time || '30 mins',
           servings: recipeJson.servings || 4,
           ingredients: Array.isArray(recipeJson.ingredients) ? recipeJson.ingredients : [],
+          ingredientsMr: Array.isArray(recipeJson.ingredients_mr) ? recipeJson.ingredients_mr : [],
           steps: Array.isArray(recipeJson.steps) ? recipeJson.steps : [],
+          stepsMr: Array.isArray(recipeJson.steps_mr) ? recipeJson.steps_mr : [],
           isPremium: false
         };
         setRecipe(transformedRecipe);
@@ -341,11 +399,18 @@ const RecipePage = () => {
           {/* Actions */}
           <div className="flex flex-wrap gap-3">
             <Button 
-              className="bg-gradient-hero shadow-warm hover-scale"
-              onClick={handlePremiumAction}
+              className={`shadow-warm hover-scale ${
+                isFavorite ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gradient-hero'
+              }`}
+              onClick={toggleFavorite}
             >
-              <Bookmark className="mr-2 w-4 h-4" />
-              {language === 'en' ? 'Save Recipe' : 'रेसिपी सेव्ह करा'}
+              <Heart 
+                className={`mr-2 w-4 h-4 ${isFavorite ? 'fill-white' : ''}`}
+              />
+              {isFavorite 
+                ? (language === 'en' ? 'Added to Favorites' : 'फेव्हरिटमध्ये जोडले')
+                : (language === 'en' ? 'Add to Favorites' : 'फेव्हरिटमध्ये जोडा')
+              }
             </Button>
             <Button variant="outline" className="hover-scale">
               <Share2 className="mr-2 w-4 h-4" />
