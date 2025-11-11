@@ -1,13 +1,15 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FilterOptions, MealType } from '@/types/recipe';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
-import { FilterBar } from '@/components/FilterBar';
 import { RecipeCard } from '@/components/RecipeCard';
-import { Footer } from '@/components/Footer';
+import { RecipeCardSkeleton } from '@/components/RecipeCardSkeleton';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
+
+const FilterBar = lazy(() => import('@/components/FilterBar').then(module => ({ default: module.FilterBar })));
+const Footer = lazy(() => import('@/components/Footer').then(module => ({ default: module.Footer })));
 
 const Index = () => {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
@@ -17,7 +19,7 @@ const Index = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const RECIPES_PER_PAGE = 12;
+  const RECIPES_PER_PAGE = 8;
   const [filters, setFilters] = useState<FilterOptions>({
     creator: [],
     tasteProfile: [],
@@ -215,19 +217,39 @@ const Index = () => {
       
       <Hero language={language} />
       
-      <FilterBar
-        filters={filters}
-        onFilterChange={setFilters}
-        language={language}
-      />
+      <Suspense fallback={<div className="h-20" />}>
+        <FilterBar
+          filters={filters}
+          onFilterChange={setFilters}
+          language={language}
+        />
+      </Suspense>
 
       <main id="recipes-section" className="container mx-auto px-4 py-12">
         {loading ? (
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-            <p className="text-xl text-muted-foreground mt-4">
-              {language === 'en' ? 'Loading delicious recipes...' : 'स्वादिष्ट रेसिपी लोड करत आहे...'}
-            </p>
+          <div className="space-y-16">
+            <div>
+              <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-2xl p-8 border border-border">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="text-4xl">✨</span>
+                  <div>
+                    <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                      {language === 'en' ? 'New Recipe Everyday' : 'दररोज नवीन रेसिपी'}
+                    </h2>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(3)].map((_, i) => (
+                    <RecipeCardSkeleton key={i} />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <RecipeCardSkeleton key={i} />
+              ))}
+            </div>
           </div>
         ) : filteredRecipes.length > 0 ? (
           <div className="space-y-16">
@@ -386,7 +408,9 @@ const Index = () => {
         )}
       </main>
 
-      <Footer language={language} />
+      <Suspense fallback={<div className="h-40" />}>
+        <Footer language={language} />
+      </Suspense>
     </div>
   );
 };

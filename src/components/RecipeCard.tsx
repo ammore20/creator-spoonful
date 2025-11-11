@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Recipe } from '@/types/recipe';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ interface RecipeCardProps {
   loading?: 'lazy' | 'eager';
 }
 
-export const RecipeCard = ({ recipe, language, loading = 'lazy' }: RecipeCardProps) => {
+const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -235,3 +235,5 @@ export const RecipeCard = ({ recipe, language, loading = 'lazy' }: RecipeCardPro
     </Card>
   );
 };
+
+export const RecipeCard = memo(RecipeCardComponent);
