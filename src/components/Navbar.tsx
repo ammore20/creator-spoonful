@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Menu, X, LogOut, Crown } from 'lucide-react';
+import { Search, Menu, X, LogOut, Crown, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -120,6 +120,18 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
             >
               {language === 'en' ? 'मराठी' : 'English'}
             </Button>
+            {user && (
+              <Link to="/favorites">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-red-500"
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  {language === 'en' ? 'Favorites' : 'आवडते'}
+                </Button>
+              </Link>
+            )}
             {!hasPremium && (
               <Link to="/premium">
                 <Button
@@ -184,6 +196,18 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
             >
               {language === 'en' ? 'मराठी' : 'English'}
             </Button>
+            {user && (
+              <Link to="/favorites" className="w-full">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="justify-start text-muted-foreground hover:text-red-500"
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  {language === 'en' ? 'Favorites' : 'आवडते'}
+                </Button>
+              </Link>
+            )}
             {!hasPremium && (
               <Link to="/premium" className="w-full">
                 <Button

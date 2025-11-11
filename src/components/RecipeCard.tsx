@@ -28,10 +28,24 @@ export const RecipeCard = ({ recipe, language, loading = 'lazy' }: RecipeCardPro
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        checkIfFavorited(session.user.id);
+      }
     });
-  }, []);
+  }, [recipe.id]);
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const checkIfFavorited = async (userId: string) => {
+    const { data } = await supabase
+      .from('user_favorites')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('recipe_id', recipe.id)
+      .maybeSingle();
+    
+    setIsFavorite(!!data);
+  };
+
+  const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -44,13 +58,31 @@ export const RecipeCard = ({ recipe, language, loading = 'lazy' }: RecipeCardPro
       return;
     }
 
-    setIsFavorite(!isFavorite);
-    toast({
-      description: !isFavorite 
-        ? `❤️ ${language === 'en' ? 'Added to favorites' : 'फेव्हरिटमध्ये जोडले'}`
-        : `${language === 'en' ? 'Removed from favorites' : 'फेव्हरिटमधून काढले'}`,
-      duration: 2000,
-    });
+    if (isFavorite) {
+      // Remove from favorites
+      await supabase
+        .from('user_favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('recipe_id', recipe.id);
+      
+      setIsFavorite(false);
+      toast({
+        description: `${language === 'en' ? 'Removed from favorites' : 'फेव्हरिटमधून काढले'}`,
+        duration: 2000,
+      });
+    } else {
+      // Add to favorites
+      await supabase
+        .from('user_favorites')
+        .insert({ user_id: user.id, recipe_id: recipe.id });
+      
+      setIsFavorite(true);
+      toast({
+        description: `❤️ ${language === 'en' ? 'Added to favorites' : 'फेव्हरिटमध्ये जोडले'}`,
+        duration: 2000,
+      });
+    }
   };
 
   const getSpiceLevel = () => {

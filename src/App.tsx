@@ -9,6 +9,7 @@ import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import SetupAdmin from "./pages/SetupAdmin";
 import Premium from "./pages/Premium";
+import Favorites from "./pages/Favorites";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import RefundPolicy from "./pages/RefundPolicy";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/setup-admin" element={<SetupAdmin />} />
           <Route path="/premium" element={<Premium />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/refund" element={<RefundPolicy />} />
