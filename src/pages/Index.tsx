@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { FilterOptions, MealType } from '@/types/recipe';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
@@ -7,6 +6,7 @@ import { RecipeCard } from '@/components/RecipeCard';
 import { RecipeCardSkeleton } from '@/components/RecipeCardSkeleton';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
+import { mockRecipes } from '@/data/recipes';
 
 const FilterBar = lazy(() => import('@/components/FilterBar').then(module => ({ default: module.FilterBar })));
 const Footer = lazy(() => import('@/components/Footer').then(module => ({ default: module.Footer })));
@@ -34,7 +34,6 @@ const Index = () => {
 
   const fetchRecipes = async (reset = false) => {
     try {
-      const currentPage = reset ? 0 : page;
       if (reset) {
         setLoading(true);
         setRecipes([]);
@@ -42,82 +41,15 @@ const Index = () => {
         setLoadingMore(true);
       }
 
-      const from = currentPage * RECIPES_PER_PAGE;
-      const to = from + RECIPES_PER_PAGE - 1;
+      // Simulate loading delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 300));
 
-      const { data, error, count } = await supabase
-        .from('videos')
-        .select(`
-          id,
-          video_id,
-          title,
-          description,
-          thumbnail_url,
-          published_at,
-          extracted_recipe_json,
-          creators (name)
-        `, { count: 'exact' })
-        .eq('status', 'done')
-        .order('published_at', { ascending: false })
-        .range(from, to);
-
-      if (error) throw error;
-
-      // Transform database records to recipe format
-      const transformedRecipes = data?.map((video: any) => {
-        const recipe = video.extracted_recipe_json as any || {};
-        return {
-          id: video.video_id,
-          title: recipe.title || video.title,
-          creator: video.creators?.name || 'Unknown',
-          description: video.description || '',
-          youtubeUrl: `https://www.youtube.com/watch?v=${video.video_id}`,
-          videoId: video.video_id,
-          thumbnailUrl: video.thumbnail_url,
-          tasteProfile: Array.isArray(recipe.taste_tags) ? recipe.taste_tags : [],
-          mealType: recipe.meal_type ? [recipe.meal_type] : [],
-          cuisine: recipe.cuisine ? [recipe.cuisine] : [],
-          mood: [],
-          difficulty: recipe.difficulty || 'Medium',
-          cookTime: recipe.prep_time || '30 mins',
-          servings: recipe.servings || 4,
-          ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
-          steps: Array.isArray(recipe.steps) ? recipe.steps : [],
-          isPremium: false
-        };
-      }) || [];
-
-      // Filter out invalid recipes
-      const validRecipes = transformedRecipes.filter((recipe) => {
-        const title = recipe.title.toLowerCase();
-        
-        // Check for invalid title patterns
-        const hasInvalidTitle = 
-          title.includes('no recipe') ||
-          title.includes('not found') ||
-          title.includes('no specific') ||
-          title === 'recipe' ||
-          title === 'cooking' ||
-          title === 'food';
-        
-        // Check for minimum content requirements
-        const hasEnoughIngredients = recipe.ingredients.length >= 5;
-        const hasEnoughSteps = recipe.steps.length >= 5;
-        
-        // Only include recipes that pass all validations
-        return !hasInvalidTitle && hasEnoughIngredients && hasEnoughSteps;
-      });
-
-      if (reset) {
-        setRecipes(validRecipes);
-      } else {
-        setRecipes(prev => [...prev, ...validRecipes]);
-      }
-
-      setHasMore(validRecipes.length === RECIPES_PER_PAGE && (count || 0) > to + 1);
-      setPage(currentPage + 1);
+      // Use original mock recipes instead of YouTube data
+      setRecipes(mockRecipes);
+      setHasMore(false); // No pagination for mock data
+      setPage(1);
     } catch (error) {
-      console.error('Error fetching recipes:', error);
+      console.error('Error loading recipes:', error);
     } finally {
       setLoading(false);
       setLoadingMore(false);
