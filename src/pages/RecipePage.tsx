@@ -18,12 +18,12 @@ import { CreatorCard } from '@/components/recipe/CreatorCard';
 import { CookingTimer } from '@/components/recipe/CookingTimer';
 import { NutritionalInfo } from '@/components/recipe/NutritionalInfo';
 import { SEO } from '@/components/SEO';
-import { toast } from '@/hooks/use-toast';
 import { useToast } from '@/hooks/use-toast';
 
 const RecipePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
   const [recipe, setRecipe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -111,7 +111,13 @@ const RecipePage = () => {
         setOriginalServings(foundRecipe.servings);
         setServings(foundRecipe.servings);
       } else {
-        console.error('Recipe not found');
+        console.error('Recipe not found with ID:', id);
+        console.error('Available IDs:', mockRecipes.map(r => r.id));
+        toast({
+          title: language === 'en' ? 'Recipe not found' : 'रेसिपी सापडली नाही',
+          description: language === 'en' ? 'This recipe does not exist' : 'ही रेसिपी अस्तित्वात नाही',
+          variant: 'destructive',
+        });
         navigate('/');
       }
     } catch (error) {
