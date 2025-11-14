@@ -1,4 +1,10 @@
 import { Recipe } from '@/types/recipe';
+import masalaBhaatImg from '@/assets/masala-bhaat.jpg';
+import ukadicherModakImg from '@/assets/ukadiche-modak.jpg';
+import kandaPohaImg from '@/assets/kanda-poha.jpg';
+import misalPavImg from '@/assets/misal-pav.jpg';
+import vadaPavImg from '@/assets/vada-pav.jpg';
+import puranPoliImg from '@/assets/puran-poli.jpg';
 
 export const mockRecipes: Recipe[] = [
   {
@@ -11,7 +17,7 @@ export const mockRecipes: Recipe[] = [
     descriptionMr: 'सुगंधी मसाल्यांसह बनवलेला महाराष्ट्रीय तांदूळ पदार्थ.',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     videoId: 'dQw4w9WgXcQ',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1596797038530-2c107229654b?w=800',
+    thumbnailUrl: masalaBhaatImg,
     tasteProfile: ['Spicy', 'Savory'],
     mealType: ['Lunch', 'Dinner'],
     cuisine: ['Maharashtrian'],
@@ -71,7 +77,7 @@ export const mockRecipes: Recipe[] = [
     descriptionMr: 'नारळ-गुळाच्या सारणासह तांदळाच्या पिठाचे गोड मोदक.',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     videoId: 'dQw4w9WgXcQ',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1589828805839-8b4dcb659c6e?w=800',
+    thumbnailUrl: ukadicherModakImg,
     tasteProfile: ['Sweet'],
     mealType: ['Dessert', 'Snack'],
     cuisine: ['Maharashtrian'],
@@ -125,7 +131,7 @@ export const mockRecipes: Recipe[] = [
     descriptionMr: 'शेंगदाणा आणि कोथिंबिरीसह हलका नाश्ता.',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     videoId: 'dQw4w9WgXcQ',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800',
+    thumbnailUrl: kandaPohaImg,
     tasteProfile: ['Savory', 'Tangy'],
     mealType: ['Breakfast', 'Snack'],
     cuisine: ['Maharashtrian', 'North Indian'],
@@ -167,7 +173,7 @@ export const mockRecipes: Recipe[] = [
     descriptionMr: 'पावासह सर्व्ह केलेला महाराष्ट्रीय तिखट कट.',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     videoId: 'dQw4w9WgXcQ',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800',
+    thumbnailUrl: misalPavImg,
     tasteProfile: ['Spicy', 'Savory', 'Tangy'],
     mealType: ['Breakfast', 'Lunch', 'Snack'],
     cuisine: ['Maharashtrian'],
@@ -208,7 +214,7 @@ export const mockRecipes: Recipe[] = [
     descriptionMr: 'मुंबईचे प्रसिद्ध स्ट्रीट फूड.',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     videoId: 'dQw4w9WgXcQ',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1626776876729-bab4eda639c7?w=800',
+    thumbnailUrl: vadaPavImg,
     tasteProfile: ['Spicy', 'Savory'],
     mealType: ['Snack'],
     cuisine: ['Maharashtrian'],
@@ -249,7 +255,7 @@ export const mockRecipes: Recipe[] = [
     descriptionMr: 'डाळीच्या पुरणाची गोड पोळी.',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     videoId: 'dQw4w9WgXcQ',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800',
+    thumbnailUrl: puranPoliImg,
     tasteProfile: ['Sweet'],
     mealType: ['Dessert', 'Snack'],
     cuisine: ['Maharashtrian'],
