@@ -5,6 +5,12 @@ import kandaPohaImg from '@/assets/kanda-poha.jpg';
 import misalPavImg from '@/assets/misal-pav.jpg';
 import vadaPavImg from '@/assets/vada-pav.jpg';
 import puranPoliImg from '@/assets/puran-poli.jpg';
+import thalipeethImg from '@/assets/thalipeeth.jpg';
+import sabudanaKhichdiImg from '@/assets/sabudana-khichdi.jpg';
+import aamtiImg from '@/assets/aamti.jpg';
+import bhariImg from '@/assets/bhakri.jpg';
+import shrikhandImg from '@/assets/shrikhand.jpg';
+import batataVadaImg from '@/assets/batata-vada.jpg';
 
 export const mockRecipes: Recipe[] = [
   {
@@ -282,5 +288,375 @@ export const mockRecipes: Recipe[] = [
       'Cook on tawa with ghee until golden'
     ],
     isPremium: true
+  },
+  {
+    id: '7',
+    title: 'Thalipeeth (Multi-grain Flatbread)',
+    titleMr: 'थालीपीठ',
+    creator: "Sarita's Kitchen",
+    creatorMr: 'सरिताज किचन',
+    description: 'Nutritious multi-grain flatbread made with jowar, bajra, and wheat flour. A healthy breakfast staple of Maharashtra.',
+    descriptionMr: 'ज्वारी, बाजरी आणि गव्हाच्या पिठाची पौष्टिक भाकरी.',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    videoId: 'dQw4w9WgXcQ',
+    thumbnailUrl: thalipeethImg,
+    tasteProfile: ['Savory', 'Spicy'],
+    mealType: ['Breakfast', 'Lunch'],
+    cuisine: ['Maharashtrian'],
+    mood: ['Comfort', 'Traditional'],
+    difficulty: 'Medium',
+    cookTime: '25 mins',
+    servings: 4,
+    ingredients: [
+      '1 cup jowar flour',
+      '1 cup bajra flour',
+      '1/2 cup wheat flour',
+      '1 onion, finely chopped',
+      '2 green chilies, chopped',
+      '1/2 cup fresh coriander',
+      '1 tsp cumin seeds',
+      '1/2 tsp turmeric',
+      'Salt to taste',
+      'Oil for cooking'
+    ],
+    ingredientsMr: [
+      '१ कप ज्वारीचं पीठ',
+      '१ कप बाजरीचं पीठ',
+      '१/२ कप गव्हाचं पीठ',
+      '१ कांदा',
+      '२ हिरव्या मिरच्या',
+      '१/२ कप कोथिंबीर',
+      '१ चमचा जिरं',
+      '१/२ चमचा हळद',
+      'चवीनुसार मीठ',
+      'शिजवण्यासाठी तेल'
+    ],
+    steps: [
+      'Mix all flours in a large bowl',
+      'Add chopped onions, chilies, and coriander',
+      'Add cumin, turmeric, and salt',
+      'Mix with water to form a thick dough',
+      'Take a portion and spread on hot tawa',
+      'Make a hole in center, drizzle oil',
+      'Cook until both sides are golden brown',
+      'Serve hot with butter and chutney'
+    ],
+    stepsMr: [
+      'सर्व पिठं एका वाटीत मिक्स करा',
+      'कांदा, मिरची आणि कोथिंबीर घाला',
+      'जिरं, हळद आणि मीठ घाला',
+      'पाण्याने जाड पीठ भिजवा',
+      'गरम तव्यावर पीठ पसरवा',
+      'मध्यभागी छिद्र करून तेल घाला',
+      'दोन्ही बाजू गोल्डन होईपर्यंत शिजवा',
+      'लोणी आणि चटणीसह सर्व्ह करा'
+    ],
+    isPremium: false
+  },
+  {
+    id: '8',
+    title: 'Sabudana Khichdi (Tapioca Pearls)',
+    titleMr: 'साबुदाणा खिचडी',
+    creator: "Sarita's Kitchen",
+    creatorMr: 'सरिताज किचन',
+    description: 'Light and fluffy tapioca pearl dish with peanuts and potatoes. Perfect fasting food that\'s absolutely delicious.',
+    descriptionMr: 'शेंगदाणा आणि बटाट्यासह साबुदाण्याची हलकी खिचडी.',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    videoId: 'dQw4w9WgXcQ',
+    thumbnailUrl: sabudanaKhichdiImg,
+    tasteProfile: ['Savory', 'Tangy'],
+    mealType: ['Breakfast', 'Snack'],
+    cuisine: ['Maharashtrian'],
+    mood: ['Quick Bite', 'Traditional'],
+    difficulty: 'Easy',
+    cookTime: '20 mins',
+    servings: 3,
+    ingredients: [
+      '2 cups sabudana (tapioca pearls)',
+      '1 cup roasted peanuts, crushed',
+      '2 potatoes, boiled and cubed',
+      '2 green chilies, chopped',
+      '10 curry leaves',
+      '1/2 tsp cumin seeds',
+      'Rock salt to taste',
+      '2 tbsp ghee or oil',
+      'Fresh coriander',
+      'Lemon juice'
+    ],
+    ingredientsMr: [
+      '२ कप साबुदाणे',
+      '१ कप शेंगदाणे',
+      '२ बटाटे',
+      '२ हिरव्या मिरच्या',
+      '१० कढीपत्ता',
+      '१/२ चमचा जिरं',
+      'चवीनुसार सेंधा मीठ',
+      '२ टेबलस्पून तूप',
+      'कोथिंबीर',
+      'लिंबाचा रस'
+    ],
+    steps: [
+      'Soak sabudana for 4-5 hours, drain well',
+      'Heat ghee, add cumin and curry leaves',
+      'Add green chilies and boiled potatoes',
+      'Add drained sabudana and mix gently',
+      'Add crushed peanuts and salt',
+      'Cook on low heat for 5-7 minutes',
+      'Add lemon juice and coriander',
+      'Serve hot with curd'
+    ],
+    stepsMr: [
+      'साबुदाणे ४-५ तास भिजवा',
+      'तूप गरम करून जिरं आणि कढीपत्ता घाला',
+      'मिरच्या आणि बटाटे घाला',
+      'साबुदाणे हलकेच मिक्स करा',
+      'शेंगदाणे आणि मीठ घाला',
+      'मंद आचेवर ५-७ मिनिटे शिजवा',
+      'लिंबाचा रस आणि कोथिंबीर घाला',
+      'दह्यासह गरमागरम खा'
+    ],
+    isPremium: false
+  },
+  {
+    id: '9',
+    title: 'Aamti (Maharashtrian Dal)',
+    titleMr: 'आमटी',
+    creator: "Sarita's Kitchen",
+    creatorMr: 'सरिताज किचन',
+    description: 'Traditional sweet and tangy lentil curry with goda masala. A comforting dal that pairs perfectly with rice.',
+    descriptionMr: 'गोड आणि आंबट डाळीची भाजी गोड मसाल्यासह.',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    videoId: 'dQw4w9WgXcQ',
+    thumbnailUrl: aamtiImg,
+    tasteProfile: ['Savory', 'Tangy', 'Sweet'],
+    mealType: ['Lunch', 'Dinner'],
+    cuisine: ['Maharashtrian'],
+    mood: ['Comfort', 'Traditional'],
+    difficulty: 'Easy',
+    cookTime: '35 mins',
+    servings: 4,
+    ingredients: [
+      '1 cup toor dal (pigeon peas)',
+      '1 tomato, chopped',
+      '1 tbsp jaggery',
+      '1 tbsp tamarind paste',
+      '1 tsp goda masala',
+      '1/2 tsp turmeric',
+      '1/2 tsp mustard seeds',
+      '10 curry leaves',
+      'Fresh coriander',
+      '2 tbsp ghee',
+      'Salt to taste'
+    ],
+    ingredientsMr: [
+      '१ कप तूर डाळ',
+      '१ टोमॅटो',
+      '१ टेबलस्पून गूळ',
+      '१ टेबलस्पून चिंच',
+      '१ चमचा गोड मसाला',
+      '१/२ चमचा हळद',
+      '१/२ चमचा मोहरी',
+      '१० कढीपत्ता',
+      'कोथिंबीर',
+      '२ टेबलस्पून तूप',
+      'चवीनुसार मीठ'
+    ],
+    steps: [
+      'Pressure cook dal with turmeric until soft',
+      'Mash dal and add water to thin consistency',
+      'Add chopped tomato, jaggery, and tamarind',
+      'Add goda masala and salt',
+      'Simmer for 10 minutes',
+      'Temper with mustard seeds and curry leaves',
+      'Add tempering to dal',
+      'Garnish with coriander and serve with rice'
+    ],
+    stepsMr: [
+      'डाळ हळदीसह कुकरमध्ये शिजवा',
+      'डाळ मळून पातळ करा',
+      'टोमॅटो, गूळ आणि चिंच घाला',
+      'गोड मसाला आणि मीठ घाला',
+      '१० मिनिटे उकळू द्या',
+      'मोहरी आणि कढीपत्त्याची फोडणी करा',
+      'फोडणी डाळीत घाला',
+      'कोथिंबीर घालून भाताबरोबर खा'
+    ],
+    isPremium: false
+  },
+  {
+    id: '10',
+    title: 'Bhakri (Millet Flatbread)',
+    titleMr: 'भाकरी',
+    creator: "Sarita's Kitchen",
+    creatorMr: 'सरिताज किचन',
+    description: 'Rustic whole grain flatbread made with jowar or bajra. A nutritious traditional bread of rural Maharashtra.',
+    descriptionMr: 'ज्वारी किंवा बाजरीची पारंपरिक पौष्टिक भाकरी.',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    videoId: 'dQw4w9WgXcQ',
+    thumbnailUrl: bhariImg,
+    tasteProfile: ['Savory'],
+    mealType: ['Lunch', 'Dinner'],
+    cuisine: ['Maharashtrian'],
+    mood: ['Traditional', 'Comfort'],
+    difficulty: 'Medium',
+    cookTime: '20 mins',
+    servings: 6,
+    ingredients: [
+      '3 cups jowar flour (or bajra)',
+      '1 tsp salt',
+      'Warm water as needed',
+      'Ghee for serving'
+    ],
+    ingredientsMr: [
+      '३ कप ज्वारीचं पीठ',
+      '१ चमचा मीठ',
+      'गरम पाणी आवश्यकतेनुसार',
+      'सर्व्ह करण्यासाठी तूप'
+    ],
+    steps: [
+      'Mix flour with salt',
+      'Add warm water gradually to make soft dough',
+      'Let dough rest for 10 minutes',
+      'Take a ball of dough',
+      'Pat and shape into a thick round disc',
+      'Cook on hot tawa until both sides have brown spots',
+      'Serve hot with ghee and curry'
+    ],
+    stepsMr: [
+      'पीठ आणि मीठ मिक्स करा',
+      'गरम पाणी घालून मळून घ्या',
+      'पीठ १० मिनिटे बाजूला ठेवा',
+      'पिठाचा गोळा घ्या',
+      'हाताने गोलाकार भाकरी बनवा',
+      'गरम तव्यावर शेकून घ्या',
+      'तुपासह गरमागरम खा'
+    ],
+    isPremium: false
+  },
+  {
+    id: '11',
+    title: 'Shrikhand (Sweetened Yogurt)',
+    titleMr: 'श्रीखंड',
+    creator: "Sarita's Kitchen",
+    creatorMr: 'सरिताज किचन',
+    description: 'Creamy sweetened hung curd dessert flavored with saffron and cardamom. A festive favorite across Maharashtra.',
+    descriptionMr: 'केशर आणि वेलचीसह गोड दहीचा मलईदार डेझर्ट.',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    videoId: 'dQw4w9WgXcQ',
+    thumbnailUrl: shrikhandImg,
+    tasteProfile: ['Sweet'],
+    mealType: ['Dessert'],
+    cuisine: ['Maharashtrian'],
+    mood: ['Festive', 'Party'],
+    difficulty: 'Easy',
+    cookTime: '15 mins',
+    servings: 6,
+    ingredients: [
+      '4 cups thick curd (hung overnight)',
+      '1 cup powdered sugar',
+      'A pinch of saffron',
+      '1/2 tsp cardamom powder',
+      '2 tbsp milk',
+      'Chopped pistachios and almonds',
+      'A few saffron strands for garnish'
+    ],
+    ingredientsMr: [
+      '४ कप दही (गाळलेला)',
+      '१ कप साखर',
+      'केशर',
+      '१/२ चमचा वेलची पूड',
+      '२ टेबलस्पून दूध',
+      'पिस्ता आणि बदाम',
+      'सजावटीसाठी केशर'
+    ],
+    steps: [
+      'Hang thick curd in muslin cloth overnight',
+      'Collect hung curd in a bowl',
+      'Warm milk and soak saffron in it',
+      'Add powdered sugar to hung curd',
+      'Beat until smooth and creamy',
+      'Add saffron milk and cardamom',
+      'Mix well and refrigerate for 2 hours',
+      'Garnish with nuts and serve chilled'
+    ],
+    stepsMr: [
+      'दही रात्रभर गाळून घ्या',
+      'गाळलेले दही वाटीत काढा',
+      'दुधात केशर भिजवा',
+      'साखर घालून मिक्स करा',
+      'मळून मलईदार करा',
+      'केशर आणि वेलची घाला',
+      'चांगले मिक्स करून थंड करा',
+      'ड्रायफ्रूट घालून सर्व्ह करा'
+    ],
+    isPremium: true
+  },
+  {
+    id: '12',
+    title: 'Batata Vada (Potato Fritters)',
+    titleMr: 'बटाटा वडा',
+    creator: "Sarita's Kitchen",
+    creatorMr: 'सरिताज किचन',
+    description: 'Crispy golden potato fritters with a spicy filling. Mumbai\'s favorite tea-time snack served with chutneys.',
+    descriptionMr: 'तिखट बटाट्याचे कुरकुरीत वडे. चटणीसह सर्व्ह करा.',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    videoId: 'dQw4w9WgXcQ',
+    thumbnailUrl: batataVadaImg,
+    tasteProfile: ['Spicy', 'Savory'],
+    mealType: ['Snack'],
+    cuisine: ['Maharashtrian'],
+    mood: ['Party', 'Quick Bite'],
+    difficulty: 'Medium',
+    cookTime: '35 mins',
+    servings: 8,
+    ingredients: [
+      '6 large potatoes, boiled and mashed',
+      '1 cup besan (gram flour)',
+      '2-3 green chilies, chopped',
+      '1 tsp ginger paste',
+      '1/2 tsp turmeric',
+      '1 tsp mustard seeds',
+      '10 curry leaves',
+      '1/4 tsp asafoetida',
+      'Fresh coriander',
+      'Oil for deep frying',
+      'Salt to taste'
+    ],
+    ingredientsMr: [
+      '६ मोठे बटाटे',
+      '१ कप बेसन',
+      '२-३ हिरव्या मिरच्या',
+      '१ चमचा आले',
+      '१/२ चमचा हळद',
+      '१ चमचा मोहरी',
+      '१० कढीपत्ता',
+      '१/४ चमचा हिंग',
+      'कोथिंबीर',
+      'तळण्यासाठी तेल',
+      'चवीनुसार मीठ'
+    ],
+    steps: [
+      'Heat oil, add mustard, curry leaves, asafoetida',
+      'Add ginger, chilies, and turmeric',
+      'Add to mashed potatoes with coriander and salt',
+      'Mix well and make round balls',
+      'Prepare thick batter with besan and water',
+      'Heat oil for deep frying',
+      'Dip potato balls in batter',
+      'Deep fry until golden brown',
+      'Serve hot with green chutney'
+    ],
+    stepsMr: [
+      'तेल गरम करून मोहरी, कढीपत्ता, हिंग घाला',
+      'आले, मिरची आणि हळद घाला',
+      'बटाट्यात कोथिंबीर आणि मीठ घाला',
+      'मिक्स करून गोळे बनवा',
+      'बेसनाचा जाड पीठ भिजवा',
+      'तेल गरम करा',
+      'बटाट्याचे गोळे पिठात बुडवा',
+      'गोल्डन होईपर्यंत तळा',
+      'हिरव्या चटणीसह सर्व्ह करा'
+    ],
+    isPremium: false
   }
 ];
