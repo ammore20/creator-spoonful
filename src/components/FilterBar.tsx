@@ -96,7 +96,6 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
 
   const clearAllFilters = () => {
     onFilterChange({
-      creator: [],
       tasteProfile: [],
       mealType: [],
       cuisine: [],
@@ -250,7 +249,7 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
                   key={`${category}-${value}`}
                   variant="secondary"
                   className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors px-3 py-1.5"
-                  onClick={() => toggleFilter(category as keyof FilterOptions, value)}
+                  onClick={() => toggleFilter(category as keyof FilterOptions, value as any)}
                 >
                   <span className="mr-1">{filterIcons[value]}</span>
                   {getDisplayText(value)}

@@ -14,7 +14,6 @@ import {
 import { Navbar } from '@/components/Navbar';
 import { ServingAdjuster } from '@/components/recipe/ServingAdjuster';
 import { PremiumPopup } from '@/components/recipe/PremiumPopup';
-import { CreatorCard } from '@/components/recipe/CreatorCard';
 import { CookingTimer } from '@/components/recipe/CookingTimer';
 import { NutritionalInfo } from '@/components/recipe/NutritionalInfo';
 import { SEO } from '@/components/SEO';
@@ -418,9 +417,6 @@ const RecipePage = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Creator Info */}
-        <CreatorCard name={creator} language={language} />
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Ingredients */}

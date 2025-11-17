@@ -22,7 +22,6 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
   const { toast } = useToast();
 
   const title = language === 'mr' && recipe.titleMr ? recipe.titleMr : recipe.title;
-  const creator = language === 'mr' && recipe.creatorMr ? recipe.creatorMr : recipe.creator;
   const description = language === 'mr' && recipe.descriptionMr ? recipe.descriptionMr : recipe.description;
 
   useEffect(() => {
@@ -115,11 +114,6 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
               </div>
             </div>
             
-            {/* Creator Avatar Badge */}
-            <div className="absolute top-3 left-3 bg-white rounded-full p-1 shadow-lg">
-              <img src={logo} alt={creator} className="w-8 h-8 rounded-full" />
-            </div>
-
             {/* Premium Badge */}
             {recipe.isPremium && (
               <div className="absolute top-3 right-3 bg-accent text-accent-foreground px-3 py-1.5 rounded-full flex items-center gap-1 text-sm font-semibold shadow-lg">
@@ -161,11 +155,6 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
         <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
           {description}
         </p>
-        
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 pb-4 border-b border-border">
-          <ChefHat className="w-4 h-4 text-primary" />
-          <span className="font-medium">{creator}</span>
-        </div>
 
         {/* Info Chips */}
         <div className="flex flex-wrap gap-2 mb-4">

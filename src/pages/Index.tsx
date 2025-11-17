@@ -21,7 +21,6 @@ const Index = () => {
   const [hasMore, setHasMore] = useState(true);
   const RECIPES_PER_PAGE = 8;
   const [filters, setFilters] = useState<FilterOptions>({
-    creator: [],
     tasteProfile: [],
     mealType: [],
     cuisine: [],
@@ -72,10 +71,6 @@ const Index = () => {
         (recipe.titleMr && recipe.titleMr.toLowerCase().includes(searchLower)) ||
         (recipe.descriptionMr && recipe.descriptionMr.toLowerCase().includes(searchLower));
 
-      const matchesCreator =
-        filters.creator.length === 0 ||
-        filters.creator.includes(recipe.creator);
-
       const matchesTaste =
         filters.tasteProfile.length === 0 ||
         filters.tasteProfile.some((taste) => recipe.tasteProfile.includes(taste));
@@ -94,7 +89,6 @@ const Index = () => {
 
       return (
         matchesSearch &&
-        matchesCreator &&
         matchesTaste &&
         matchesMeal &&
         matchesCuisine &&
