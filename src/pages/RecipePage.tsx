@@ -1,7 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { mockRecipes } from '@/data/recipes';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,15 +13,16 @@ import {
 import { Navbar } from '@/components/Navbar';
 import { ServingAdjuster } from '@/components/recipe/ServingAdjuster';
 import { PremiumPopup } from '@/components/recipe/PremiumPopup';
+import { CreatorCard } from '@/components/recipe/CreatorCard';
 import { CookingTimer } from '@/components/recipe/CookingTimer';
 import { NutritionalInfo } from '@/components/recipe/NutritionalInfo';
 import { SEO } from '@/components/SEO';
+import { toast } from '@/hooks/use-toast';
 import { useToast } from '@/hooks/use-toast';
 
 const RecipePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
   const [recipe, setRecipe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -99,28 +99,50 @@ const RecipePage = () => {
 
   const fetchRecipe = async () => {
     try {
-      // Simulate loading delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const { data, error } = await supabase
+        .from('videos')
+        .select(`
+          *,
+          creators (name)
+        `)
+        .eq('video_id', id)
+        .eq('status', 'done')
+        .single();
 
-      // Find recipe from mock data
-      const foundRecipe = mockRecipes.find(r => r.id === id);
+      if (error) throw error;
 
-      if (foundRecipe) {
-        setRecipe(foundRecipe);
-        setOriginalServings(foundRecipe.servings);
-        setServings(foundRecipe.servings);
-      } else {
-        console.error('Recipe not found with ID:', id);
-        console.error('Available IDs:', mockRecipes.map(r => r.id));
-        toast({
-          title: language === 'en' ? 'Recipe not found' : 'रेसिपी सापडली नाही',
-          description: language === 'en' ? 'This recipe does not exist' : 'ही रेसिपी अस्तित्वात नाही',
-          variant: 'destructive',
-        });
-        navigate('/');
+      if (data) {
+        const recipeJson = data.extracted_recipe_json as any || {};
+        const transformedRecipe = {
+          id: data.video_id,
+          title: recipeJson.title || data.title,
+          titleMr: recipeJson.title_mr,
+          creator: data.creators?.name || 'Unknown',
+          creatorMr: recipeJson.creator_mr,
+          description: data.description || '',
+          descriptionMr: recipeJson.description_mr,
+          youtubeUrl: `https://www.youtube.com/watch?v=${data.video_id}`,
+          videoId: data.video_id,
+          thumbnailUrl: data.thumbnail_url,
+          tasteProfile: Array.isArray(recipeJson.taste_tags) ? recipeJson.taste_tags : [],
+          mealType: recipeJson.meal_type ? [recipeJson.meal_type] : [],
+          cuisine: recipeJson.cuisine ? [recipeJson.cuisine] : [],
+          mood: [],
+          difficulty: recipeJson.difficulty || 'Medium',
+          cookTime: recipeJson.prep_time || '30 mins',
+          servings: recipeJson.servings || 4,
+          ingredients: Array.isArray(recipeJson.ingredients) ? recipeJson.ingredients : [],
+          ingredientsMr: Array.isArray(recipeJson.ingredients_mr) ? recipeJson.ingredients_mr : [],
+          steps: Array.isArray(recipeJson.steps) ? recipeJson.steps : [],
+          stepsMr: Array.isArray(recipeJson.steps_mr) ? recipeJson.steps_mr : [],
+          isPremium: false
+        };
+        setRecipe(transformedRecipe);
+        setServings(transformedRecipe.servings);
+        setOriginalServings(transformedRecipe.servings);
       }
     } catch (error) {
-      console.error('Error loading recipe:', error);
+      console.error('Error fetching recipe:', error);
     } finally {
       setLoading(false);
     }
@@ -417,6 +439,9 @@ const RecipePage = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Creator Info */}
+        <CreatorCard name={creator} language={language} />
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Ingredients */}

@@ -7,6 +7,8 @@ export interface Recipe {
   id: string;
   title: string;
   titleMr?: string; // Marathi translation
+  creator: string;
+  creatorMr?: string;
   description: string;
   descriptionMr?: string;
   youtubeUrl: string;
@@ -19,8 +21,6 @@ export interface Recipe {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   cookTime: string; // e.g., "30 mins"
   servings: number;
-  quantityInfo?: string; // e.g., "Makes 12 pieces" for quantity-based recipes
-  quantityInfoMr?: string;
   ingredients: string[];
   ingredientsMr?: string[];
   steps: string[];
@@ -29,6 +29,7 @@ export interface Recipe {
 }
 
 export interface FilterOptions {
+  creator: string[];
   tasteProfile: TasteProfile[];
   mealType: MealType[];
   cuisine: Cuisine[];
