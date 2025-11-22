@@ -184,6 +184,33 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          recipe_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          recipe_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          recipe_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           amount: number

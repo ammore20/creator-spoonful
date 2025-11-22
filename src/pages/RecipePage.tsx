@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Clock, Users, ChefHat, Lock, ArrowLeft, 
   Bookmark, Share2, Play, Copy, Printer, Star,
-  MessageCircle, Timer, Flame, UtensilsCrossed, Heart
+  Timer, Flame, UtensilsCrossed, Heart
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ServingAdjuster } from '@/components/recipe/ServingAdjuster';
@@ -16,6 +16,7 @@ import { PremiumPopup } from '@/components/recipe/PremiumPopup';
 import { CreatorCard } from '@/components/recipe/CreatorCard';
 import { CookingTimer } from '@/components/recipe/CookingTimer';
 import { NutritionalInfo } from '@/components/recipe/NutritionalInfo';
+import { CommentsSection } from '@/components/recipe/CommentsSection';
 import { SEO } from '@/components/SEO';
 import { toast } from '@/hooks/use-toast';
 import { useToast } from '@/hooks/use-toast';
@@ -497,7 +498,11 @@ const RecipePage = () => {
               </CardContent>
             </Card>
 
-            <NutritionalInfo language={language} />
+            <NutritionalInfo 
+              servings={servings} 
+              baseServings={originalServings}
+              language={language} 
+            />
           </div>
 
           {/* Steps */}
@@ -628,39 +633,44 @@ const RecipePage = () => {
         </div>
 
         {/* Comments Section */}
-        <Card className="mt-8 shadow-card relative overflow-hidden animate-fade-in">
-          <div className={`${!user ? 'blur-sm pointer-events-none' : ''}`}>
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2">
-                <MessageCircle className="w-5 h-5" />
-                {language === 'en' ? 'Comments & Your Version' : 'कमेंट आणि तुमची आवृत्ती'}
-              </h3>
-              <p className="text-muted-foreground">
-                {language === 'en' 
-                  ? 'Share your experience with this recipe...' 
-                  : 'या रेसिपीसह तुमचा अनुभव शेअर करा...'}
-              </p>
-            </CardContent>
-          </div>
-          {!user && (
+        {user ? (
+          <CommentsSection 
+            recipeId={id!} 
+            userId={user.id} 
+            language={language} 
+          />
+        ) : (
+          <Card className="mt-8 shadow-card relative overflow-hidden animate-fade-in">
+            <div className="blur-sm pointer-events-none">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold mb-4 text-foreground">
+                  {language === 'en' ? 'Comments & Discussion' : 'कमेंट आणि चर्चा'}
+                </h3>
+                <p className="text-muted-foreground">
+                  {language === 'en' 
+                    ? 'Share your experience with this recipe...' 
+                    : 'या रेसिपीसह तुमचा अनुभव शेअर करा...'}
+                </p>
+              </CardContent>
+            </div>
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
               <div className="text-center p-6">
                 <Lock className="w-12 h-12 mx-auto mb-3 text-primary" />
                 <p className="text-lg font-semibold mb-2">
                   {language === 'en' 
-                    ? 'Unlock premium to comment and save recipes!' 
-                    : 'कमेंट आणि रेसिपी सेव्ह करण्यासाठी प्रीमियम अनलॉक करा!'}
+                    ? 'Sign in to join the discussion!' 
+                    : 'चर्चेत सामील होण्यासाठी साइन इन करा!'}
                 </p>
                 <Button
                   className="bg-gradient-hero shadow-warm mt-2 hover-scale"
-                  onClick={handlePremiumAction}
+                  onClick={() => navigate('/auth')}
                 >
-                  {language === 'en' ? 'Upgrade to Premium' : 'प्रीमियम मिळवा'}
+                  {language === 'en' ? 'Sign In' : 'साइन इन'}
                 </Button>
               </div>
             </div>
-          )}
-        </Card>
+          </Card>
+        )}
 
       </div>
 
