@@ -428,8 +428,13 @@ const RecipePage = () => {
                 alt={title}
                 className="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <a href={recipe.youtubeUrl} target="_blank" rel="noopener noreferrer">
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <a 
+                  href={recipe.youtubeUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="pointer-events-auto"
+                >
                   <Button size="lg" className="bg-primary/90 hover:bg-primary shadow-warm hover-scale">
                     <Play className="mr-2 w-5 h-5" />
                     {language === 'en' ? 'Watch on YouTube' : 'YouTube वर पहा'}
