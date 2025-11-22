@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { FilterOptions, MealType } from '@/types/recipe';
 import { Navbar } from '@/components/Navbar';
@@ -12,6 +13,7 @@ const FilterBar = lazy(() => import('@/components/FilterBar').then(module => ({ 
 const Footer = lazy(() => import('@/components/Footer').then(module => ({ default: module.Footer })));
 
 const Index = () => {
+  const navigate = useNavigate();
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
   const [searchQuery, setSearchQuery] = useState('');
   const [recipes, setRecipes] = useState<any[]>([]);
@@ -29,8 +31,17 @@ const Index = () => {
   });
 
   useEffect(() => {
-    fetchRecipes(true);
+    checkAuthAndFetchRecipes();
   }, []);
+
+  const checkAuthAndFetchRecipes = async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) {
+      navigate('/auth');
+      return;
+    }
+    fetchRecipes(true);
+  };
 
   const fetchRecipes = async (reset = false) => {
     try {
