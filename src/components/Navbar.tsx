@@ -18,53 +18,19 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState<User | null>(null);
-  const [hasPremium, setHasPremium] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        checkPremiumStatus(session.user.id);
-      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        setTimeout(() => {
-          checkPremiumStatus(session.user.id);
-        }, 0);
-      } else {
-        setHasPremium(false);
-      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const checkPremiumStatus = async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', userId)
-        .in('status', ['active', 'completed'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (data) {
-        // Check if subscription is still valid (if expires_at exists)
-        const isValid = !data.expires_at || new Date(data.expires_at) > new Date();
-        setHasPremium(isValid);
-      } else {
-        setHasPremium(false);
-      }
-    } catch (error) {
-      setHasPremium(false);
-    }
-  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -132,7 +98,7 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
                 </Button>
               </Link>
             )}
-            {!hasPremium && (
+            {!user && (
               <Link to="/premium">
                 <Button
                   size="sm"
@@ -208,7 +174,7 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
                 </Button>
               </Link>
             )}
-            {!hasPremium && (
+            {!user && (
               <Link to="/premium" className="w-full">
                 <Button
                   size="sm"

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ServingAdjuster } from '@/components/recipe/ServingAdjuster';
-import { PremiumPopup } from '@/components/recipe/PremiumPopup';
+
 import { CreatorCard } from '@/components/recipe/CreatorCard';
 import { CookingTimer } from '@/components/recipe/CookingTimer';
 import { NutritionalInfo } from '@/components/recipe/NutritionalInfo';
@@ -29,16 +29,13 @@ const RecipePage = () => {
   const [loading, setLoading] = useState(true);
   const [servings, setServings] = useState(4);
   const [originalServings, setOriginalServings] = useState(4);
-  const [showPremiumPopup, setShowPremiumPopup] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [activeTimer, setActiveTimer] = useState<number | null>(null);
-  const [rating, setRating] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
-    fetchRecipe();
-    fetchUser();
+    checkAuthAndFetchRecipe();
   }, [id]);
 
   useEffect(() => {
@@ -47,9 +44,14 @@ const RecipePage = () => {
     }
   }, [user, id]);
 
-  const fetchUser = async () => {
+  const checkAuthAndFetchRecipe = async () => {
     const { data } = await supabase.auth.getUser();
+    if (!data.user) {
+      navigate('/auth');
+      return;
+    }
     setUser(data.user);
+    fetchRecipe();
   };
 
   const checkIfFavorited = async (userId: string) => {
@@ -229,16 +231,6 @@ const RecipePage = () => {
     });
   });
 
-  const handlePremiumAction = () => {
-    if (!user) {
-      toast({
-        title: language === 'en' ? 'Login Required' : 'लॉगिन आवश्यक',
-        description: language === 'en' ? 'Please login to access premium features' : 'प्रीमियम वैशिष्ट्यांसाठी कृपया लॉगिन करा',
-      });
-      return;
-    }
-    setShowPremiumPopup(true);
-  };
 
   const handleCopyIngredients = () => {
     const ingredientsText = scaledIngredients.join('\n');
@@ -272,10 +264,6 @@ const RecipePage = () => {
     return timeMatch ? parseInt(timeMatch[1]) : null;
   };
 
-  const handleRating = (value: number) => {
-    handlePremiumAction();
-    setRating(value);
-  };
 
   // Truncate description to 150 characters for meta description
   const metaDescription = description.length > 150 
@@ -480,7 +468,7 @@ const RecipePage = () => {
                     variant="outline" 
                     size="sm" 
                     className="flex-1 hover:bg-primary hover:text-primary-foreground transition-colors"
-                    onClick={handlePremiumAction}
+                    onClick={handleCopyIngredients}
                   >
                     <Copy className="mr-2 w-4 h-4" />
                     {language === 'en' ? 'Copy' : 'कॉपी'}
@@ -489,7 +477,7 @@ const RecipePage = () => {
                     variant="outline" 
                     size="sm" 
                     className="flex-1 hover:bg-primary hover:text-primary-foreground transition-colors"
-                    onClick={handlePremiumAction}
+                    onClick={handlePrint}
                   >
                     <Printer className="mr-2 w-4 h-4" />
                     {language === 'en' ? 'Print' : 'प्रिंट'}
@@ -567,31 +555,6 @@ const RecipePage = () => {
           </Card>
         </div>
 
-        {/* Rating Section */}
-        <Card className="mt-8 shadow-card animate-fade-in">
-          <CardContent className="p-6">
-            <h3 className="text-xl font-bold mb-4 text-foreground">
-              {language === 'en' ? 'Rate this Recipe' : 'या रेसिपीला रेटिंग द्या'}
-            </h3>
-            <div className="flex items-center gap-2">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  key={value}
-                  onClick={() => handleRating(value)}
-                  className="transition-transform hover:scale-125"
-                >
-                  <Star
-                    className={`w-8 h-8 ${
-                      value <= rating
-                        ? 'fill-amber-500 text-amber-500'
-                        : 'text-muted-foreground'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Related Tags Section */}
         <div className="mt-8 pb-8 border-t border-border pt-8 animate-fade-in">
@@ -673,12 +636,6 @@ const RecipePage = () => {
         )}
 
       </div>
-
-      <PremiumPopup 
-        isOpen={showPremiumPopup} 
-        onClose={() => setShowPremiumPopup(false)} 
-        language={language}
-      />
     </div>
   );
 };
