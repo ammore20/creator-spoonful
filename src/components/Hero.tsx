@@ -141,7 +141,7 @@ export const Hero = ({ language }: HeroProps) => {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
-              onClick={() => navigate(hasPremium ? '/install' : '/premium')}
+              onClick={() => navigate('/install')}
             >
               <Smartphone className="mr-2 w-6 h-6" />
               {language === 'en' ? 'Download App' : 'अॅप डाउनलोड करा'}

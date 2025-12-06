@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Download, Smartphone, Check, Share, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SEO } from "@/components/SEO";
-import { PremiumGate } from "@/components/PremiumGate";
+
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -176,10 +176,4 @@ const InstallContent = () => {
   );
 };
 
-const Install = () => (
-  <PremiumGate>
-    <InstallContent />
-  </PremiumGate>
-);
-
-export default Install;
+export default InstallContent;
