@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChefHat, Sparkles, LogIn } from 'lucide-react';
+import { ChefHat, Sparkles, LogIn, Smartphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -138,7 +138,16 @@ export const Hero = ({ language }: HeroProps) => {
               <ChefHat className="mr-2 w-6 h-6" />
               {language === 'en' ? 'Discover Recipes' : 'रेसिपी एक्सप्लोर करा'}
             </Button>
-            {!hasPremium && (
+            {hasPremium ? (
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
+                onClick={() => navigate('/install')}
+              >
+                <Smartphone className="mr-2 w-6 h-6" />
+                {language === 'en' ? 'Download App' : 'अॅप डाउनलोड करा'}
+              </Button>
+            ) : (
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
