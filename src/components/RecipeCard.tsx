@@ -92,7 +92,7 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
   };
 
   return (
-    <Card className="group overflow-hidden hover-lift hover-glow transition-all duration-500 bg-gradient-card border-border relative opacity-0 animate-fade-in-scale">
+    <Card className="group overflow-hidden card-3d spotlight hover-glow transition-all duration-500 bg-gradient-card border-border relative opacity-0 animate-fade-in-scale">
       <Link to={`/recipe/${recipe.id}`}>
         <CardHeader className="p-0 relative img-zoom">
           <div className="aspect-video overflow-hidden relative bg-muted">
