@@ -152,37 +152,37 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
         </CardHeader>
       </Link>
       
-      <CardContent className="p-5">
+      <CardContent className="p-4 sm:p-5">
         <Link to={`/recipe/${recipe.id}`}>
-          <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+          <h3 className="text-lg sm:text-xl font-bold mb-2 group-hover:text-primary transition-colors line-clamp-2">
             {title}
           </h3>
         </Link>
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+        <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 line-clamp-2">
           {description}
         </p>
         
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 pb-4 border-b border-border">
-          <ChefHat className="w-4 h-4 text-primary" />
-          <span className="font-medium">{creator}</span>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-border">
+          <ChefHat className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+          <span className="font-medium truncate">{creator}</span>
         </div>
 
         {/* Info Chips */}
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
           {/* Time Chip */}
-          <div className="flex items-center gap-1.5 bg-gradient-pill px-3 py-1.5 rounded-full border border-border">
-            <Clock className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-medium">{recipe.cookTime}</span>
+          <div className="flex items-center gap-1 sm:gap-1.5 bg-gradient-pill px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-border">
+            <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" />
+            <span className="text-[10px] sm:text-xs font-medium">{recipe.cookTime}</span>
           </div>
           
           {/* Spice Level Chip */}
-          <div className="flex items-center gap-1.5 bg-gradient-pill px-3 py-1.5 rounded-full border border-border">
-            <Flame className="w-3.5 h-3.5 text-orange-500" />
+          <div className="flex items-center gap-1 sm:gap-1.5 bg-gradient-pill px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-border">
+            <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-500" />
             <div className="flex gap-0.5">
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className={`w-1 h-3 rounded-full ${
+                  className={`w-1 h-2.5 sm:h-3 rounded-full ${
                     i < getSpiceLevel() ? 'bg-orange-500' : 'bg-muted'
                   }`}
                 />
@@ -191,9 +191,9 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
           </div>
           
           {/* Rating Chip */}
-          <div className="flex items-center gap-1.5 bg-gradient-pill px-3 py-1.5 rounded-full border border-border">
-            <Star className="w-3.5 h-3.5 text-accent fill-accent" />
-            <span className="text-xs font-medium">4.8</span>
+          <div className="flex items-center gap-1 sm:gap-1.5 bg-gradient-pill px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-border">
+            <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-accent fill-accent" />
+            <span className="text-[10px] sm:text-xs font-medium">4.8</span>
           </div>
         </div>
 
@@ -221,13 +221,13 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
         </div>
       </CardContent>
       
-      <CardFooter className="p-5 pt-0 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
-          <Users className="w-4 h-4" />
+      <CardFooter className="p-4 sm:p-5 pt-0 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-muted-foreground bg-muted/50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full">
+          <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <span className="font-medium">{recipe.servings} {language === 'en' ? 'servings' : 'सर्व्हिंग्ज'}</span>
         </div>
         <Link to={`/recipe/${recipe.id}`}>
-          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 ripple font-semibold shadow-pill">
+          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 ripple font-semibold shadow-pill text-xs sm:text-sm px-3 sm:px-4">
             {language === 'en' ? 'View Recipe' : 'रेसिपी पहा'} →
           </Button>
         </Link>
