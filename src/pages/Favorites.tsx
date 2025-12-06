@@ -8,8 +8,9 @@ import { Recipe } from '@/types/recipe';
 import { Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { PremiumGate } from '@/components/PremiumGate';
 
-const Favorites = () => {
+const FavoritesContent = () => {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
   const [favorites, setFavorites] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,5 +133,11 @@ const Favorites = () => {
     </div>
   );
 };
+
+const Favorites = () => (
+  <PremiumGate>
+    <FavoritesContent />
+  </PremiumGate>
+);
 
 export default Favorites;
