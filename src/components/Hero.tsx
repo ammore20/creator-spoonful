@@ -138,25 +138,14 @@ export const Hero = ({ language }: HeroProps) => {
               <ChefHat className="mr-2 w-6 h-6" />
               {language === 'en' ? 'Discover Recipes' : 'रेसिपी एक्सप्लोर करा'}
             </Button>
-            {hasPremium ? (
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
-                onClick={() => navigate('/install')}
-              >
-                <Smartphone className="mr-2 w-6 h-6" />
-                {language === 'en' ? 'Download App' : 'अॅप डाउनलोड करा'}
-              </Button>
-            ) : (
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
-                onClick={() => navigate('/premium')}
-              >
-                <Sparkles className="mr-2 w-6 h-6" />
-                {language === 'en' ? 'Subscribe at just ₹99/month' : 'फक्त ₹९९/महिना मध्ये सब्सक्राइब करा'}
-              </Button>
-            )}
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
+              onClick={() => navigate(hasPremium ? '/install' : '/premium')}
+            >
+              <Smartphone className="mr-2 w-6 h-6" />
+              {language === 'en' ? 'Download App' : 'अॅप डाउनलोड करा'}
+            </Button>
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 text-sm md:text-base">
