@@ -4,13 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Download, Smartphone, Check, Share, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SEO } from "@/components/SEO";
+import { PremiumGate } from "@/components/PremiumGate";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const Install = () => {
+const InstallContent = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -174,5 +175,11 @@ const Install = () => {
     </div>
   );
 };
+
+const Install = () => (
+  <PremiumGate>
+    <InstallContent />
+  </PremiumGate>
+);
 
 export default Install;

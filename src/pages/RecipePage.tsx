@@ -20,8 +20,9 @@ import { CommentsSection } from '@/components/recipe/CommentsSection';
 import { SEO } from '@/components/SEO';
 import { toast } from '@/hooks/use-toast';
 import { useToast } from '@/hooks/use-toast';
+import { PremiumGate } from '@/components/PremiumGate';
 
-const RecipePage = () => {
+const RecipePageContent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
@@ -639,5 +640,11 @@ const RecipePage = () => {
     </div>
   );
 };
+
+const RecipePage = () => (
+  <PremiumGate>
+    <RecipePageContent />
+  </PremiumGate>
+);
 
 export default RecipePage;
