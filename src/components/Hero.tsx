@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChefHat, Sparkles, LogIn, Smartphone } from 'lucide-react';
+import { ChefHat, LogIn } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -94,29 +94,29 @@ export const Hero = ({ language }: HeroProps) => {
         }}
       />
       
-      <div className="relative container mx-auto px-4 py-24 md:py-36">
+      <div className="relative container mx-auto px-4 py-16 sm:py-24 md:py-36">
         <div className="max-w-4xl mx-auto text-center text-white">
           {!user && (
-            <div className="mb-6 animate-fade-in">
-              <div className="inline-flex items-center gap-3 bg-accent/90 backdrop-blur-sm px-6 py-3 rounded-full border border-white/30 shadow-warm hover:scale-105 transition-transform cursor-pointer" onClick={() => navigate('/auth')}>
-                <LogIn className="w-5 h-5" />
-                <span className="text-sm font-semibold">
+            <div className="mb-4 sm:mb-6 animate-fade-in">
+              <div className="inline-flex items-center gap-2 sm:gap-3 bg-accent/90 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 rounded-full border border-white/30 shadow-warm hover:scale-105 transition-transform cursor-pointer" onClick={() => navigate('/auth')}>
+                <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="text-xs sm:text-sm font-semibold">
                   {language === 'en' ? 'Sign in to save your favorite recipes' : 'तुमच्या आवडत्या रेसिपी सेव्ह करण्यासाठी साइन इन करा'}
                 </span>
               </div>
             </div>
           )}
           
-          <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight animate-fade-in">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 sm:mb-8 leading-tight animate-fade-in px-2">
             {language === 'en' 
               ? 'Discover Recipes from Your Favorite Creators'
               : 'तुमच्या आवडत्या क्रिएटर्सच्या रेसिपी शोधा'}
           </h1>
 
           {/* Rotating Tagline */}
-          <div className="h-12 mb-10 flex items-center justify-center">
+          <div className="h-10 sm:h-12 mb-8 sm:mb-10 flex items-center justify-center px-4">
             <p 
-              className={`text-xl md:text-2xl font-medium text-accent transition-all duration-500 ${
+              className={`text-lg sm:text-xl md:text-2xl font-medium text-accent transition-all duration-500 ${
                 isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0 animate-text-slide-up'
               }`}
             >
@@ -124,10 +124,10 @@ export const Hero = ({ language }: HeroProps) => {
             </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <div className="flex justify-center mb-12">
             <Button 
               size="lg" 
-              className="bg-white text-primary hover:bg-white/90 shadow-warm text-lg px-10 py-6 ripple font-semibold"
+              className="bg-white text-primary hover:bg-white/90 shadow-warm text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 ripple font-semibold"
               onClick={() => {
                 const recipesSection = document.getElementById('recipes-section');
                 if (recipesSection) {
@@ -135,16 +135,8 @@ export const Hero = ({ language }: HeroProps) => {
                 }
               }}
             >
-              <ChefHat className="mr-2 w-6 h-6" />
+              <ChefHat className="mr-2 w-5 h-5 sm:w-6 sm:h-6" />
               {language === 'en' ? 'Discover Recipes' : 'रेसिपी एक्सप्लोर करा'}
-            </Button>
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-accent to-primary text-white hover:opacity-90 text-lg px-10 py-6 shadow-warm ripple font-semibold border-0"
-              onClick={() => navigate('/install')}
-            >
-              <Smartphone className="mr-2 w-6 h-6" />
-              {language === 'en' ? 'Download App' : 'अॅप डाउनलोड करा'}
             </Button>
           </div>
           

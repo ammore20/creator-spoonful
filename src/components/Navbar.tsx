@@ -47,16 +47,16 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
 
   return (
     <nav className="sticky top-0 z-50 bg-card/80 border-b border-border backdrop-blur-xl shadow-sm transition-all duration-300">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-4">
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-hero rounded-xl flex items-center justify-center shadow-warm">
-              <img src={logo} alt="RecipeMaker" className="w-7 h-7" />
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-hero rounded-xl flex items-center justify-center shadow-warm shrink-0">
+              <img src={logo} alt="RecipeMaker" className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">RecipeMaker</h1>
-              <p className="text-xs text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">RecipeMaker</h1>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate hidden xs:block">
                 {language === 'en' ? 'AI Recipes by Your Favorite Creators' : 'तुमच्या आवडत्या क्रिएटर्सच्या AI रेसिपी'}
               </p>
             </div>
