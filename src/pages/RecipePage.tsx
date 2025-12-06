@@ -34,6 +34,7 @@ const RecipePageContent = () => {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [activeTimer, setActiveTimer] = useState<number | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   useEffect(() => {
     checkAuthAndFetchRecipe();
@@ -412,22 +413,34 @@ const RecipePageContent = () => {
         {/* Video */}
         <Card className="mb-8 overflow-hidden shadow-card animate-fade-in">
           <CardContent className="p-0">
-            <div className="aspect-video bg-muted flex items-center justify-center relative group">
-              <img 
-                src={recipe.thumbnailUrl} 
-                alt={title}
-                className="w-full h-full object-cover transition-transform group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button 
-                  size="lg" 
-                  className="bg-primary/90 hover:bg-primary shadow-warm hover-scale"
-                  onClick={() => window.open(recipe.youtubeUrl, '_blank', 'noopener,noreferrer')}
-                >
-                  <Play className="mr-2 w-5 h-5" />
-                  {language === 'en' ? 'Watch on YouTube' : 'YouTube वर पहा'}
-                </Button>
-              </div>
+            <div className="aspect-video bg-muted flex items-center justify-center relative">
+              {isVideoPlaying ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${recipe.videoId}?autoplay=1&rel=0`}
+                  title={title}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="w-full h-full relative group">
+                  <img 
+                    src={recipe.thumbnailUrl} 
+                    alt={title}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button 
+                      size="lg" 
+                      className="bg-primary/90 hover:bg-primary shadow-warm hover-scale"
+                      onClick={() => setIsVideoPlaying(true)}
+                    >
+                      <Play className="mr-2 w-5 h-5" />
+                      {language === 'en' ? 'Watch Video' : 'व्हिडिओ पहा'}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
