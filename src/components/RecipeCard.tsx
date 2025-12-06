@@ -92,20 +92,20 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
   };
 
   return (
-    <Card className="group overflow-hidden hover:shadow-warm transition-all duration-500 bg-gradient-card border-border relative">
+    <Card className="group overflow-hidden hover-lift hover-glow transition-all duration-500 bg-gradient-card border-border relative opacity-0 animate-fade-in-scale">
       <Link to={`/recipe/${recipe.id}`}>
-        <CardHeader className="p-0 relative">
+        <CardHeader className="p-0 relative img-zoom">
           <div className="aspect-video overflow-hidden relative bg-muted">
             {!imageLoaded && (
-              <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted-foreground/10 to-muted"></div>
+              <div className="absolute inset-0 shimmer"></div>
             )}
             <img
               src={recipe.thumbnailUrl}
               alt={title}
               loading={loading}
               onLoad={() => setImageLoaded(true)}
-              className={`w-full h-full object-cover group-hover:scale-110 transition-all duration-500 ${
-                imageLoaded ? 'opacity-100' : 'opacity-0'
+              className={`w-full h-full object-cover transition-all duration-700 ${
+                imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
               }`}
             />
             {/* Overlay on hover */}
@@ -140,11 +140,11 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
             {/* Favorite Heart */}
             <button
               onClick={toggleFavorite}
-              className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:scale-110 transition-transform duration-300"
+              className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:scale-125 btn-press transition-all duration-300"
             >
               <Heart 
                 className={`w-5 h-5 transition-all duration-300 ${
-                  isFavorite ? 'fill-red-500 text-red-500 animate-heart-beat' : 'text-muted-foreground'
+                  isFavorite ? 'fill-red-500 text-red-500 animate-heart-beat' : 'text-muted-foreground hover:text-red-400'
                 }`}
               />
             </button>
@@ -153,8 +153,8 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
       </Link>
       
       <CardContent className="p-4 sm:p-5">
-        <Link to={`/recipe/${recipe.id}`}>
-          <h3 className="text-lg sm:text-xl font-bold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+        <Link to={`/recipe/${recipe.id}`} className="link-underline">
+          <h3 className="text-lg sm:text-xl font-bold mb-2 group-hover:text-primary transition-colors duration-300 line-clamp-2">
             {title}
           </h3>
         </Link>
@@ -227,7 +227,7 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
           <span className="font-medium">{recipe.servings} {language === 'en' ? 'servings' : 'सर्व्हिंग्ज'}</span>
         </div>
         <Link to={`/recipe/${recipe.id}`}>
-          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 ripple font-semibold shadow-pill text-xs sm:text-sm px-3 sm:px-4">
+          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 ripple btn-press font-semibold shadow-pill text-xs sm:text-sm px-3 sm:px-4 transition-all duration-300 hover:shadow-warm">
             {language === 'en' ? 'View Recipe' : 'रेसिपी पहा'} →
           </Button>
         </Link>

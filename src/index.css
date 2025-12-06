@@ -113,9 +113,15 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 @layer utilities {
+  /* Ripple effect for buttons */
   .ripple {
     position: relative;
     overflow: hidden;
@@ -139,6 +145,7 @@ All colors MUST be HSL.
     height: 300px;
   }
 
+  /* Animated gradient background */
   .animate-gradient {
     background-size: 200% 200%;
     animation: gradient 8s ease infinite;
@@ -149,6 +156,7 @@ All colors MUST be HSL.
     50% { background-position: 100% 50%; }
   }
 
+  /* Text slide up animation */
   .animate-text-slide-up {
     animation: text-slide-up 0.5s ease-out;
   }
@@ -164,6 +172,7 @@ All colors MUST be HSL.
     }
   }
 
+  /* Heart beat animation */
   .animate-heart-beat {
     animation: heart-beat 0.3s ease-in-out;
   }
@@ -174,6 +183,7 @@ All colors MUST be HSL.
     50% { transform: scale(1.1); }
   }
 
+  /* Zoom in animation */
   .animate-zoom-in {
     animation: zoom-in 0.3s ease-out;
   }
@@ -187,5 +197,140 @@ All colors MUST be HSL.
       opacity: 1;
       transform: scale(1);
     }
+  }
+
+  /* Staggered animation delays */
+  .stagger-1 { animation-delay: 0.1s; }
+  .stagger-2 { animation-delay: 0.2s; }
+  .stagger-3 { animation-delay: 0.3s; }
+  .stagger-4 { animation-delay: 0.4s; }
+  .stagger-5 { animation-delay: 0.5s; }
+  .stagger-6 { animation-delay: 0.6s; }
+
+  /* Hover lift effect */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .hover-lift:hover {
+    @apply -translate-y-2 shadow-lg;
+  }
+
+  /* Hover glow effect */
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.4);
+  }
+
+  /* Shimmer effect for loading */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted-foreground) / 0.1) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Underline animation for links */
+  .link-underline {
+    @apply relative;
+  }
+  
+  .link-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 transition-transform duration-300;
+  }
+  
+  .link-underline:hover::after {
+    @apply scale-x-100;
+  }
+
+  /* Card tilt effect on hover */
+  .card-tilt {
+    @apply transition-transform duration-300;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+  
+  .card-tilt:hover {
+    transform: rotateY(-5deg) rotateX(5deg);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  }
+
+  /* Blur backdrop on scroll */
+  .backdrop-blur-scroll {
+    @apply backdrop-blur-xl transition-all duration-300;
+  }
+
+  /* Smooth image zoom */
+  .img-zoom {
+    @apply overflow-hidden;
+  }
+  
+  .img-zoom img {
+    @apply transition-transform duration-500 ease-out;
+  }
+  
+  .img-zoom:hover img {
+    @apply scale-110;
+  }
+
+  /* Button press effect */
+  .btn-press {
+    @apply transition-transform duration-150;
+  }
+  
+  .btn-press:active {
+    @apply scale-95;
+  }
+
+  /* Floating animation */
+  .floating {
+    animation: floating 3s ease-in-out infinite;
+  }
+
+  @keyframes floating {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Rotate on hover */
+  .rotate-hover {
+    @apply transition-transform duration-500;
+  }
+  
+  .rotate-hover:hover {
+    @apply rotate-12;
+  }
+
+  /* Scale bounce on hover */
+  .scale-bounce {
+    @apply transition-transform duration-300;
+  }
+  
+  .scale-bounce:hover {
+    animation: scale-bounce 0.4s ease-out;
+  }
+
+  @keyframes scale-bounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1.05); }
   }
 }

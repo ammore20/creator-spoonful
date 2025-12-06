@@ -87,7 +87,7 @@ export const Hero = ({ language }: HeroProps) => {
     <div className="relative overflow-hidden bg-gradient-hero-animated animate-gradient">
       <div className="absolute inset-0 bg-black/30" />
       <div 
-        className="absolute inset-0 bg-cover bg-center opacity-15"
+        className="absolute inset-0 bg-cover bg-center opacity-15 transition-transform duration-[20s] hover:scale-110"
         style={{ 
           backgroundImage: `url(${heroImage})`,
           filter: 'blur(3px)'
@@ -97,8 +97,8 @@ export const Hero = ({ language }: HeroProps) => {
       <div className="relative container mx-auto px-4 py-16 sm:py-24 md:py-36">
         <div className="max-w-4xl mx-auto text-center text-white">
           {!user && (
-            <div className="mb-4 sm:mb-6 animate-fade-in">
-              <div className="inline-flex items-center gap-2 sm:gap-3 bg-accent/90 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 rounded-full border border-white/30 shadow-warm hover:scale-105 transition-transform cursor-pointer" onClick={() => navigate('/auth')}>
+            <div className="mb-4 sm:mb-6 opacity-0 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <div className="inline-flex items-center gap-2 sm:gap-3 bg-accent/90 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 rounded-full border border-white/30 shadow-warm hover:scale-110 btn-press transition-all duration-300 cursor-pointer hover:shadow-lg" onClick={() => navigate('/auth')}>
                 <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span className="text-xs sm:text-sm font-semibold">
                   {language === 'en' ? 'Sign in to save your favorite recipes' : 'तुमच्या आवडत्या रेसिपी सेव्ह करण्यासाठी साइन इन करा'}
@@ -107,7 +107,7 @@ export const Hero = ({ language }: HeroProps) => {
             </div>
           )}
           
-          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 sm:mb-8 leading-tight animate-fade-in px-2">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 sm:mb-8 leading-tight opacity-0 animate-fade-in-up px-2" style={{ animationDelay: '0.3s' }}>
             {language === 'en' 
               ? 'Discover Recipes from Your Favorite Creators'
               : 'तुमच्या आवडत्या क्रिएटर्सच्या रेसिपी शोधा'}
@@ -116,18 +116,18 @@ export const Hero = ({ language }: HeroProps) => {
           {/* Rotating Tagline */}
           <div className="h-10 sm:h-12 mb-8 sm:mb-10 flex items-center justify-center px-4">
             <p 
-              className={`text-lg sm:text-xl md:text-2xl font-medium text-accent transition-all duration-500 ${
-                isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0 animate-text-slide-up'
+              className={`text-lg sm:text-xl md:text-2xl font-medium text-accent transition-all duration-500 ease-out ${
+                isAnimating ? 'opacity-0 translate-y-4 scale-95' : 'opacity-100 translate-y-0 scale-100'
               }`}
             >
               {taglines[language][currentTagline]}
             </p>
           </div>
           
-          <div className="flex justify-center mb-12">
+          <div className="flex justify-center mb-12 opacity-0 animate-fade-in" style={{ animationDelay: '0.5s' }}>
             <Button 
               size="lg" 
-              className="bg-white text-primary hover:bg-white/90 shadow-warm text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 ripple font-semibold"
+              className="bg-white text-primary hover:bg-white/90 shadow-warm text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 ripple btn-press font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
               onClick={() => {
                 const recipesSection = document.getElementById('recipes-section');
                 if (recipesSection) {
@@ -135,17 +135,17 @@ export const Hero = ({ language }: HeroProps) => {
                 }
               }}
             >
-              <ChefHat className="mr-2 w-5 h-5 sm:w-6 sm:h-6" />
+              <ChefHat className="mr-2 w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:rotate-12" />
               {language === 'en' ? 'Discover Recipes' : 'रेसिपी एक्सप्लोर करा'}
             </Button>
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 text-sm md:text-base">
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 opacity-0 animate-slide-in-left hover:bg-white/20 transition-all duration-300" style={{ animationDelay: '0.6s' }}>
               <div className="w-2.5 h-2.5 bg-accent rounded-full animate-pulse" />
               <span className="font-medium">{language === 'en' ? '100+ Recipes' : '१००+ रेसिपी'}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 opacity-0 animate-slide-in-right hover:bg-white/20 transition-all duration-300" style={{ animationDelay: '0.7s' }}>
               <div className="w-2.5 h-2.5 bg-accent rounded-full animate-pulse" />
               <span className="font-medium">{language === 'en' ? 'Smart Filters' : 'स्मार्ट फिल्टर्स'}</span>
             </div>
