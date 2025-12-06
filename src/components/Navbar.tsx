@@ -46,32 +46,32 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-card/80 border-b border-border backdrop-blur-xl shadow-sm transition-all duration-500">
-      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 animate-fade-in">
+    <nav className="sticky top-0 z-50 glass border-b border-border/50 shadow-sm transition-all duration-500">
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-hero rounded-xl flex items-center justify-center shadow-warm shrink-0">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0 group">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-hero rounded-xl flex items-center justify-center shadow-warm shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
               <img src={logo} alt="RecipeMaker" className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">RecipeMaker</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate group-hover:text-primary transition-colors duration-300">RecipeMaker</h1>
               <p className="text-[10px] sm:text-xs text-muted-foreground truncate hidden xs:block">
                 {language === 'en' ? 'AI Recipes by Your Favorite Creators' : 'तुमच्या आवडत्या क्रिएटर्सच्या AI रेसिपी'}
               </p>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Search */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <div className="relative w-full group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5 transition-colors duration-300 group-focus-within:text-primary" />
               <Input
                 type="text"
                 placeholder={language === 'en' ? 'Search recipes...' : 'रेसिपी शोधा...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-background border-border"
+                className="pl-10 bg-background/80 border-border glow-focus transition-all duration-300 hover:border-primary/50"
               />
             </div>
           </form>
