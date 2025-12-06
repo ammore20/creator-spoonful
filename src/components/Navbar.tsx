@@ -46,8 +46,8 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-card/80 border-b border-border backdrop-blur-xl shadow-sm transition-all duration-300">
-      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+    <nav className="sticky top-0 z-50 bg-card/80 border-b border-border backdrop-blur-xl shadow-sm transition-all duration-500">
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 animate-fade-in">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">

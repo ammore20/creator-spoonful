@@ -230,9 +230,9 @@ const IndexContent = () => {
         {loading ? (
           <div className="space-y-16">
             <div>
-              <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-2xl p-8 border border-border">
+              <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-2xl p-8 border border-border animate-pulse">
                 <div className="flex items-center gap-3 mb-6">
-                  <span className="text-4xl">✨</span>
+                  <span className="text-4xl floating">✨</span>
                   <div>
                     <h2 className="text-3xl md:text-4xl font-bold text-foreground">
                       {language === 'en' ? 'New Recipe Everyday' : 'दररोज नवीन रेसिपी'}
@@ -256,10 +256,10 @@ const IndexContent = () => {
           <div className="space-y-16">
             {/* New Recipe Everyday Section */}
             {recipes.length > 0 && (
-              <div>
-                <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-2xl p-8 border border-border">
+              <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-2xl p-8 border border-border hover:shadow-warm transition-all duration-500">
                   <div className="flex items-center gap-3 mb-6">
-                    <span className="text-4xl">✨</span>
+                    <span className="text-4xl floating">✨</span>
                     <div>
                       <h2 className="text-3xl md:text-4xl font-bold text-foreground">
                         {language === 'en' ? 'New Recipe Everyday' : 'दररोज नवीन रेसिपी'}
@@ -270,8 +270,10 @@ const IndexContent = () => {
                     </div>
                   </div>
                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {recipes.slice(0, 3).map((recipe) => (
-                      <RecipeCard key={recipe.id} recipe={recipe} language={language} loading="eager" />
+                    {recipes.slice(0, 3).map((recipe, index) => (
+                      <div key={recipe.id} style={{ animationDelay: `${0.2 + index * 0.1}s` }}>
+                        <RecipeCard recipe={recipe} language={language} loading="eager" />
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -279,11 +281,11 @@ const IndexContent = () => {
             )}
             
             {/* Recipe Count */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between opacity-0 animate-fade-in" style={{ animationDelay: '0.3s' }}>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
                 {language === 'en' ? 'All Recipes' : 'सर्व रेसिपी'}
               </h2>
-              <div className="bg-gradient-pill px-4 py-2 rounded-full border border-border">
+              <div className="bg-gradient-pill px-4 py-2 rounded-full border border-border hover:scale-105 transition-transform duration-300">
                 <p className="text-sm font-semibold text-foreground">
                   {filteredRecipes.length} {language === 'en' ? 'recipes' : 'रेसिपी'}
                 </p>
@@ -373,12 +375,12 @@ const IndexContent = () => {
 
             {/* Load More Button */}
             {hasMore && !loading && (
-              <div className="flex justify-center mt-12">
+              <div className="flex justify-center mt-12 opacity-0 animate-fade-in" style={{ animationDelay: '0.5s' }}>
                 <Button
                   onClick={loadMore}
                   disabled={loadingMore}
                   size="lg"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 ripple btn-press transition-all duration-300 hover:shadow-warm hover:-translate-y-1"
                 >
                   {loadingMore ? (
                     <>
