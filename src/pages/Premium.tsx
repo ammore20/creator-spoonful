@@ -227,18 +227,11 @@ export default function Premium() {
     },
     {
       name: language === 'en' ? 'Yearly Plan' : 'वार्षिक योजना',
-      price: 499,
-      period: language === 'en' ? '/year' : '/वर्ष',
-      description: language === 'en' ? 'Save 58% with annual billing' : 'वार्षिक बिलिंगसह 58% वाचवा',
-      amount: 49900, // Amount in paise
-      popular: true,
-    },
-    {
-      name: language === 'en' ? 'Lifetime Access' : 'आजीवन प्रवेश',
       price: 999,
-      period: language === 'en' ? 'one-time' : 'एकवेळ',
-      description: language === 'en' ? 'Pay once, own forever' : 'एकदा पैसे द्या, कायमचे मिळवा',
+      period: language === 'en' ? '/year' : '/वर्ष',
+      description: language === 'en' ? 'Save 17% with annual billing' : 'वार्षिक बिलिंगसह 17% वाचवा',
       amount: 99900, // Amount in paise
+      popular: true,
     },
   ];
 
