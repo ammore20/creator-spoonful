@@ -77,7 +77,7 @@ const ForCreators = () => {
             </div>
             <span className="text-xl font-bold gradient-text">RecipeMaker</span>
           </Link>
-          <Link to="/">
+          <Link to="/?creator_access=true" onClick={() => sessionStorage.setItem('creator_preview', 'true')}>
             <Button variant="outline" className="btn-press">
               View Platform
               <ArrowRight className="ml-2 w-4 h-4" />
