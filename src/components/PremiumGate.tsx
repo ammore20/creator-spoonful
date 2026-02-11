@@ -11,6 +11,7 @@ interface PremiumGateProps {
 export const PremiumGate = ({ children }: PremiumGateProps) => {
   const { user, isLoading, isPremium } = usePremiumStatus();
   const navigate = useNavigate();
+  const isCreatorPreview = sessionStorage.getItem('creator_preview') === 'true';
 
   if (isLoading) {
     return (
@@ -23,7 +24,7 @@ export const PremiumGate = ({ children }: PremiumGateProps) => {
     );
   }
 
-  if (!user) {
+  if (!user && !isCreatorPreview) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-md w-full text-center">
@@ -56,7 +57,7 @@ export const PremiumGate = ({ children }: PremiumGateProps) => {
     );
   }
 
-  if (!isPremium) {
+  if (!isPremium && !isCreatorPreview) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
         <Card className="max-w-md w-full text-center bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 border-primary/20">
