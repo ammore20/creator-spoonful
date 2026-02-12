@@ -8,7 +8,8 @@ import { RecipeCard } from '@/components/RecipeCard';
 import { RecipeCardSkeleton } from '@/components/RecipeCardSkeleton';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { PremiumGate } from '@/components/PremiumGate';
+import { Badge } from '@/components/ui/badge';
+import { Sparkles } from 'lucide-react';
 
 const FilterBar = lazy(() => import('@/components/FilterBar').then(module => ({ default: module.FilterBar })));
 const Footer = lazy(() => import('@/components/Footer').then(module => ({ default: module.Footer })));
@@ -263,6 +264,44 @@ const IndexContent = () => {
           </div>
         ) : filteredRecipes.length > 0 ? (
           <div className="space-y-16">
+            {/* Free Recipe of the Day */}
+            {recipes.length > 0 && (() => {
+              // Deterministic daily pick based on date
+              const today = new Date().toISOString().split('T')[0];
+              const seed = today.split('-').reduce((a, b) => a + parseInt(b), 0);
+              const freeIndex = seed % recipes.length;
+              const freeRecipe = recipes[freeIndex];
+              // Store free recipe ID for the day
+              localStorage.setItem('free_recipe_of_day', freeRecipe.id);
+              localStorage.setItem('free_recipe_date', today);
+              return (
+                <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
+                  <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 rounded-2xl p-8 border border-emerald-500/20 hover:shadow-warm transition-all duration-500">
+                    <div className="flex items-center gap-3 mb-6">
+                      <span className="text-4xl floating">🎁</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                            {language === 'en' ? 'Free Recipe of the Day' : 'आजची मोफत रेसिपी'}
+                          </h2>
+                          <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30">
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            {language === 'en' ? 'FREE' : 'मोफत'}
+                          </Badge>
+                        </div>
+                        <p className="text-muted-foreground mt-1">
+                          {language === 'en' ? 'Enjoy this recipe completely free today!' : 'आज ही रेसिपी पूर्णपणे मोफत आनंद घ्या!'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="max-w-sm">
+                      <RecipeCard recipe={freeRecipe} language={language} loading="eager" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* New Recipe Everyday Section */}
             {recipes.length > 0 && (
               <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
@@ -427,10 +466,6 @@ const IndexContent = () => {
   );
 };
 
-const Index = () => (
-  <PremiumGate>
-    <IndexContent />
-  </PremiumGate>
-);
+const Index = () => <IndexContent />;
 
 export default Index;
