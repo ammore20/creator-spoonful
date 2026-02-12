@@ -9,19 +9,33 @@ import { RecipeCardSkeleton } from '@/components/RecipeCardSkeleton';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, PartyPopper, X } from 'lucide-react';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 
 const FilterBar = lazy(() => import('@/components/FilterBar').then(module => ({ default: module.FilterBar })));
 const Footer = lazy(() => import('@/components/Footer').then(module => ({ default: module.Footer })));
 
 const IndexContent = () => {
   const [searchParams] = useSearchParams();
+  const { user, isPremium, subscriptionDetails } = usePremiumStatus();
+  const [showFreeBanner, setShowFreeBanner] = useState(false);
   
   useEffect(() => {
     if (searchParams.get('creator_access') === 'true') {
       sessionStorage.setItem('creator_preview', 'true');
     }
   }, [searchParams]);
+
+  // Show free month banner for referred users who got free access
+  useEffect(() => {
+    const refSlug = localStorage.getItem('ref_creator_slug');
+    if (user && isPremium && refSlug && subscriptionDetails?.amount === 0) {
+      const dismissed = sessionStorage.getItem('free_banner_dismissed');
+      if (!dismissed) {
+        setShowFreeBanner(true);
+      }
+    }
+  }, [user, isPremium, subscriptionDetails]);
 
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
   const [searchQuery, setSearchQuery] = useState('');
@@ -228,6 +242,38 @@ const IndexContent = () => {
       />
       
       <Hero language={language} />
+
+      {/* Free Month Congratulations Banner */}
+      {showFreeBanner && (
+        <div className="container mx-auto px-4 mt-6">
+          <div className="relative bg-gradient-to-r from-primary/15 via-accent/15 to-primary/15 border border-primary/30 rounded-2xl p-6 animate-fade-in">
+            <button
+              onClick={() => {
+                setShowFreeBanner(false);
+                sessionStorage.setItem('free_banner_dismissed', 'true');
+              }}
+              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-4">
+              <PartyPopper className="w-10 h-10 text-primary flex-shrink-0" />
+              <div>
+                <h3 className="text-lg font-bold text-foreground">
+                  {language === 'en'
+                    ? '🎉 Congratulations! You\'re one of the first 50!'
+                    : '🎉 अभिनंदन! तुम्ही पहिल्या ५० मध्ये आहात!'}
+                </h3>
+                <p className="text-muted-foreground text-sm mt-1">
+                  {language === 'en'
+                    ? 'You\'ve received 1 month of FREE premium access. Enjoy all recipes without limits!'
+                    : 'तुम्हाला 1 महिन्याचा मोफत प्रीमियम अ‍ॅक्सेस मिळाला आहे. सर्व रेसिपी मर्यादेशिवाय आनंद घ्या!'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <Suspense fallback={<div className="h-20" />}>
         <FilterBar
