@@ -140,7 +140,7 @@ export default function CreatorLanding() {
                 onClick={() => navigate('/premium')}
               >
                 <Crown className="mr-2 w-5 h-5" />
-                {language === 'en' ? 'Get Premium Access' : 'प्रीमियम मिळवा'}
+                {language === 'en' ? 'Get Premium — ₹299/year (Free 1 month for first 50!)' : 'प्रीमियम मिळवा — ₹299/वर्ष (पहिल्या 50 साठी 1 महिना मोफत!)'}
               </Button>
             </div>
           </div>

@@ -108,16 +108,15 @@ serve(async (req) => {
       // Determine expiry based on amount
       let expiresAt: Date | null = null;
       
-      if (subscription.amount === 9900) {
+      if (subscription.amount === 4900) {
         // Monthly plan - 1 month
         expiresAt = new Date();
         expiresAt.setMonth(expiresAt.getMonth() + 1);
-      } else if (subscription.amount === 49900) {
-        // Yearly plan - 1 year
+      } else if (subscription.amount === 49900 || subscription.amount === 29900) {
+        // Yearly plan (regular or creator discount) - 1 year
         expiresAt = new Date();
         expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       }
-      // For lifetime (99900), expiresAt remains null
 
       console.log(`Activating subscription: order=${orderId}, amount=${subscription.amount}, expiry=${expiresAt?.toISOString() || 'lifetime'}`);
 
