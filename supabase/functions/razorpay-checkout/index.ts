@@ -67,7 +67,43 @@ serve(async (req) => {
         .from('referrals')
         .upsert({ creator_id: creator.id, user_id: user.id }, { onConflict: 'user_id' });
 
-      return new Response(JSON.stringify({ success: true }),
+      // Check if this creator's first 50 referrals — grant free 1 month
+      const { count: referralCount } = await adminClient
+        .from('referrals')
+        .select('id', { count: 'exact', head: true })
+        .eq('creator_id', creator.id);
+
+      let freeMonthGranted = false;
+      if ((referralCount || 0) <= 50) {
+        // Check if user already has an active subscription
+        const { data: existingSub } = await adminClient
+          .from('subscriptions')
+          .select('id')
+          .eq('user_id', user.id)
+          .in('status', ['active', 'completed'])
+          .limit(1);
+
+        if (!existingSub || existingSub.length === 0) {
+          const expiresAt = new Date();
+          expiresAt.setMonth(expiresAt.getMonth() + 1);
+          
+          await adminClient
+            .from('subscriptions')
+            .insert({
+              user_id: user.id,
+              amount: 0,
+              status: 'active',
+              currency: 'INR',
+              expires_at: expiresAt.toISOString(),
+              razorpay_order_id: `free_creator_${creatorSlug}`,
+              razorpay_payment_id: `free_creator_${creatorSlug}`,
+            });
+          freeMonthGranted = true;
+          console.log(`Free month granted to user ${user.id} via creator ${creatorSlug} (referral #${referralCount})`);
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true, freeMonthGranted }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -186,16 +222,15 @@ serve(async (req) => {
       // Determine expiry based on amount from database (not client)
       let expiresAt: Date | null = null;
       
-      if (subscription.amount === 9900) {
+      if (subscription.amount === 4900) {
         // Monthly plan - 1 month
         expiresAt = new Date();
         expiresAt.setMonth(expiresAt.getMonth() + 1);
-      } else if (subscription.amount === 49900) {
-        // Yearly plan - 1 year
+      } else if (subscription.amount === 49900 || subscription.amount === 29900) {
+        // Yearly plan (regular or creator discount) - 1 year
         expiresAt = new Date();
         expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       }
-      // For lifetime (99900), expiresAt remains null
 
       console.log(`Payment verified for user ${user.id}, order ${razorpay_order_id}, amount ${subscription.amount}, expiry: ${expiresAt?.toISOString() || 'lifetime'}`);
 

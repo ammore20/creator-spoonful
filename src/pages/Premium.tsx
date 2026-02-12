@@ -131,10 +131,20 @@ export default function Premium() {
       // Track referral if exists
       const refSlug = localStorage.getItem('ref_creator_slug');
       if (refSlug) {
-        await supabase.functions.invoke('razorpay-checkout', {
+        const { data: refData } = await supabase.functions.invoke('razorpay-checkout', {
           body: { action: 'track-referral', creatorSlug: refSlug },
           headers: { Authorization: `Bearer ${session?.access_token}` },
-        }).catch(() => {}); // non-fatal
+        }).catch(() => ({ data: null }));
+        
+        if (refData?.freeMonthGranted) {
+          localStorage.removeItem('ref_creator_slug');
+          toast({
+            title: language === 'en' ? '🎉 Free Month Activated!' : '🎉 मोफत महिना सक्रिय!',
+            description: language === 'en' ? 'You got 1 month free premium access!' : 'तुम्हाला 1 महिना मोफत प्रीमियम मिळाले!',
+          });
+          navigate('/');
+          return;
+        }
         localStorage.removeItem('ref_creator_slug');
       }
       
@@ -227,20 +237,39 @@ export default function Premium() {
     }
   };
 
-  const pricingPlans = [
+  const isReferred = !!localStorage.getItem('ref_creator_slug');
+
+  const pricingPlans = isReferred ? [
     {
       name: language === 'en' ? 'Monthly Plan' : 'मासिक योजना',
-      price: 99,
+      price: 49,
       period: language === 'en' ? '/month' : '/महिना',
       description: language === 'en' ? 'Billed monthly' : 'मासिक बिल',
-      amount: 9900, // Amount in paise
+      amount: 4900,
     },
     {
       name: language === 'en' ? 'Yearly Plan' : 'वार्षिक योजना',
-      price: 999,
+      price: 299,
+      originalPrice: 499,
       period: language === 'en' ? '/year' : '/वर्ष',
-      description: language === 'en' ? 'Save 17% with annual billing' : 'वार्षिक बिलिंगसह 17% वाचवा',
-      amount: 99900, // Amount in paise
+      description: language === 'en' ? 'Creator special — 40% off!' : 'क्रिएटर स्पेशल — 40% सवलत!',
+      amount: 29900,
+      popular: true,
+    },
+  ] : [
+    {
+      name: language === 'en' ? 'Monthly Plan' : 'मासिक योजना',
+      price: 49,
+      period: language === 'en' ? '/month' : '/महिना',
+      description: language === 'en' ? 'Billed monthly' : 'मासिक बिल',
+      amount: 4900,
+    },
+    {
+      name: language === 'en' ? 'Yearly Plan' : 'वार्षिक योजना',
+      price: 499,
+      period: language === 'en' ? '/year' : '/वर्ष',
+      description: language === 'en' ? 'Save 59% with annual billing' : 'वार्षिक बिलिंगसह 59% वाचवा',
+      amount: 49900,
       popular: true,
     },
   ];
@@ -272,7 +301,7 @@ export default function Premium() {
     <div className="min-h-screen flex flex-col bg-gradient-subtle">
       <SEO
         title="Premium Membership - Unlock Exclusive Marathi Recipes"
-        description="Subscribe to RecipeMaker Premium and get access to 1000+ exclusive Marathi recipes, save unlimited favorites, download recipes, AI-powered suggestions, and personalized meal planning. Plans starting at ₹99/month."
+        description="Subscribe to RecipeMaker Premium and get access to 1000+ exclusive Marathi recipes, save unlimited favorites, download recipes, AI-powered suggestions, and personalized meal planning. Plans starting at ₹49/month."
         url="/premium"
       />
       <Navbar onSearch={() => {}} language={language} onLanguageToggle={toggleLanguage} />
@@ -383,6 +412,9 @@ export default function Premium() {
                   {plan.name}
                 </CardTitle>
                 <div className="text-4xl font-bold my-4 text-foreground">
+                  {'originalPrice' in plan && (plan as any).originalPrice && (
+                    <span className="text-lg line-through text-muted-foreground mr-2">₹{(plan as any).originalPrice}</span>
+                  )}
                   ₹{plan.price}
                   <span className="text-lg font-normal text-muted-foreground block mt-1">
                     {plan.period}

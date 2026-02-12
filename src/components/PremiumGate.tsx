@@ -99,7 +99,7 @@ export const PremiumGate = ({ children }: PremiumGateProps) => {
                 Upgrade to Premium
               </Button>
               <p className="text-sm text-muted-foreground">
-                Plans starting at just ₹99/month
+                Plans starting at just ₹49/month
               </p>
             </div>
           </CardContent>
