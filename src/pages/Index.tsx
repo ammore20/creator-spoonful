@@ -69,6 +69,7 @@ const IndexContent = () => {
           creators (name)
         `, { count: 'exact' })
         .eq('status', 'done')
+        .not('extracted_recipe_json', 'cs', '{"no_recipe":true}')
         .order('published_at', { ascending: false })
         .range(from, to);
 
