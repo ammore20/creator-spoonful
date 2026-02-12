@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/Navbar';
-import { RefreshCw, Play, Loader2, ArrowLeftRight } from 'lucide-react';
+import { RefreshCw, Play, Loader2, ArrowLeftRight, Plus } from 'lucide-react';
 import type { User, Session } from '@supabase/supabase-js';
 
 const Admin = () => {
@@ -17,6 +18,9 @@ const Admin = () => {
   const [stats, setStats] = useState<any>(null);
   const [queueItems, setQueueItems] = useState<any[]>([]);
   const [pageToken, setPageToken] = useState<string | null>(null);
+  const [creators, setCreators] = useState<any[]>([]);
+  const [newCreatorHandle, setNewCreatorHandle] = useState('');
+  const [addingCreator, setAddingCreator] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -73,6 +77,7 @@ const Admin = () => {
 
       setIsAdmin(true);
       setLoading(false);
+      loadCreators();
       loadStats();
       loadQueue();
     } catch (error) {
@@ -83,6 +88,14 @@ const Admin = () => {
       });
       navigate('/');
     }
+  };
+
+  const loadCreators = async () => {
+    const { data } = await supabase
+      .from('creators')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setCreators(data || []);
   };
 
   const loadStats = async () => {
@@ -97,6 +110,44 @@ const Admin = () => {
     }, {}) || {};
 
     setStats({ statusCounts, totalVideos: videos?.length || 0 });
+  };
+
+  const addCreatorByHandle = async () => {
+    if (!session || !newCreatorHandle.trim()) return;
+    
+    setAddingCreator(true);
+    try {
+      // Use ingest function which now resolves handles and auto-creates creators
+      const handle = newCreatorHandle.trim().startsWith('@') ? newCreatorHandle.trim() : `@${newCreatorHandle.trim()}`;
+      
+      const { data, error } = await supabase.functions.invoke('ingest-youtube', {
+        body: {
+          channelId: handle,
+          maxResults: 20,
+          jobType: 'seed'
+        }
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: 'Creator Added!',
+        description: `Ingested ${data.ingestedCount} videos, ${data.queuedCount} queued for processing`
+      });
+      
+      setNewCreatorHandle('');
+      loadCreators();
+      loadStats();
+      loadQueue();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to add creator',
+        variant: 'destructive'
+      });
+    } finally {
+      setAddingCreator(false);
+    }
   };
 
   const loadQueue = async () => {
@@ -392,7 +443,38 @@ const Admin = () => {
           </div>
         )}
 
-        {/* Actions */}
+        {/* Add Creator */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Add Creator by YouTube Handle</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-3 items-center mb-4">
+              <Input
+                placeholder="@kitchencookintipsmarathi"
+                value={newCreatorHandle}
+                onChange={(e) => setNewCreatorHandle(e.target.value)}
+                className="max-w-md"
+              />
+              <Button onClick={addCreatorByHandle} disabled={addingCreator || !newCreatorHandle.trim()}>
+                {addingCreator ? <Loader2 className="mr-2 w-4 h-4 animate-spin" /> : <Plus className="mr-2 w-4 h-4" />}
+                Add & Seed
+              </Button>
+            </div>
+            {creators.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">Existing Creators:</div>
+                {creators.map((c) => (
+                  <div key={c.id} className="flex items-center gap-2 p-2 bg-muted rounded">
+                    <Badge>{c.name}</Badge>
+                    <span className="text-xs text-muted-foreground">{c.channel_id}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Processing Actions</CardTitle>

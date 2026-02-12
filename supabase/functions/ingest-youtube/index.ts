@@ -96,24 +96,61 @@ serve(async (req) => {
       );
     }
 
-    const { channelId, maxResults, jobType, pageToken } = validationResult.data;
+    const { channelId: rawChannelId, maxResults, jobType, pageToken } = validationResult.data;
     
-    console.log(`Starting ingestion: channelId=${channelId}, maxResults=${maxResults}, jobType=${jobType}`);
+    console.log(`Starting ingestion: channelId=${rawChannelId}, maxResults=${maxResults}, jobType=${jobType}`);
+
+    // Resolve handle to channel ID if needed (handles start with @)
+    let resolvedChannelId = rawChannelId;
+    if (rawChannelId.startsWith('@')) {
+      console.log(`Resolving YouTube handle: ${rawChannelId}`);
+      const handleResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=id,snippet&forHandle=${rawChannelId.substring(1)}&key=${YOUTUBE_API_KEY}`
+      );
+      if (!handleResponse.ok) {
+        throw new Error(`YouTube API error resolving handle: ${await handleResponse.text()}`);
+      }
+      const handleData = await handleResponse.json();
+      if (!handleData.items || handleData.items.length === 0) {
+        throw new Error(`No YouTube channel found for handle: ${rawChannelId}`);
+      }
+      resolvedChannelId = handleData.items[0].id;
+      const channelName = handleData.items[0].snippet?.title || rawChannelId;
+      console.log(`Resolved handle ${rawChannelId} to channel ID: ${resolvedChannelId}, name: ${channelName}`);
+
+      // Auto-create creator if not exists
+      const { data: existingCreator } = await supabase
+        .from('creators')
+        .select('id')
+        .eq('channel_id', resolvedChannelId)
+        .maybeSingle();
+
+      if (!existingCreator) {
+        const { error: createError } = await supabase
+          .from('creators')
+          .insert({ channel_id: resolvedChannelId, name: channelName });
+        if (createError) {
+          console.error('Error creating creator:', createError);
+        } else {
+          console.log(`Auto-created creator: ${channelName}`);
+        }
+      }
+    }
 
     // Get creator
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
       .select('*')
-      .eq('channel_id', channelId)
+      .eq('channel_id', resolvedChannelId)
       .single();
 
     if (creatorError || !creator) {
-      throw new Error(`Creator not found for channel_id: ${channelId}`);
+      throw new Error(`Creator not found for channel_id: ${resolvedChannelId}`);
     }
 
     // Fetch uploads playlist ID
     const channelResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${YOUTUBE_API_KEY}`
+      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${resolvedChannelId}&key=${YOUTUBE_API_KEY}`
     );
     
     if (!channelResponse.ok) {
