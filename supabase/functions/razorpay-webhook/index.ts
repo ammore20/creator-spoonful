@@ -143,6 +143,31 @@ serve(async (req) => {
 
       console.log('Subscription activated successfully:', orderId);
 
+      // Track affiliate earnings - check if user was referred by a creator
+      try {
+        const { data: referral } = await supabaseAdmin
+          .from('referrals')
+          .select('id, creator_id')
+          .eq('user_id', subscription.user_id)
+          .single();
+
+        if (referral) {
+          const creatorShare = Math.floor(amount / 2); // 50% split
+          await supabaseAdmin
+            .from('creator_earnings')
+            .insert({
+              creator_id: referral.creator_id,
+              subscription_id: subscription.id,
+              referral_id: referral.id,
+              subscription_amount: amount,
+              creator_share: creatorShare,
+            });
+          console.log(`Creator earning recorded: creator=${referral.creator_id}, share=${creatorShare}`);
+        }
+      } catch (refErr) {
+        console.error('Error tracking referral earnings (non-fatal):', refErr);
+      }
+
       return new Response(
         JSON.stringify({ success: true, message: 'Payment processed successfully' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

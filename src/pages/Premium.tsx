@@ -127,6 +127,16 @@ export default function Premium() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
+
+      // Track referral if exists
+      const refSlug = localStorage.getItem('ref_creator_slug');
+      if (refSlug) {
+        await supabase.functions.invoke('razorpay-checkout', {
+          body: { action: 'track-referral', creatorSlug: refSlug },
+          headers: { Authorization: `Bearer ${session?.access_token}` },
+        }).catch(() => {}); // non-fatal
+        localStorage.removeItem('ref_creator_slug');
+      }
       
       // Create Razorpay order
       const { data: orderData, error: orderError } = await supabase.functions.invoke(

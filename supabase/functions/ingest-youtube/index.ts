@@ -126,13 +126,15 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!existingCreator) {
+        // Generate URL-friendly slug from channel name
+        const slug = channelName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const { error: createError } = await supabase
           .from('creators')
-          .insert({ channel_id: resolvedChannelId, name: channelName });
+          .insert({ channel_id: resolvedChannelId, name: channelName, slug });
         if (createError) {
           console.error('Error creating creator:', createError);
         } else {
-          console.log(`Auto-created creator: ${channelName}`);
+          console.log(`Auto-created creator: ${channelName} (slug: ${slug})`);
         }
       }
     }

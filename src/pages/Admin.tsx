@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/Navbar';
-import { RefreshCw, Play, Loader2, ArrowLeftRight, Plus } from 'lucide-react';
+import { RefreshCw, Play, Loader2, ArrowLeftRight, Plus, Link, IndianRupee } from 'lucide-react';
 import type { User, Session } from '@supabase/supabase-js';
 
 const Admin = () => {
@@ -19,6 +19,7 @@ const Admin = () => {
   const [queueItems, setQueueItems] = useState<any[]>([]);
   const [pageToken, setPageToken] = useState<string | null>(null);
   const [creators, setCreators] = useState<any[]>([]);
+  const [creatorEarnings, setCreatorEarnings] = useState<Record<string, { total: number; referrals: number }>>({});
   const [newCreatorHandle, setNewCreatorHandle] = useState('');
   const [addingCreator, setAddingCreator] = useState(false);
   const { toast } = useToast();
@@ -78,6 +79,7 @@ const Admin = () => {
       setIsAdmin(true);
       setLoading(false);
       loadCreators();
+      loadCreatorEarnings();
       loadStats();
       loadQueue();
     } catch (error) {
@@ -96,6 +98,30 @@ const Admin = () => {
       .select('*')
       .order('created_at', { ascending: false });
     setCreators(data || []);
+  };
+
+  const loadCreatorEarnings = async () => {
+    const { data: earnings } = await supabase
+      .from('creator_earnings')
+      .select('creator_id, creator_share');
+    
+    const { data: referrals } = await supabase
+      .from('referrals')
+      .select('creator_id');
+
+    const earningsMap: Record<string, { total: number; referrals: number }> = {};
+    
+    referrals?.forEach((r: any) => {
+      if (!earningsMap[r.creator_id]) earningsMap[r.creator_id] = { total: 0, referrals: 0 };
+      earningsMap[r.creator_id].referrals++;
+    });
+    
+    earnings?.forEach((e: any) => {
+      if (!earningsMap[e.creator_id]) earningsMap[e.creator_id] = { total: 0, referrals: 0 };
+      earningsMap[e.creator_id].total += e.creator_share;
+    });
+
+    setCreatorEarnings(earningsMap);
   };
 
   const loadStats = async () => {
@@ -462,14 +488,49 @@ const Admin = () => {
               </Button>
             </div>
             {creators.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="text-sm font-medium text-muted-foreground">Existing Creators:</div>
-                {creators.map((c) => (
-                  <div key={c.id} className="flex items-center gap-2 p-2 bg-muted rounded">
-                    <Badge>{c.name}</Badge>
-                    <span className="text-xs text-muted-foreground">{c.channel_id}</span>
-                  </div>
-                ))}
+                {creators.map((c) => {
+                  const earnings = creatorEarnings[c.id];
+                  return (
+                    <div key={c.id} className="p-3 bg-muted rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge>{c.name}</Badge>
+                          <span className="text-xs text-muted-foreground">{c.channel_id}</span>
+                        </div>
+                        {earnings && (
+                          <div className="flex items-center gap-3 text-sm">
+                            <span className="text-muted-foreground">{earnings.referrals} referrals</span>
+                            <span className="font-semibold text-primary flex items-center gap-1">
+                              <IndianRupee className="w-3 h-3" />
+                              {(earnings.total / 100).toFixed(0)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      {c.slug && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <Link className="w-3 h-3 text-muted-foreground" />
+                          <code className="bg-background px-2 py-1 rounded text-muted-foreground">
+                            {window.location.origin}/c/{c.slug}
+                          </code>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 text-xs"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/c/${c.slug}`);
+                              toast({ title: 'Link copied!' });
+                            }}
+                          >
+                            Copy
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>
