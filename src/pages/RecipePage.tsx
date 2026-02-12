@@ -48,11 +48,7 @@ const RecipePageContent = () => {
 
   const checkAuthAndFetchRecipe = async () => {
     const { data } = await supabase.auth.getUser();
-    if (!data.user) {
-      navigate('/auth');
-      return;
-    }
-    setUser(data.user);
+    setUser(data.user || null);
     fetchRecipe();
   };
 
@@ -654,10 +650,24 @@ const RecipePageContent = () => {
   );
 };
 
-const RecipePage = () => (
-  <PremiumGate>
-    <RecipePageContent />
-  </PremiumGate>
-);
+const RecipePage = () => {
+  const { id } = useParams();
+  
+  // Check if this is the free recipe of the day
+  const today = new Date().toISOString().split('T')[0];
+  const freeRecipeId = localStorage.getItem('free_recipe_of_day');
+  const freeRecipeDate = localStorage.getItem('free_recipe_date');
+  const isFreeRecipe = freeRecipeId === id && freeRecipeDate === today;
+
+  if (isFreeRecipe) {
+    return <RecipePageContent />;
+  }
+
+  return (
+    <PremiumGate>
+      <RecipePageContent />
+    </PremiumGate>
+  );
+};
 
 export default RecipePage;
