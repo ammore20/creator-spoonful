@@ -120,9 +120,12 @@ serve(async (req) => {
           requestBody.pageToken = pageToken;
         }
         
-        // Call ingest function
+        // Call ingest function with user's JWT for auth
         const { data: ingestData, error: ingestError } = await supabase.functions.invoke('ingest-youtube', {
-          body: requestBody
+          body: requestBody,
+          headers: {
+            Authorization: authHeader!
+          }
         });
 
         if (ingestError) throw ingestError;
