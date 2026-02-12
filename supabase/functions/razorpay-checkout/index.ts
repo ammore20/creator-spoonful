@@ -38,6 +38,39 @@ serve(async (req) => {
 
     const { action, ...body } = await req.json();
 
+    // Handle referral tracking
+    if (action === 'track-referral') {
+      const { creatorSlug } = body;
+      if (!creatorSlug) {
+        return new Response(JSON.stringify({ error: 'Missing creator slug' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const adminClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      const { data: creator } = await adminClient
+        .from('creators')
+        .select('id')
+        .eq('slug', creatorSlug)
+        .single();
+
+      if (!creator) {
+        return new Response(JSON.stringify({ error: 'Creator not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Upsert referral (ignore if already exists)
+      await adminClient
+        .from('referrals')
+        .upsert({ creator_id: creator.id, user_id: user.id }, { onConflict: 'user_id' });
+
+      return new Response(JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Create Razorpay order
     if (action === 'create-order') {
       const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');

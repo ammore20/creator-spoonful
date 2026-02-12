@@ -15,6 +15,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import RefundPolicy from "./pages/RefundPolicy";
 import Contact from "./pages/Contact";
 import ForCreators from "./pages/ForCreators";
+import CreatorLanding from "./pages/CreatorLanding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/refund" element={<RefundPolicy />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/for-creators" element={<ForCreators />} />
+          <Route path="/c/:slug" element={<CreatorLanding />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

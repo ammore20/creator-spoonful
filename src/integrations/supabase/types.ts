@@ -52,12 +52,65 @@ export type Database = {
           },
         ]
       }
+      creator_earnings: {
+        Row: {
+          created_at: string
+          creator_id: string
+          creator_share: number
+          id: string
+          referral_id: string
+          subscription_amount: number
+          subscription_id: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          creator_share: number
+          id?: string
+          referral_id: string
+          subscription_amount: number
+          subscription_id: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          creator_share?: number
+          id?: string
+          referral_id?: string
+          subscription_amount?: number
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_earnings_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_earnings_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_earnings_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creators: {
         Row: {
           channel_id: string
           created_at: string | null
           id: string
           name: string
+          slug: string | null
           updated_at: string | null
         }
         Insert: {
@@ -65,6 +118,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name: string
+          slug?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -72,6 +126,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
+          slug?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -210,6 +265,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
