@@ -2,3 +2,6 @@ project_id = "yaslzerxrbfyspaffxru"
 
 [functions.generate-sitemap]
 verify_jwt = false
+
+[functions.translate-recipes]
+verify_jwt = false
