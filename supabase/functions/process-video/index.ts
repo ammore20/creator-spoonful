@@ -314,7 +314,45 @@ serve(async (req) => {
       tokens_used: tokensUsed
     });
 
-    // Step 3: Update video with results
+    // Step 3: Translate to Marathi using Lovable AI
+    console.log('Step 3: Translating to Marathi...');
+    try {
+      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+      if (LOVABLE_API_KEY) {
+        const translationResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash-lite',
+            messages: [
+              { role: 'system', content: `You are a Marathi translation expert. Translate the given recipe to Marathi. Return ONLY valid JSON: {"title_mr":"...","description_mr":"...","ingredients_mr":["..."],"steps_mr":["..."]}. Keep quantities in numerals.` },
+              { role: 'user', content: JSON.stringify({ title: extractedRecipe.title, ingredients: extractedRecipe.ingredients, steps: extractedRecipe.steps }) },
+            ],
+            temperature: 0.2,
+          }),
+        });
+
+        if (translationResponse.ok) {
+          const transData = await translationResponse.json();
+          let transText = transData.choices?.[0]?.message?.content || '';
+          if (transText.includes('```json')) transText = transText.split('```json')[1].split('```')[0].trim();
+          else if (transText.includes('```')) transText = transText.split('```')[1].split('```')[0].trim();
+          const translation = JSON.parse(transText);
+          extractedRecipe.title_mr = translation.title_mr;
+          extractedRecipe.description_mr = translation.description_mr;
+          extractedRecipe.ingredients_mr = translation.ingredients_mr;
+          extractedRecipe.steps_mr = translation.steps_mr;
+          console.log('Marathi translation added:', translation.title_mr);
+        }
+      }
+    } catch (transError) {
+      console.error('Marathi translation failed (non-fatal):', transError);
+    }
+
+    // Step 4: Update video with results
     await supabase
       .from('videos')
       .update({
