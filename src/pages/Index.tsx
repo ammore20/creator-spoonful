@@ -283,7 +283,7 @@ const IndexContent = () => {
         />
       </Suspense>
 
-      <main id="recipes-section" className="container mx-auto px-4 py-12">
+      <main id="recipes-section" className="container mx-auto px-3 sm:px-4 py-6 sm:py-12">
         {loading ? (
           <div className="space-y-16">
             <div>
@@ -296,21 +296,21 @@ const IndexContent = () => {
                     </h2>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                   {[...Array(3)].map((_, i) => (
                     <RecipeCardSkeleton key={i} />
                   ))}
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {[...Array(6)].map((_, i) => (
                 <RecipeCardSkeleton key={i} />
               ))}
             </div>
           </div>
         ) : filteredRecipes.length > 0 ? (
-          <div className="space-y-16">
+          <div className="space-y-8 sm:space-y-16">
             {/* Free Recipe of the Day */}
             {recipes.length > 0 && (() => {
               // Deterministic daily pick based on date
@@ -323,7 +323,7 @@ const IndexContent = () => {
               localStorage.setItem('free_recipe_date', today);
               return (
                 <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
-                  <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 rounded-2xl p-8 border border-emerald-500/20 hover:shadow-warm transition-all duration-500">
+                  <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-emerald-500/20 hover:shadow-warm transition-all duration-500">
                     <div className="flex items-center gap-3 mb-6">
                       <span className="text-4xl floating">🎁</span>
                       <div className="flex-1">
@@ -341,7 +341,7 @@ const IndexContent = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="max-w-sm">
+                    <div className="max-w-[180px] sm:max-w-sm">
                       <RecipeCard recipe={freeRecipe} language={language} loading="eager" />
                     </div>
                   </div>
@@ -352,7 +352,7 @@ const IndexContent = () => {
             {/* New Recipe Everyday Section */}
             {recipes.length > 0 && (
               <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-2xl p-8 border border-border hover:shadow-warm transition-all duration-500">
+                <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-border hover:shadow-warm transition-all duration-500">
                   <div className="flex items-center gap-3 mb-6">
                     <span className="text-4xl floating">✨</span>
                     <div>
@@ -364,7 +364,7 @@ const IndexContent = () => {
                       </p>
                     </div>
                   </div>
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                     {recipes.slice(0, 3).map((recipe, index) => (
                       <div key={recipe.id} style={{ animationDelay: `${0.2 + index * 0.1}s` }}>
                         <RecipeCard recipe={recipe} language={language} loading="eager" />
@@ -459,7 +459,7 @@ const IndexContent = () => {
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                     {recipes.map((recipe) => (
                       <RecipeCard key={recipe.id} recipe={recipe} language={language} loading="lazy" />
                     ))}
