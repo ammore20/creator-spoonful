@@ -70,7 +70,7 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
                 type="text"
                 placeholder={language === 'en' ? 'Search recipes...' : 'रेसिपी शोधा...'}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); onSearch(e.target.value); }}
                 className="pl-10 bg-background/80 border-border glow-focus transition-all duration-300 hover:border-primary/50"
               />
             </div>
@@ -145,8 +145,8 @@ export const Navbar = ({ onSearch, language, onLanguageToggle }: NavbarProps) =>
               type="text"
               placeholder={language === 'en' ? 'Search recipes...' : 'रेसिपी शोधा...'}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-background"
+              onChange={(e) => { setSearchQuery(e.target.value); onSearch(e.target.value); }}
+                className="pl-10 bg-background"
             />
           </div>
         </form>
