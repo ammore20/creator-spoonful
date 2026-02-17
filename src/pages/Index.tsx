@@ -52,6 +52,7 @@ const IndexContent = () => {
     cuisine: [],
     mood: [],
     cookTimeRange: [],
+    dietType: [],
   });
 
   useEffect(() => {
@@ -201,6 +202,23 @@ const IndexContent = () => {
         });
       })();
 
+      // Diet type filter based on ingredient keywords
+      const matchesDiet = (() => {
+        if (filters.dietType.length === 0) return true;
+        const allIngredients = recipe.ingredients.join(' ').toLowerCase();
+        const title = recipe.title.toLowerCase();
+        const nonVegKeywords = ['chicken', 'mutton', 'fish', 'prawn', 'shrimp', 'meat', 'lamb', 'pork', 'crab', 'surmai', 'pomfret', 'bombil', 'kolambi', 'kombdi', 'murg', 'keema', 'gosht', 'चिकन', 'मटण', 'मासा', 'कोळंबी', 'सुरमई', 'मांस'];
+        const eggKeywords = ['egg', 'anda', 'अंड'];
+        const hasNonVeg = nonVegKeywords.some(k => allIngredients.includes(k) || title.includes(k));
+        const hasEgg = eggKeywords.some(k => allIngredients.includes(k) || title.includes(k));
+        return filters.dietType.some((diet) => {
+          if (diet === 'Veg') return !hasNonVeg && !hasEgg;
+          if (diet === 'Non-Veg') return hasNonVeg;
+          if (diet === 'Egg') return hasEgg;
+          return false;
+        });
+      })();
+
       return (
         matchesSearch &&
         matchesCreator &&
@@ -208,7 +226,8 @@ const IndexContent = () => {
         matchesMeal &&
         matchesCuisine &&
         matchesMood &&
-        matchesCookTime
+        matchesCookTime &&
+        matchesDiet
       );
     });
   }, [recipes, searchQuery, filters]);

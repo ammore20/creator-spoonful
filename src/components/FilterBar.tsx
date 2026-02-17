@@ -1,4 +1,4 @@
-import { FilterOptions, TasteProfile, MealType, Cuisine, Mood, CookTimeRange } from '@/types/recipe';
+import { FilterOptions, TasteProfile, MealType, Cuisine, Mood, CookTimeRange, DietType } from '@/types/recipe';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, RotateCcw } from 'lucide-react';
@@ -36,6 +36,9 @@ const filterIcons: Record<string, string> = {
   'Quick': '⚡',
   'Medium': '⏱️',
   'Long': '🍲',
+  'Veg': '🥬',
+  'Non-Veg': '🍗',
+  'Egg': '🥚',
 };
 
 const translations: Record<string, string> = {
@@ -64,6 +67,9 @@ const translations: Record<string, string> = {
   'Quick': 'झटपट',
   'Medium': 'मध्यम',
   'Long': 'दीर्घ',
+  'Veg': 'शाकाहारी',
+  'Non-Veg': 'मांसाहारी',
+  'Egg': 'अंडा',
 };
 
 const tasteProfiles: TasteProfile[] = ['Spicy', 'Sweet', 'Sour', 'Bitter', 'Tangy', 'Savory', 'Balanced'];
@@ -71,6 +77,7 @@ const mealTypes: MealType[] = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert
 const cuisines: Cuisine[] = ['Maharashtrian', 'South Indian', 'North Indian', 'Fusion', 'Global'];
 const moods: Mood[] = ['Comfort', 'Party', 'Festive', 'Quick Bite', 'Traditional'];
 const cookTimeRanges: CookTimeRange[] = ['Quick', 'Medium', 'Long'];
+const dietTypes: DietType[] = ['Veg', 'Non-Veg', 'Egg'];
 
 export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps) => {
   const { toast } = useToast();
@@ -109,6 +116,7 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
       cuisine: [],
       mood: [],
       cookTimeRange: [],
+      dietType: [],
     });
     toast({
       description: language === 'en' ? '✨ All filters cleared' : '✨ सर्व फिल्टर काढले',
@@ -260,6 +268,23 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
                   value={range}
                   category="cookTimeRange"
                   isActive={filters.cookTimeRange.includes(range)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Diet Type */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+              {language === 'en' ? 'Diet' : 'आहार'}
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {dietTypes.map((diet) => (
+                <FilterPillButton
+                  key={diet}
+                  value={diet}
+                  category="dietType"
+                  isActive={filters.dietType.includes(diet)}
                 />
               ))}
             </div>
