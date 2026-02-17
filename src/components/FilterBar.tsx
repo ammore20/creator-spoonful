@@ -1,4 +1,4 @@
-import { FilterOptions, TasteProfile, MealType, Cuisine, Mood } from '@/types/recipe';
+import { FilterOptions, TasteProfile, MealType, Cuisine, Mood, CookTimeRange } from '@/types/recipe';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, RotateCcw } from 'lucide-react';
@@ -32,7 +32,10 @@ const filterIcons: Record<string, string> = {
   'Party': '🎉',
   'Festive': '🪔',
   'Quick Bite': '⏱️',
-  'Traditional': '👵'
+  'Traditional': '👵',
+  'Quick': '⚡',
+  'Medium': '⏱️',
+  'Long': '🍲',
 };
 
 const translations: Record<string, string> = {
@@ -57,13 +60,17 @@ const translations: Record<string, string> = {
   'Party': 'पार्टी',
   'Festive': 'सणासुदीचे',
   'Quick Bite': 'त्वरित',
-  'Traditional': 'पारंपरिक'
+  'Traditional': 'पारंपरिक',
+  'Quick': 'झटपट',
+  'Medium': 'मध्यम',
+  'Long': 'दीर्घ',
 };
 
 const tasteProfiles: TasteProfile[] = ['Spicy', 'Sweet', 'Sour', 'Bitter', 'Tangy', 'Savory', 'Balanced'];
 const mealTypes: MealType[] = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
 const cuisines: Cuisine[] = ['Maharashtrian', 'South Indian', 'North Indian', 'Fusion', 'Global'];
 const moods: Mood[] = ['Comfort', 'Party', 'Festive', 'Quick Bite', 'Traditional'];
+const cookTimeRanges: CookTimeRange[] = ['Quick', 'Medium', 'Long'];
 
 export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps) => {
   const { toast } = useToast();
@@ -101,6 +108,7 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
       mealType: [],
       cuisine: [],
       mood: [],
+      cookTimeRange: [],
     });
     toast({
       description: language === 'en' ? '✨ All filters cleared' : '✨ सर्व फिल्टर काढले',
@@ -235,6 +243,23 @@ export const FilterBar = ({ filters, onFilterChange, language }: FilterBarProps)
                   value={mood}
                   category="mood"
                   isActive={filters.mood.includes(mood)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Cook Time */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+              {language === 'en' ? 'Cook Time' : 'वेळ'}
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {cookTimeRanges.map((range) => (
+                <FilterPillButton
+                  key={range}
+                  value={range}
+                  category="cookTimeRange"
+                  isActive={filters.cookTimeRange.includes(range)}
                 />
               ))}
             </div>

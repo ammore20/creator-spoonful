@@ -2,6 +2,7 @@ export type TasteProfile = 'Spicy' | 'Sweet' | 'Sour' | 'Bitter' | 'Tangy' | 'Sa
 export type MealType = 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert';
 export type Cuisine = 'Maharashtrian' | 'South Indian' | 'North Indian' | 'Fusion' | 'Global';
 export type Mood = 'Comfort' | 'Party' | 'Festive' | 'Quick Bite' | 'Traditional';
+export type CookTimeRange = 'Quick' | 'Medium' | 'Long';
 
 export interface Recipe {
   id: string;
@@ -34,4 +35,5 @@ export interface FilterOptions {
   mealType: MealType[];
   cuisine: Cuisine[];
   mood: Mood[];
+  cookTimeRange: CookTimeRange[];
 }

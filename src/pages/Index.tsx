@@ -51,6 +51,7 @@ const IndexContent = () => {
     mealType: [],
     cuisine: [],
     mood: [],
+    cookTimeRange: [],
   });
 
   useEffect(() => {
@@ -186,13 +187,28 @@ const IndexContent = () => {
         filters.mood.length === 0 ||
         filters.mood.some((mood) => recipe.mood.includes(mood));
 
+      // Parse cook time to minutes for filtering
+      const matchesCookTime = (() => {
+        if (filters.cookTimeRange.length === 0) return true;
+        const timeStr = (recipe.cookTime || '').toLowerCase();
+        const minutes = parseInt(timeStr) || 30;
+        const adjustedMins = timeStr.includes('hour') ? minutes * 60 : minutes;
+        return filters.cookTimeRange.some((range) => {
+          if (range === 'Quick') return adjustedMins <= 20;
+          if (range === 'Medium') return adjustedMins > 20 && adjustedMins <= 45;
+          if (range === 'Long') return adjustedMins > 45;
+          return false;
+        });
+      })();
+
       return (
         matchesSearch &&
         matchesCreator &&
         matchesTaste &&
         matchesMeal &&
         matchesCuisine &&
-        matchesMood
+        matchesMood &&
+        matchesCookTime
       );
     });
   }, [recipes, searchQuery, filters]);
