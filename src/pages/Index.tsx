@@ -232,6 +232,14 @@ const IndexContent = () => {
     });
   }, [recipes, searchQuery, filters]);
 
+  // Auto-load more recipes when filters result in empty/few results but more data exists
+  const hasActiveFilters = Object.values(filters).some(arr => arr.length > 0);
+  useEffect(() => {
+    if (hasActiveFilters && filteredRecipes.length < 4 && hasMore && !loading && !loadingMore) {
+      fetchRecipes(false);
+    }
+  }, [filteredRecipes.length, hasActiveFilters, hasMore, loading, loadingMore]);
+
   // Group recipes by meal type
   const groupedRecipes = useMemo(() => {
     const mealTypes: MealType[] = ['Breakfast', 'Snack', 'Lunch', 'Dinner', 'Dessert'];
