@@ -6,6 +6,46 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Simple in-memory rate limiter (per-edge-instance)
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 20; // max 20 requests per window
+
+type RateRecord = {
+  timestamps: number[];
+};
+
+const rateLimitStore: Map<string, RateRecord> = (globalThis as any).rateLimitStore ??
+  new Map<string, RateRecord>();
+(globalThis as any).rateLimitStore = rateLimitStore;
+
+function getClientKey(req: Request): string {
+  const ip =
+    req.headers.get("x-real-ip") ??
+    req.headers.get("x-forwarded-for") ??
+    "unknown";
+  const userId = req.headers.get("x-client-info") ?? "";
+  return `${ip}:${userId}`;
+}
+
+function isRateLimited(req: Request): boolean {
+  const key = getClientKey(req);
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+
+  const record = rateLimitStore.get(key) ?? { timestamps: [] };
+  // Remove timestamps outside the window
+  record.timestamps = record.timestamps.filter((ts) => ts >= windowStart);
+
+  if (record.timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
+    rateLimitStore.set(key, record);
+    return true;
+  }
+
+  record.timestamps.push(now);
+  rateLimitStore.set(key, record);
+  return false;
+}
+
 interface RazorpayOrder {
   id: string;
   amount: number;
@@ -15,6 +55,16 @@ interface RazorpayOrder {
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (isRateLimited(req)) {
+    return new Response(
+      JSON.stringify({ error: 'Too many requests, please try again later.' }),
+      {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    );
   }
 
   try {
