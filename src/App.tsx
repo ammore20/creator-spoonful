@@ -7,7 +7,6 @@ import Index from "./pages/Index";
 import RecipePage from "./pages/RecipePage";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
-import SetupAdmin from "./pages/SetupAdmin";
 import Premium from "./pages/Premium";
 import Favorites from "./pages/Favorites";
 import TermsOfService from "./pages/TermsOfService";
@@ -18,7 +17,16 @@ import ForCreators from "./pages/ForCreators";
 import CreatorLanding from "./pages/CreatorLanding";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,7 +39,6 @@ const App = () => (
           <Route path="/recipe/:id" element={<RecipePage />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/setup-admin" element={<SetupAdmin />} />
           <Route path="/premium" element={<Premium />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/terms" element={<TermsOfService />} />
@@ -49,3 +56,4 @@ const App = () => (
 );
 
 export default App;
+

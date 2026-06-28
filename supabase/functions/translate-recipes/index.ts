@@ -30,13 +30,42 @@ serve(async (req) => {
   try {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
+    // ---- AUTH: require admin caller ----
+    const authHeader = req.headers.get('Authorization') || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const authClient = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claims, error: claimsErr } = await authClient.auth.getClaims(token);
+    if (claimsErr || !claims?.claims?.sub) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    const { data: isAdmin } = await supabase.rpc('has_role', {
+      _user_id: claims.claims.sub, _role: 'admin',
+    });
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    const { batchSize = 5 } = await req.json().catch(() => ({}));
+    // ---- Validate input ----
+    const body = await req.json().catch(() => ({}));
+    const rawBatch = Number(body?.batchSize ?? 5);
+    const batchSize = Math.min(Math.max(Number.isFinite(rawBatch) ? Math.floor(rawBatch) : 5, 1), 20);
 
     // Fetch recipes without Marathi translation
     const { data: videos, error } = await supabase
