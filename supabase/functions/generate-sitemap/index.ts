@@ -29,7 +29,7 @@ serve(async (req) => {
     const { data: recipes, error } = await supabase
       .from('videos')
       .select('id, updated_at')
-      .eq('status', 'completed')
+      .eq('status', 'done')
       .order('updated_at', { ascending: false });
 
     if (error) {

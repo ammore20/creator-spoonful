@@ -3,5 +3,5 @@ project_id = "yaslzerxrbfyspaffxru"
 [functions.generate-sitemap]
 verify_jwt = false
 
-[functions.translate-recipes]
+[functions.razorpay-webhook]
 verify_jwt = false
