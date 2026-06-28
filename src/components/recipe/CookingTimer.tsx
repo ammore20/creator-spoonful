@@ -12,13 +12,15 @@ export const CookingTimer = ({ minutes, onClose }: CookingTimerProps) => {
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval> | undefined;
     if (isRunning && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isRunning, timeLeft]);
 
   const formatTime = (seconds: number) => {
