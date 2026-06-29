@@ -75,22 +75,41 @@ serve(async (req) => {
 
     console.log(`Admin access verified for user: ${user.id}`);
 
-    // Validate input
+    // Validate input — channelId is either a YouTube channel id (UC...) or a handle (@name)
     const requestSchema = z.object({
-      channelId: z.string().min(1).max(100),
+      channelId: z.string().trim().min(2).max(100).regex(
+        /^(@[A-Za-z0-9_.-]{1,80}|UC[A-Za-z0-9_-]{20,30})$/,
+        { message: 'channelId must be a YouTube handle (@name) or channel id (UC…)' },
+      ),
       maxResults: z.number().int().min(1).max(50).default(20),
-      jobType: z.string().default('seed'),
-      pageToken: z.string().optional(),
+      jobType: z.enum(['seed', 'backfill', 'incremental']).default('seed'),
+      pageToken: z.string().trim().max(200).optional(),
     });
 
-    const rawBody = await req.json();
+    // Body size guard (defensive)
+    const rawText = await req.text();
+    if (rawText.length > 4096) {
+      return new Response(
+        JSON.stringify({ error: 'Request body too large' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+    let rawBody: unknown;
+    try {
+      rawBody = rawText ? JSON.parse(rawText) : {};
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'Malformed JSON' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
     const validationResult = requestSchema.safeParse(rawBody);
     
     if (!validationResult.success) {
       return new Response(
         JSON.stringify({ 
           error: 'Invalid request parameters', 
-          details: validationResult.error.errors 
+          details: validationResult.error.flatten() 
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
