@@ -253,39 +253,49 @@ serve(async (req) => {
       transcript = `Video Title: ${video.title}\n\nDescription: ${video.description || 'No description'}\n\nThis is a cooking video.`;
     }
     
-    console.log('Transcript prepared, length:', transcript.length);
+    // Enforce hard transcript cap to bound AI cost
+    if (transcript.length > MAX_TRANSCRIPT_CHARS) {
+      console.warn('transcript_truncated', { original: transcript.length, cap: MAX_TRANSCRIPT_CHARS });
+      transcript = transcript.slice(0, MAX_TRANSCRIPT_CHARS);
+    }
+    console.log('transcript_prepared', { length: transcript.length });
 
     // Track transcription cost
     await supabase.from('cost_tracking').insert({
       video_id: videoDbId,
       operation_type: 'transcription',
-      estimated_cost: 0.006, // ~$0.006 per minute
+      estimated_cost: 0.006,
       tokens_used: transcript.length
     });
 
-    // Step 2: Extract recipe using GPT
-    console.log('Step 2: Extracting recipe structure...');
-    
-    const extractionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
+    // Step 2: Extract recipe using GPT (with timeout + exponential backoff on 429/5xx)
+    console.log('extracting_recipe', { model: 'gpt-4o-mini', maxTokens: MAX_RECIPE_TOKENS });
+
+    const extractionResponse = await fetchWithRetry(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: RECIPE_EXTRACTION_PROMPT },
+            { role: 'user', content: `Extract recipe from this transcript:\n\n${transcript}` }
+          ],
+          temperature: 0.3,
+          max_tokens: MAX_RECIPE_TOKENS,
+        }),
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: RECIPE_EXTRACTION_PROMPT },
-          { role: 'user', content: `Extract recipe from this transcript:\n\n${transcript}` }
-        ],
-        temperature: 0.3,
-        max_tokens: 2000
-      }),
-    });
+      { attempts: 3, baseDelayMs: 800, timeoutMs: 30_000 },
+    );
 
     if (!extractionResponse.ok) {
       const errorText = await extractionResponse.text();
-      throw new Error(`OpenAI API error: ${errorText}`);
+      console.error('openai_extraction_failed', { status: extractionResponse.status });
+      throw new Error(`OpenAI API error (${extractionResponse.status}): ${errorText.slice(0, 200)}`);
     }
 
     const extractionData = await extractionResponse.json();
