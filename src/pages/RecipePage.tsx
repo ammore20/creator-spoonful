@@ -100,14 +100,10 @@ const RecipePageContent = () => {
 
   const fetchRecipe = async () => {
     try {
-      const { data, error } = await supabase
-        .from('videos')
-        .select(`
-          *,
-          creators (name)
-        `)
+      const { data, error } = await (supabase as any)
+        .from('public_videos')
+        .select('*')
         .eq('video_id', id)
-        .eq('status', 'done')
         .single();
 
       if (error) throw error;
@@ -118,7 +114,7 @@ const RecipePageContent = () => {
           id: data.video_id,
           title: recipeJson.title || data.title,
           titleMr: recipeJson.title_mr,
-          creator: data.creators?.name || 'Unknown',
+          creator: data.creator_name || 'Unknown',
           creatorMr: recipeJson.creator_mr,
           description: data.description || '',
           descriptionMr: recipeJson.description_mr,
