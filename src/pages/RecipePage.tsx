@@ -114,7 +114,7 @@ const RecipePageContent = () => {
           id: data.video_id,
           title: recipeJson.title || data.title,
           titleMr: recipeJson.title_mr,
-          creator: data.creators?.name || 'Unknown',
+          creator: data.creator_name || 'Unknown',
           creatorMr: recipeJson.creator_mr,
           description: data.description || '',
           descriptionMr: recipeJson.description_mr,
