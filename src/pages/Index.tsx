@@ -72,8 +72,8 @@ const IndexContent = () => {
       const from = currentPage * RECIPES_PER_PAGE;
       const to = from + RECIPES_PER_PAGE - 1;
 
-      const { data, error, count } = await supabase
-        .from('videos')
+      const { data, error, count } = await (supabase as any)
+        .from('public_videos')
         .select(`
           id,
           video_id,
@@ -82,10 +82,8 @@ const IndexContent = () => {
           thumbnail_url,
           published_at,
           extracted_recipe_json,
-          creators (name)
+          creator_name
         `, { count: 'exact' })
-        .eq('status', 'done')
-        .not('extracted_recipe_json', 'cs', '{"no_recipe":true}')
         .order('published_at', { ascending: false })
         .range(from, to);
 
