@@ -413,12 +413,14 @@ serve(async (req) => {
       throw new Error(`Invalid recipe JSON from GPT: ${parseError instanceof Error ? parseError.message : 'Parse error'}`);
     }
 
-    // Track extraction cost
+    // Track extraction cost (structured log)
     const tokensUsed = extractionData.usage?.total_tokens || 0;
+    const estimatedCost = (tokensUsed / 1000) * 0.002; // GPT-4o-mini pricing
+    console.log('ai_extraction_cost', { videoId, tokensUsed, estimatedCost });
     await supabase.from('cost_tracking').insert({
       video_id: videoDbId,
       operation_type: 'extraction',
-      estimated_cost: (tokensUsed / 1000) * 0.002, // GPT-4o-mini pricing
+      estimated_cost: estimatedCost,
       tokens_used: tokensUsed
     });
 
