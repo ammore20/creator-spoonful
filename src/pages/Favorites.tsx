@@ -51,11 +51,10 @@ const FavoritesContent = () => {
     const recipeIds = favoriteData.map(f => f.recipe_id);
 
     // Get recipe details from videos table
-    const { data: videos } = await supabase
-      .from('videos')
+    const { data: videos } = await (supabase as any)
+      .from('public_videos')
       .select('*')
-      .in('video_id', recipeIds)
-      .eq('status', 'completed');
+      .in('video_id', recipeIds);
 
     if (videos) {
       const recipes: Recipe[] = videos
