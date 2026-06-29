@@ -84,6 +84,39 @@ Valid cuisine: Maharashtrian, South Indian, North Indian, Fusion, Global
 Valid meal_type: Breakfast, Lunch, Dinner, Snack, Dessert
 Valid difficulty: Easy, Medium, Hard`;
 
+// Hard caps to prevent runaway AI cost
+const MAX_TRANSCRIPT_CHARS = 24_000; // ~6k tokens worst case
+const MAX_RECIPE_TOKENS = 2000;
+const MAX_BODY_BYTES = 1024;
+
+// Exponential backoff retry helper for transient HTTP failures (429 / 5xx)
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  opts: { attempts?: number; baseDelayMs?: number; timeoutMs?: number } = {},
+): Promise<Response> {
+  const { attempts = 3, baseDelayMs = 500, timeoutMs = 30_000 } = opts;
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...init, signal: ctrl.signal });
+      clearTimeout(timer);
+      if (res.status !== 429 && res.status < 500) return res;
+      lastErr = new Error(`HTTP ${res.status}`);
+    } catch (e) {
+      clearTimeout(timer);
+      lastErr = e;
+    }
+    if (i < attempts - 1) {
+      const delay = baseDelayMs * Math.pow(2, i) + Math.floor(Math.random() * 250);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error('fetch failed');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -109,21 +142,36 @@ serve(async (req) => {
 
     if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
 
-    console.log('Process-video function called - public endpoint, no auth required');
+    console.log('process_video_invoked');
 
-    // Validate input
+    // Validate input (with body size cap + JSON guard)
     const requestSchema = z.object({
       queueItemId: z.string().uuid(),
     });
 
-    const requestData = await req.json();
+    const rawText = await req.text();
+    if (rawText.length > MAX_BODY_BYTES) {
+      return new Response(
+        JSON.stringify({ error: 'Request body too large' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+    let requestData: unknown;
+    try {
+      requestData = rawText ? JSON.parse(rawText) : {};
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'Malformed JSON' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
     const validationResult = requestSchema.safeParse(requestData);
     
     if (!validationResult.success) {
       return new Response(
         JSON.stringify({ 
           error: 'Invalid request parameters', 
-          details: validationResult.error.errors 
+          details: validationResult.error.flatten() 
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
