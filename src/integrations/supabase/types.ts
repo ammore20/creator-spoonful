@@ -47,6 +47,13 @@ export type Database = {
             foreignKeyName: "cost_tracking_video_id_fkey"
             columns: ["video_id"]
             isOneToOne: false
+            referencedRelation: "public_videos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cost_tracking_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
             referencedRelation: "videos"
             referencedColumns: ["id"]
           },
@@ -207,6 +214,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "processing_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processing_queue_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "public_videos"
             referencedColumns: ["id"]
           },
           {
@@ -446,7 +460,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_videos: {
+        Row: {
+          created_at: string | null
+          creator_id: string | null
+          creator_name: string | null
+          creator_slug: string | null
+          description: string | null
+          duration: string | null
+          extracted_recipe_json: Json | null
+          id: string | null
+          published_at: string | null
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string | null
+          video_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
