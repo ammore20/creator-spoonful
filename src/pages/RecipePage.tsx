@@ -100,14 +100,10 @@ const RecipePageContent = () => {
 
   const fetchRecipe = async () => {
     try {
-      const { data, error } = await supabase
-        .from('videos')
-        .select(`
-          *,
-          creators (name)
-        `)
+      const { data, error } = await (supabase as any)
+        .from('public_videos')
+        .select('*')
         .eq('video_id', id)
-        .eq('status', 'done')
         .single();
 
       if (error) throw error;
