@@ -95,7 +95,7 @@ const IndexContent = () => {
         return {
           id: video.video_id,
           title: recipe.title || video.title,
-          creator: video.creators?.name || 'Unknown',
+          creator: video.creator_name || 'Unknown',
           description: video.description || '',
           youtubeUrl: `https://www.youtube.com/watch?v=${video.video_id}`,
           videoId: video.video_id,
