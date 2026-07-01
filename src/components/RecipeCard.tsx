@@ -7,6 +7,7 @@ import { Clock, Users, ChefHat, Lock, Heart, Star, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import logo from '@/assets/logo.png';
 
 interface RecipeCardProps {
@@ -17,7 +18,7 @@ interface RecipeCardProps {
 
 const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const user = useCurrentUser();
   const [imageLoaded, setImageLoaded] = useState(false);
   const { toast } = useToast();
 
@@ -26,13 +27,12 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
   const description = language === 'mr' && recipe.descriptionMr ? recipe.descriptionMr : recipe.description;
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkIfFavorited(session.user.id);
-      }
-    });
-  }, [recipe.id]);
+    if (user) {
+      checkIfFavorited(user.id);
+    } else {
+      setIsFavorite(false);
+    }
+  }, [user, recipe.id]);
 
   const checkIfFavorited = async (userId: string) => {
     const { data } = await supabase
