@@ -9,6 +9,8 @@ import { Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PremiumGate } from '@/components/PremiumGate';
+import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const FavoritesContent = () => {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
