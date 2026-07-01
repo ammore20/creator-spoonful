@@ -146,13 +146,14 @@ const IndexContent = () => {
       setPage(currentPage + 1);
     } catch (error) {
       logger.error('index.fetch_recipes_failed', { error: error as Error });
-      toast({
-        title: language === 'en' ? 'Failed to load recipes' : 'रेसिपी लोड करण्यात अयशस्वी',
-        description: language === 'en'
-          ? 'Please check your connection and try again.'
-          : 'कृपया तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.',
-        variant: 'destructive',
-      });
+      toast.error(
+        language === 'en' ? 'Failed to load recipes' : 'रेसिपी लोड करण्यात अयशस्वी',
+        {
+          description: language === 'en'
+            ? 'Please check your connection and try again.'
+            : 'कृपया तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.',
+        }
+      );
     } finally {
       setLoading(false);
       setLoadingMore(false);
