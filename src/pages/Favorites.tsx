@@ -9,6 +9,8 @@ import { Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PremiumGate } from '@/components/PremiumGate';
+import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const FavoritesContent = () => {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
@@ -35,31 +37,32 @@ const FavoritesContent = () => {
 
   const loadFavorites = async (userId: string) => {
     setLoading(true);
-    
-    // Get favorite recipe IDs
-    const { data: favoriteData } = await supabase
-      .from('user_favorites')
-      .select('recipe_id')
-      .eq('user_id', userId);
+    try {
+      // Get favorite recipe IDs
+      const { data: favoriteData, error: favError } = await supabase
+        .from('user_favorites')
+        .select('recipe_id')
+        .eq('user_id', userId);
 
-    if (!favoriteData || favoriteData.length === 0) {
-      setFavorites([]);
-      setLoading(false);
-      return;
-    }
+      if (favError) throw favError;
 
-    const recipeIds = favoriteData.map(f => f.recipe_id);
+      if (!favoriteData || favoriteData.length === 0) {
+        setFavorites([]);
+        return;
+      }
 
-    // Get recipe details from videos table
-    const { data: videos } = await (supabase as any)
-      .from('public_videos')
-      .select('*')
-      .in('video_id', recipeIds);
+      const recipeIds = favoriteData.map(f => f.recipe_id);
 
-    if (videos) {
-      const recipes: Recipe[] = videos
-        .filter(v => v.extracted_recipe_json)
-        .map(v => {
+      const { data: videos, error: videosError } = await (supabase as any)
+        .from('public_videos')
+        .select('*')
+        .in('video_id', recipeIds);
+
+      if (videosError) throw videosError;
+
+      const recipes: Recipe[] = (videos || [])
+        .filter((v: any) => v.extracted_recipe_json)
+        .map((v: any) => {
           const json = v.extracted_recipe_json as any;
           return {
             id: v.video_id,
@@ -71,9 +74,14 @@ const FavoritesContent = () => {
         });
 
       setFavorites(recipes);
+    } catch (error) {
+      logger.error('favorites.load_failed', { error: error as Error });
+      toast.error('Failed to load favorites', {
+        description: 'Please refresh the page to try again.',
+      });
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

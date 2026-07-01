@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, PartyPopper, X } from 'lucide-react';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const FilterBar = lazy(() => import('@/components/FilterBar').then(module => ({ default: module.FilterBar })));
 const Footer = lazy(() => import('@/components/Footer').then(module => ({ default: module.Footer })));
@@ -143,7 +145,15 @@ const IndexContent = () => {
       setHasMore(validRecipes.length === RECIPES_PER_PAGE && (count || 0) > to + 1);
       setPage(currentPage + 1);
     } catch (error) {
-      console.error('Error fetching recipes:', error);
+      logger.error('index.fetch_recipes_failed', { error: error as Error });
+      toast.error(
+        language === 'en' ? 'Failed to load recipes' : 'रेसिपी लोड करण्यात अयशस्वी',
+        {
+          description: language === 'en'
+            ? 'Please check your connection and try again.'
+            : 'कृपया तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.',
+        }
+      );
     } finally {
       setLoading(false);
       setLoadingMore(false);
