@@ -23,7 +23,7 @@ let sentry: SentryLike | null = null;
 async function loadSentry(dsn: string) {
   try {
     // Dynamic import so unused when no DSN configured.
-    const mod = await import(/* @vite-ignore */ '@sentry/browser').catch(() => null);
+    const mod = await import(/* @vite-ignore */ '@sentry/browser' as string).catch(() => null);
     if (!mod) return;
     sentry = mod as unknown as SentryLike;
     sentry.init({
