@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/Navbar';
 import { RefreshCw, Play, Loader2, ArrowLeftRight, Plus, Link, IndianRupee } from 'lucide-react';
 import type { User, Session } from '@supabase/supabase-js';
+import { AICostDashboard } from '@/components/admin/AICostDashboard';
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -444,6 +445,8 @@ const Admin = () => {
             {loading ? 'Granting Access...' : 'Access Premium Site'}
           </Button>
         </div>
+
+        <AICostDashboard />
 
         {/* Stats */}
         {stats && (
