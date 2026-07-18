@@ -9,13 +9,16 @@ import { RecipeCardSkeleton } from '@/components/RecipeCardSkeleton';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, PartyPopper, X } from 'lucide-react';
+import { Sparkles, PartyPopper, X, Flame, Zap, Clock, TrendingUp } from 'lucide-react';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { HorizontalRail } from '@/components/HorizontalRail';
 
 const FilterBar = lazy(() => import('@/components/FilterBar').then(module => ({ default: module.FilterBar })));
 const Footer = lazy(() => import('@/components/Footer').then(module => ({ default: module.Footer })));
+
+const RAIL_ITEM = 'snap-start flex-shrink-0 w-[160px] sm:w-[240px] md:w-[260px]';
 
 const IndexContent = () => {
   const [searchParams] = useSearchParams();
