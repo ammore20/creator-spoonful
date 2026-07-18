@@ -9,13 +9,16 @@ import { RecipeCardSkeleton } from '@/components/RecipeCardSkeleton';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, PartyPopper, X } from 'lucide-react';
+import { Sparkles, PartyPopper, X, Flame, Zap, Clock, TrendingUp } from 'lucide-react';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { HorizontalRail } from '@/components/HorizontalRail';
 
 const FilterBar = lazy(() => import('@/components/FilterBar').then(module => ({ default: module.FilterBar })));
 const Footer = lazy(() => import('@/components/Footer').then(module => ({ default: module.Footer })));
+
+const RAIL_ITEM = 'snap-start flex-shrink-0 w-[160px] sm:w-[240px] md:w-[260px]';
 
 const IndexContent = () => {
   const [searchParams] = useSearchParams();
@@ -361,25 +364,57 @@ const IndexContent = () => {
             </div>
           </div>
         ) : filteredRecipes.length > 0 ? (
-          <div className="space-y-8 sm:space-y-16">
+          <div className="space-y-6 sm:space-y-10">
+            {/* Category chips — quick jump */}
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-3 px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {[
+                { key: 'all', icon: '🍽️', en: 'All', mr: 'सर्व' },
+                { key: 'Breakfast', icon: '🌅', en: 'Breakfast', mr: 'नाश्ता' },
+                { key: 'Snack', icon: '🍿', en: 'Snacks', mr: 'चाळण' },
+                { key: 'Lunch', icon: '🍱', en: 'Lunch', mr: 'दुपार' },
+                { key: 'Dinner', icon: '🌙', en: 'Dinner', mr: 'रात्र' },
+                { key: 'Dessert', icon: '🍨', en: 'Dessert', mr: 'मिठाई' },
+              ].map((c) => {
+                const active = c.key !== 'all' && filters.mealType.includes(c.key as MealType);
+                return (
+                  <button
+                    key={c.key}
+                    onClick={() => {
+                      if (c.key === 'all') {
+                        setFilters({ ...filters, mealType: [] });
+                      } else {
+                        setFilters({ ...filters, mealType: [c.key as MealType] });
+                      }
+                    }}
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full border text-xs sm:text-sm font-semibold transition-all btn-press ${
+                      active
+                        ? 'bg-primary text-primary-foreground border-primary shadow-pill'
+                        : 'bg-card text-foreground border-border hover:bg-secondary'
+                    }`}
+                  >
+                    <span className="text-base">{c.icon}</span>
+                    {language === 'en' ? c.en : c.mr}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Free Recipe of the Day */}
             {recipes.length > 0 && (() => {
-              // Deterministic daily pick based on date
               const today = new Date().toISOString().split('T')[0];
               const seed = today.split('-').reduce((a, b) => a + parseInt(b), 0);
               const freeIndex = seed % recipes.length;
               const freeRecipe = recipes[freeIndex];
-              // Store free recipe ID for the day
               localStorage.setItem('free_recipe_of_day', freeRecipe.id);
               localStorage.setItem('free_recipe_date', today);
               return (
                 <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
-                  <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-emerald-500/20 hover:shadow-warm transition-all duration-500">
-                    <div className="flex items-center gap-3 mb-6">
-                      <span className="text-4xl floating">🎁</span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                  <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-emerald-500/20">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-3xl sm:text-4xl floating">🎁</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h2 className="text-xl sm:text-3xl font-bold text-foreground">
                             {language === 'en' ? 'Free Recipe of the Day' : 'आजची मोफत रेसिपी'}
                           </h2>
                           <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30">
@@ -387,12 +422,12 @@ const IndexContent = () => {
                             {language === 'en' ? 'FREE' : 'मोफत'}
                           </Badge>
                         </div>
-                        <p className="text-muted-foreground mt-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                           {language === 'en' ? 'Enjoy this recipe completely free today!' : 'आज ही रेसिपी पूर्णपणे मोफत आनंद घ्या!'}
                         </p>
                       </div>
                     </div>
-                    <div className="max-w-[180px] sm:max-w-sm">
+                    <div className="max-w-[200px] sm:max-w-sm">
                       <RecipeCard recipe={freeRecipe} language={language} loading="eager" />
                     </div>
                   </div>
@@ -400,128 +435,106 @@ const IndexContent = () => {
               );
             })()}
 
-            {/* New Recipe Everyday Section */}
-            {recipes.length > 0 && (
-              <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-border hover:shadow-warm transition-all duration-500">
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className="text-4xl floating">✨</span>
-                    <div>
-                      <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                        {language === 'en' ? 'New Recipe Everyday' : 'दररोज नवीन रेसिपी'}
-                      </h2>
-                      <p className="text-muted-foreground mt-1">
-                        {language === 'en' ? 'Fresh additions to inspire your cooking' : 'तुमच्या स्वयंपाकाला प्रेरणा देण्यासाठी नवीन रेसिपी'}
-                      </p>
-                    </div>
+            {/* Hot Recipes — horizontal rail */}
+            {filteredRecipes.length > 0 && (
+              <HorizontalRail
+                title={language === 'en' ? 'Hot Right Now' : 'सध्या ट्रेंडिंग'}
+                subtitle={language === 'en' ? "What everyone's cooking today" : 'आज सर्वजण काय बनवत आहेत'}
+                icon="🔥"
+                accent="from-orange-500/10 via-primary/10 to-red-500/10"
+              >
+                {filteredRecipes.slice(0, 12).map((recipe) => (
+                  <div key={`hot-${recipe.id}`} className={RAIL_ITEM}>
+                    <RecipeCard recipe={recipe} language={language} loading="eager" />
                   </div>
-                   <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                    {recipes.slice(0, 3).map((recipe, index) => (
-                      <div key={recipe.id} style={{ animationDelay: `${0.2 + index * 0.1}s` }}>
-                        <RecipeCard recipe={recipe} language={language} loading="eager" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                ))}
+              </HorizontalRail>
             )}
-            
-            {/* Recipe Count */}
-            <div className="flex items-center justify-between opacity-0 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                {language === 'en' ? 'All Recipes' : 'सर्व रेसिपी'}
+
+            {/* Quick Bites — under 20 min */}
+            {(() => {
+              const quick = filteredRecipes.filter((r) => {
+                const t = (r.cookTime || '').toLowerCase();
+                const m = parseInt(t) || 30;
+                const mins = t.includes('hour') ? m * 60 : m;
+                return mins <= 20;
+              });
+              if (quick.length < 3) return null;
+              return (
+                <HorizontalRail
+                  title={language === 'en' ? 'Quick Bites' : 'झटपट रेसिपी'}
+                  subtitle={language === 'en' ? 'Ready in 20 minutes or less' : '२० मिनिटांत तयार'}
+                  icon="⚡"
+                  accent="from-yellow-400/10 via-amber-400/10 to-orange-400/10"
+                >
+                  {quick.slice(0, 12).map((recipe) => (
+                    <div key={`quick-${recipe.id}`} className={RAIL_ITEM}>
+                      <RecipeCard recipe={recipe} language={language} loading="lazy" />
+                    </div>
+                  ))}
+                </HorizontalRail>
+              );
+            })()}
+
+            {/* Fresh Additions rail */}
+            {recipes.length > 0 && (
+              <HorizontalRail
+                title={language === 'en' ? 'New Recipe Everyday' : 'दररोज नवीन रेसिपी'}
+                subtitle={language === 'en' ? 'Fresh additions to inspire your cooking' : 'नवीन रेसिपी'}
+                icon="✨"
+                accent="from-primary/10 via-accent/10 to-primary/10"
+              >
+                {recipes.slice(0, 12).map((recipe) => (
+                  <div key={`new-${recipe.id}`} className={RAIL_ITEM}>
+                    <RecipeCard recipe={recipe} language={language} loading="lazy" />
+                  </div>
+                ))}
+              </HorizontalRail>
+            )}
+
+            {/* Browse by Category header */}
+            <div className="flex items-center justify-between pt-2 opacity-0 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                {language === 'en' ? 'Browse by Category' : 'श्रेणीनुसार पहा'}
               </h2>
-              <div className="bg-gradient-pill px-4 py-2 rounded-full border border-border hover:scale-105 transition-transform duration-300">
-                <p className="text-sm font-semibold text-foreground">
+              <div className="bg-gradient-pill px-3 py-1.5 rounded-full border border-border">
+                <p className="text-xs sm:text-sm font-semibold text-foreground">
                   {filteredRecipes.length} {language === 'en' ? 'recipes' : 'रेसिपी'}
                 </p>
               </div>
             </div>
 
-            {/* Grouped Recipes by Meal Type */}
-            {Object.entries(groupedRecipes).map(([mealType, recipes]) => {
-              if (recipes.length === 0) return null;
-              
+            {/* Grouped Recipes by Meal Type — horizontal rails */}
+            {Object.entries(groupedRecipes).map(([mealType, mealRecipes]) => {
+              if (mealRecipes.length === 0) return null;
+
               const mealIcons: Record<string, string> = {
-                'Breakfast': '🌅',
-                'Snack': '🍿',
-                'Lunch': '🍱',
-                'Dinner': '🌙',
-                'Dessert': '🍨',
-                'Other': '🍽️'
+                Breakfast: '🌅', Snack: '🍿', Lunch: '🍱', Dinner: '🌙', Dessert: '🍨', Other: '🍽️',
               };
-
               const mealTranslations: Record<string, string> = {
-                'Breakfast': 'नाश्ता',
-                'Snack': 'चाळण',
-                'Lunch': 'दुपारचे जेवण',
-                'Dinner': 'रात्रीचे जेवण',
-                'Dessert': 'मिठाई',
-                'Other': 'इतर'
+                Breakfast: 'नाश्ता', Snack: 'चाळण', Lunch: 'दुपारचे जेवण',
+                Dinner: 'रात्रीचे जेवण', Dessert: 'मिठाई', Other: 'इतर',
               };
-
-              const categoryIntros: Record<string, { en: string; mr: string }> = {
-                'Breakfast': {
-                  en: 'Start your day with authentic Marathi breakfast recipes that blend tradition with taste. From quick poha to hearty upma, discover dishes perfect for energizing mornings.',
-                  mr: 'पारंपरिक मराठी नाश्त्याच्या रेसिपींसह तुमचा दिवस सुरू करा. पोहे, उपमा आणि इतर चवदार पदार्थ जे तुमच्या सकाळला ऊर्जा देतील.'
-                },
-                'Snack': {
-                  en: 'Explore delicious Marathi snack recipes perfect for evening tea time or party gatherings. From crispy vada pav to savory bhajiya, find quick bites that satisfy every craving.',
-                  mr: 'संध्याकाळच्या चहासाठी किंवा पार्टीसाठी योग्य मराठी स्नॅक्स रेसिपी शोधा. वडा पाव पासून भजी पर्यंत चवदार पदार्थ.'
-                },
-                'Lunch': {
-                  en: 'Discover wholesome Marathi lunch recipes featuring traditional thalis, fragrant rice dishes, and flavorful curries. Complete meal solutions for family dining and special occasions.',
-                  mr: 'पारंपरिक थाळी, सुगंधी भात आणि चवदार भाज्या असलेल्या पौष्टिक मराठी दुपारच्या जेवणाच्या रेसिपी शोधा.'
-                },
-                'Dinner': {
-                  en: 'Find comforting Marathi dinner recipes that bring families together. From simple dal-bhaat to elaborate festive meals, create memorable evening dining experiences.',
-                  mr: 'कुटुंबाला एकत्र आणणाऱ्या मराठी रात्रीच्या जेवणाच्या रेसिपी शोधा. साध्या डाळ-भातापासून विशेष सणाच्या जेवणापर्यंत.'
-                },
-                'Dessert': {
-                  en: 'Indulge in traditional Marathi dessert recipes and sweet delicacies. From festive modaks to everyday kheer, satisfy your sweet tooth with authentic flavors.',
-                  mr: 'पारंपरिक मराठी गोड पदार्थांची रेसिपी आणि मिठाई शोधा. मोदकापासून खिरापर्यंत, प्रत्येक सणासुदीसाठी गोड पदार्थ.'
-                },
-                'Other': {
-                  en: 'Browse unique Marathi recipes that don\'t fit traditional categories but are equally delicious. Discover fusion dishes and creative cooking ideas from talented creators.',
-                  mr: 'पारंपरिक श्रेणीत न बसणाऱ्या पण तितक्याच चविष्ट मराठी रेसिपी शोधा. फ्यूजन पदार्थ आणि नाविन्यपूर्ण कल्पना.'
-                }
-              };
-
-              const intro = categoryIntros[mealType] || { en: '', mr: '' };
 
               return (
-                <section key={mealType} className="space-y-6">
-                  <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-4xl">{mealIcons[mealType]}</span>
-                      <div>
-                        <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                          {language === 'en' ? mealType : mealTranslations[mealType]}
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                          {recipes.length} {language === 'en' ? 'recipes' : 'रेसिपी'}
-                        </p>
-                      </div>
+                <HorizontalRail
+                  key={mealType}
+                  title={language === 'en' ? mealType : mealTranslations[mealType]}
+                  subtitle={`${mealRecipes.length} ${language === 'en' ? 'recipes' : 'रेसिपी'}`}
+                  icon={mealIcons[mealType]}
+                >
+                  {mealRecipes.map((recipe) => (
+                    <div key={`${mealType}-${recipe.id}`} className={RAIL_ITEM}>
+                      <RecipeCard recipe={recipe} language={language} loading="lazy" />
                     </div>
-                    {intro.en && (
-                      <p className="text-sm text-muted-foreground/90 leading-relaxed max-w-4xl mb-4 font-light">
-                        {language === 'en' ? intro.en : intro.mr}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                    {recipes.map((recipe) => (
-                      <RecipeCard key={recipe.id} recipe={recipe} language={language} loading="lazy" />
-                    ))}
-                  </div>
-                </section>
+                  ))}
+                </HorizontalRail>
               );
             })}
 
             {/* Load More Button */}
             {hasMore && !loading && (
-              <div className="flex justify-center mt-12 opacity-0 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+              <div className="flex justify-center mt-8 opacity-0 animate-fade-in" style={{ animationDelay: '0.5s' }}>
                 <Button
                   onClick={loadMore}
                   disabled={loadingMore}
