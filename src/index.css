@@ -116,8 +116,9 @@ All colors MUST be HSL.
     font-feature-settings: "ss01", "cv11";
   }
 
-  h1, h2, h3, h4, h5, h6, .font-display {
-    @apply font-display tracking-tight;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', system-ui, sans-serif;
+    letter-spacing: -0.02em;
   }
 
   /* Smooth scrolling */
