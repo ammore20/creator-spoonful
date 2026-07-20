@@ -9,36 +9,40 @@ import { RecipeCardSkeleton } from '@/components/RecipeCardSkeleton';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, PartyPopper, X, Flame, Zap, Clock, TrendingUp } from 'lucide-react';
+import { PartyPopper, X, Flame, Zap, Sparkles, Gift, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
-import { HorizontalRail } from '@/components/HorizontalRail';
 
-const FilterBar = lazy(() => import('@/components/FilterBar').then(module => ({ default: module.FilterBar })));
-const Footer = lazy(() => import('@/components/Footer').then(module => ({ default: module.Footer })));
+const FilterBar = lazy(() => import('@/components/FilterBar').then(m => ({ default: m.FilterBar })));
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
-const RAIL_ITEM = 'snap-start flex-shrink-0 w-[160px] sm:w-[240px] md:w-[260px]';
+const CATEGORIES: { key: 'all' | MealType; icon: string; en: string; mr: string }[] = [
+  { key: 'all', icon: '🍽️', en: 'All', mr: 'सर्व' },
+  { key: 'Breakfast', icon: '🌅', en: 'Breakfast', mr: 'नाश्ता' },
+  { key: 'Snack', icon: '🍿', en: 'Snacks', mr: 'चाळण' },
+  { key: 'Lunch', icon: '🍱', en: 'Lunch', mr: 'दुपार' },
+  { key: 'Dinner', icon: '🌙', en: 'Dinner', mr: 'रात्र' },
+  { key: 'Dessert', icon: '🍨', en: 'Dessert', mr: 'मिठाई' },
+];
 
 const IndexContent = () => {
   const [searchParams] = useSearchParams();
   const { user, isPremium, subscriptionDetails } = usePremiumStatus();
   const [showFreeBanner, setShowFreeBanner] = useState(false);
-  
+
   useEffect(() => {
     if (searchParams.get('creator_access') === 'true') {
       sessionStorage.setItem('creator_preview', 'true');
     }
   }, [searchParams]);
 
-  // Show free month banner for referred users who got free access
   useEffect(() => {
     const refSlug = localStorage.getItem('ref_creator_slug');
     if (user && isPremium && refSlug && subscriptionDetails?.amount === 0) {
       const dismissed = sessionStorage.getItem('free_banner_dismissed');
-      if (!dismissed) {
-        setShowFreeBanner(true);
-      }
+      if (!dismissed) setShowFreeBanner(true);
     }
   }, [user, isPremium, subscriptionDetails]);
 
@@ -49,53 +53,30 @@ const IndexContent = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const RECIPES_PER_PAGE = 8;
+  const RECIPES_PER_PAGE = 12;
   const [filters, setFilters] = useState<FilterOptions>({
-    creator: [],
-    tasteProfile: [],
-    mealType: [],
-    cuisine: [],
-    mood: [],
-    cookTimeRange: [],
-    dietType: [],
+    creator: [], tasteProfile: [], mealType: [], cuisine: [], mood: [], cookTimeRange: [], dietType: [],
   });
 
-  useEffect(() => {
-    fetchRecipes(true);
-  }, []);
+  useEffect(() => { fetchRecipes(true); }, []);
 
   const fetchRecipes = async (reset = false) => {
     try {
       const currentPage = reset ? 0 : page;
-      if (reset) {
-        setLoading(true);
-        setRecipes([]);
-      } else {
-        setLoadingMore(true);
-      }
+      if (reset) { setLoading(true); setRecipes([]); } else { setLoadingMore(true); }
 
       const from = currentPage * RECIPES_PER_PAGE;
       const to = from + RECIPES_PER_PAGE - 1;
 
       const { data, error, count } = await (supabase as any)
         .from('public_videos')
-        .select(`
-          id,
-          video_id,
-          title,
-          description,
-          thumbnail_url,
-          published_at,
-          extracted_recipe_json,
-          creator_name
-        `, { count: 'exact' })
+        .select(`id, video_id, title, description, thumbnail_url, published_at, extracted_recipe_json, creator_name`, { count: 'exact' })
         .order('published_at', { ascending: false })
         .range(from, to);
 
       if (error) throw error;
 
-      // Transform database records to recipe format
-      const transformedRecipes = data?.map((video: any) => {
+      const transformed = data?.map((video: any) => {
         const recipe = video.extracted_recipe_json as any || {};
         return {
           id: video.video_id,
@@ -114,457 +95,352 @@ const IndexContent = () => {
           servings: recipe.servings || 4,
           ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
           steps: Array.isArray(recipe.steps) ? recipe.steps : [],
-          isPremium: false
+          isPremium: false,
         };
       }) || [];
 
-      // Filter out invalid recipes
-      const validRecipes = transformedRecipes.filter((recipe) => {
-        const title = recipe.title.toLowerCase();
-        
-        // Check for invalid title patterns
-        const hasInvalidTitle = 
-          title.includes('no recipe') ||
-          title.includes('not found') ||
-          title.includes('no specific') ||
-          title === 'recipe' ||
-          title === 'cooking' ||
-          title === 'food';
-        
-        // Check for minimum content requirements
-        const hasEnoughIngredients = recipe.ingredients.length >= 5;
-        const hasEnoughSteps = recipe.steps.length >= 5;
-        
-        // Only include recipes that pass all validations
-        return !hasInvalidTitle && hasEnoughIngredients && hasEnoughSteps;
+      const valid = transformed.filter((r) => {
+        const t = r.title.toLowerCase();
+        const bad = t.includes('no recipe') || t.includes('not found') || t.includes('no specific') || t === 'recipe' || t === 'cooking' || t === 'food';
+        return !bad && r.ingredients.length >= 5 && r.steps.length >= 5;
       });
 
-      if (reset) {
-        setRecipes(validRecipes);
-      } else {
-        setRecipes(prev => [...prev, ...validRecipes]);
-      }
-
-      setHasMore(validRecipes.length === RECIPES_PER_PAGE && (count || 0) > to + 1);
+      setRecipes(prev => reset ? valid : [...prev, ...valid]);
+      setHasMore(valid.length === RECIPES_PER_PAGE && (count || 0) > to + 1);
       setPage(currentPage + 1);
     } catch (error) {
       logger.error('index.fetch_recipes_failed', { error: error as Error });
-      toast.error(
-        language === 'en' ? 'Failed to load recipes' : 'रेसिपी लोड करण्यात अयशस्वी',
-        {
-          description: language === 'en'
-            ? 'Please check your connection and try again.'
-            : 'कृपया तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.',
-        }
-      );
+      toast.error(language === 'en' ? 'Failed to load recipes' : 'रेसिपी लोड करण्यात अयशस्वी', {
+        description: language === 'en' ? 'Please check your connection and try again.' : 'कृपया तुमचे कनेक्शन तपासा.',
+      });
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
   };
 
-  const loadMore = () => {
-    if (!loadingMore && hasMore) {
-      fetchRecipes(false);
-    }
-  };
+  const loadMore = () => { if (!loadingMore && hasMore) fetchRecipes(false); };
 
   const filteredRecipes = useMemo(() => {
     return recipes.filter((recipe) => {
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch =
-        !searchQuery ||
-        recipe.title.toLowerCase().includes(searchLower) ||
-        recipe.description.toLowerCase().includes(searchLower) ||
-        (recipe.titleMr && recipe.titleMr.toLowerCase().includes(searchLower)) ||
-        (recipe.descriptionMr && recipe.descriptionMr.toLowerCase().includes(searchLower));
+      const s = searchQuery.toLowerCase();
+      const matchesSearch = !searchQuery ||
+        recipe.title.toLowerCase().includes(s) ||
+        recipe.description.toLowerCase().includes(s) ||
+        (recipe.titleMr && recipe.titleMr.toLowerCase().includes(s));
 
-      const matchesCreator =
-        filters.creator.length === 0 ||
-        filters.creator.includes(recipe.creator);
+      const matchesCreator = filters.creator.length === 0 || filters.creator.includes(recipe.creator);
+      const matchesTaste = filters.tasteProfile.length === 0 || filters.tasteProfile.some((t) => recipe.tasteProfile.includes(t));
+      const matchesMeal = filters.mealType.length === 0 || filters.mealType.some((m) => recipe.mealType.includes(m));
+      const matchesCuisine = filters.cuisine.length === 0 || filters.cuisine.some((c) => recipe.cuisine.includes(c));
+      const matchesMood = filters.mood.length === 0 || filters.mood.some((m) => recipe.mood.includes(m));
 
-      const matchesTaste =
-        filters.tasteProfile.length === 0 ||
-        filters.tasteProfile.some((taste) => recipe.tasteProfile.includes(taste));
-
-      const matchesMeal =
-        filters.mealType.length === 0 ||
-        filters.mealType.some((meal) => recipe.mealType.includes(meal));
-
-      const matchesCuisine =
-        filters.cuisine.length === 0 ||
-        filters.cuisine.some((cuisine) => recipe.cuisine.includes(cuisine));
-
-      const matchesMood =
-        filters.mood.length === 0 ||
-        filters.mood.some((mood) => recipe.mood.includes(mood));
-
-      // Parse cook time to minutes for filtering
       const matchesCookTime = (() => {
         if (filters.cookTimeRange.length === 0) return true;
         const timeStr = (recipe.cookTime || '').toLowerCase();
         const minutes = parseInt(timeStr) || 30;
-        const adjustedMins = timeStr.includes('hour') ? minutes * 60 : minutes;
-        return filters.cookTimeRange.some((range) => {
-          if (range === 'Quick') return adjustedMins <= 20;
-          if (range === 'Medium') return adjustedMins > 20 && adjustedMins <= 45;
-          if (range === 'Long') return adjustedMins > 45;
-          return false;
-        });
+        const adj = timeStr.includes('hour') ? minutes * 60 : minutes;
+        return filters.cookTimeRange.some((r) => (r === 'Quick' ? adj <= 20 : r === 'Medium' ? adj > 20 && adj <= 45 : adj > 45));
       })();
 
-      // Diet type filter based on ingredient keywords
       const matchesDiet = (() => {
         if (filters.dietType.length === 0) return true;
-        const allIngredients = recipe.ingredients.join(' ').toLowerCase();
+        const ing = recipe.ingredients.join(' ').toLowerCase();
         const title = recipe.title.toLowerCase();
-        const nonVegKeywords = ['chicken', 'mutton', 'fish', 'prawn', 'shrimp', 'meat', 'lamb', 'pork', 'crab', 'surmai', 'pomfret', 'bombil', 'kolambi', 'kombdi', 'murg', 'keema', 'gosht', 'चिकन', 'मटण', 'मासा', 'कोळंबी', 'सुरमई', 'मांस'];
-        const eggKeywords = ['egg', 'anda', 'अंड'];
-        const hasNonVeg = nonVegKeywords.some(k => allIngredients.includes(k) || title.includes(k));
-        const hasEgg = eggKeywords.some(k => allIngredients.includes(k) || title.includes(k));
-        return filters.dietType.some((diet) => {
-          if (diet === 'Veg') return !hasNonVeg && !hasEgg;
-          if (diet === 'Non-Veg') return hasNonVeg;
-          if (diet === 'Egg') return hasEgg;
-          return false;
-        });
+        const nv = ['chicken','mutton','fish','prawn','shrimp','meat','lamb','pork','crab','surmai','pomfret','bombil','kolambi','kombdi','murg','keema','gosht','चिकन','मटण','मासा','कोळंबी','सुरमई','मांस'];
+        const eg = ['egg','anda','अंड'];
+        const hasNV = nv.some(k => ing.includes(k) || title.includes(k));
+        const hasEgg = eg.some(k => ing.includes(k) || title.includes(k));
+        return filters.dietType.some((d) => d === 'Veg' ? (!hasNV && !hasEgg) : d === 'Non-Veg' ? hasNV : d === 'Egg' ? hasEgg : false);
       })();
 
-      return (
-        matchesSearch &&
-        matchesCreator &&
-        matchesTaste &&
-        matchesMeal &&
-        matchesCuisine &&
-        matchesMood &&
-        matchesCookTime &&
-        matchesDiet
-      );
+      return matchesSearch && matchesCreator && matchesTaste && matchesMeal && matchesCuisine && matchesMood && matchesCookTime && matchesDiet;
     });
   }, [recipes, searchQuery, filters]);
 
-  // Auto-load more recipes when filters result in empty/few results but more data exists
-  const hasActiveFilters = Object.values(filters).some(arr => arr.length > 0);
+  const hasActiveFilters = Object.values(filters).some(a => a.length > 0);
   useEffect(() => {
-    if (hasActiveFilters && filteredRecipes.length < 4 && hasMore && !loading && !loadingMore) {
-      fetchRecipes(false);
-    }
+    if (hasActiveFilters && filteredRecipes.length < 4 && hasMore && !loading && !loadingMore) fetchRecipes(false);
   }, [filteredRecipes.length, hasActiveFilters, hasMore, loading, loadingMore]);
 
-  // Group recipes by meal type
+  const quickBites = useMemo(() =>
+    filteredRecipes.filter((r) => {
+      const t = (r.cookTime || '').toLowerCase();
+      const m = parseInt(t) || 30;
+      return (t.includes('hour') ? m * 60 : m) <= 20;
+    }), [filteredRecipes]);
+
   const groupedRecipes = useMemo(() => {
-    const mealTypes: MealType[] = ['Breakfast', 'Snack', 'Lunch', 'Dinner', 'Dessert'];
-    const grouped: Record<string, typeof filteredRecipes> = {};
-    
-    mealTypes.forEach(mealType => {
-      grouped[mealType] = filteredRecipes.filter(recipe => 
-        recipe.mealType.includes(mealType)
-      );
-    });
-    
-    // Add "Other" category for recipes without meal type
-    grouped['Other'] = filteredRecipes.filter(recipe => 
-      recipe.mealType.length === 0
-    );
-    
-    return grouped;
+    const meals: MealType[] = ['Breakfast', 'Snack', 'Lunch', 'Dinner', 'Dessert'];
+    const g: Record<string, typeof filteredRecipes> = {};
+    meals.forEach(m => { g[m] = filteredRecipes.filter(r => r.mealType.includes(m)); });
+    g['Other'] = filteredRecipes.filter(r => r.mealType.length === 0);
+    return g;
   }, [filteredRecipes]);
+
+  const freeRecipe = useMemo(() => {
+    if (recipes.length === 0) return null;
+    const today = new Date().toISOString().split('T')[0];
+    const seed = today.split('-').reduce((a, b) => a + parseInt(b), 0);
+    const idx = seed % recipes.length;
+    const r = recipes[idx];
+    localStorage.setItem('free_recipe_of_day', r.id);
+    localStorage.setItem('free_recipe_date', today);
+    return r;
+  }, [recipes]);
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
         title="RecipeMaker - Discover & Personalize Authentic Marathi Recipes"
-        description="RecipeMaker helps you discover and personalize authentic Marathi recipes with step-by-step videos, ingredients, and instructions. Explore recipes from top Marathi creators."
+        description="Discover and personalize authentic Marathi recipes with step-by-step videos, ingredients, and instructions."
         url="/"
         structuredData={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          "name": "RecipeMaker",
+          "@context": "https://schema.org", "@type": "WebSite", "name": "RecipeMaker",
           "url": "https://recipemaker.in",
-          "description": "Discover and personalize authentic Marathi recipes with step-by-step videos",
+          "description": "Discover and personalize authentic Marathi recipes",
           "potentialAction": {
             "@type": "SearchAction",
             "target": "https://recipemaker.in/?search={search_term_string}",
-            "query-input": "required name=search_term_string"
-          }
+            "query-input": "required name=search_term_string",
+          },
         }}
       />
-      <Navbar
-        onSearch={setSearchQuery}
-        language={language}
-        onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}
-      />
-      
+      <Navbar onSearch={setSearchQuery} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} />
       <Hero language={language} />
 
-      {/* Free Month Congratulations Banner */}
       {showFreeBanner && (
-        <div className="container mx-auto px-4 mt-6">
-          <div className="relative bg-gradient-to-r from-primary/15 via-accent/15 to-primary/15 border border-primary/30 rounded-2xl p-6 animate-fade-in">
+        <div className="container mx-auto px-4 mt-4">
+          <div className="relative bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-primary/20 rounded-2xl p-5 animate-fade-in">
             <button
-              onClick={() => {
-                setShowFreeBanner(false);
-                sessionStorage.setItem('free_banner_dismissed', 'true');
-              }}
-              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => { setShowFreeBanner(false); sessionStorage.setItem('free_banner_dismissed', 'true'); }}
+              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
+              aria-label="Dismiss"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
-            <div className="flex items-center gap-4">
-              <PartyPopper className="w-10 h-10 text-primary flex-shrink-0" />
+            <div className="flex items-center gap-3">
+              <PartyPopper className="w-8 h-8 text-primary flex-shrink-0" />
               <div>
-                <h3 className="text-lg font-bold text-foreground">
-                  {language === 'en'
-                    ? '🎉 Congratulations! You\'re one of the first 50!'
-                    : '🎉 अभिनंदन! तुम्ही पहिल्या ५० मध्ये आहात!'}
+                <h3 className="text-base font-bold text-foreground">
+                  {language === 'en' ? '🎉 You\'re one of the first 50!' : '🎉 तुम्ही पहिल्या ५० मध्ये आहात!'}
                 </h3>
-                <p className="text-muted-foreground text-sm mt-1">
-                  {language === 'en'
-                    ? 'You\'ve received 1 month of FREE premium access. Enjoy all recipes without limits!'
-                    : 'तुम्हाला 1 महिन्याचा मोफत प्रीमियम अ‍ॅक्सेस मिळाला आहे. सर्व रेसिपी मर्यादेशिवाय आनंद घ्या!'}
+                <p className="text-muted-foreground text-sm">
+                  {language === 'en' ? '1 month of FREE premium unlocked.' : '१ महिन्याचा मोफत प्रीमियम अनलॉक.'}
                 </p>
               </div>
             </div>
           </div>
         </div>
       )}
-      
-      <Suspense fallback={<div className="h-20" />}>
-        <FilterBar
-          filters={filters}
-          onFilterChange={setFilters}
-          language={language}
-        />
+
+      {/* Category chips — sticky under nav, always in reach */}
+      <div className="sticky top-[64px] sm:top-[72px] z-30 bg-background/85 backdrop-blur border-b border-border/60">
+        <div className="container mx-auto px-3 sm:px-6 py-3">
+          <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {CATEGORIES.map((c) => {
+              const active = c.key === 'all' ? filters.mealType.length === 0 : filters.mealType.includes(c.key as MealType);
+              return (
+                <button
+                  key={c.key}
+                  onClick={() => setFilters({ ...filters, mealType: c.key === 'all' ? [] : [c.key as MealType] })}
+                  className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    active
+                      ? 'bg-foreground text-background shadow-soft'
+                      : 'bg-secondary text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <span className="text-base leading-none">{c.icon}</span>
+                  {language === 'en' ? c.en : c.mr}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <Suspense fallback={<div className="h-16" />}>
+        <FilterBar filters={filters} onFilterChange={setFilters} language={language} />
       </Suspense>
 
-      <main id="recipes-section" className="container mx-auto px-3 sm:px-4 py-6 sm:py-12">
+      <main id="recipes-section" className="container mx-auto px-3 sm:px-6 py-6 sm:py-10">
         {loading ? (
-          <div className="space-y-16">
-            <div>
-              <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-2xl p-8 border border-border animate-pulse">
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="text-4xl floating">✨</span>
-                  <div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                      {language === 'en' ? 'New Recipe Everyday' : 'दररोज नवीन रेसिपी'}
-                    </h2>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                  {[...Array(3)].map((_, i) => (
-                    <RecipeCardSkeleton key={i} />
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-              {[...Array(6)].map((_, i) => (
-                <RecipeCardSkeleton key={i} />
-              ))}
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+            {[...Array(8)].map((_, i) => <RecipeCardSkeleton key={i} />)}
           </div>
         ) : filteredRecipes.length > 0 ? (
-          <div className="space-y-6 sm:space-y-10">
-            {/* Category chips — quick jump */}
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-3 px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {[
-                { key: 'all', icon: '🍽️', en: 'All', mr: 'सर्व' },
-                { key: 'Breakfast', icon: '🌅', en: 'Breakfast', mr: 'नाश्ता' },
-                { key: 'Snack', icon: '🍿', en: 'Snacks', mr: 'चाळण' },
-                { key: 'Lunch', icon: '🍱', en: 'Lunch', mr: 'दुपार' },
-                { key: 'Dinner', icon: '🌙', en: 'Dinner', mr: 'रात्र' },
-                { key: 'Dessert', icon: '🍨', en: 'Dessert', mr: 'मिठाई' },
-              ].map((c) => {
-                const active = c.key !== 'all' && filters.mealType.includes(c.key as MealType);
-                return (
-                  <button
-                    key={c.key}
-                    onClick={() => {
-                      if (c.key === 'all') {
-                        setFilters({ ...filters, mealType: [] });
-                      } else {
-                        setFilters({ ...filters, mealType: [c.key as MealType] });
-                      }
-                    }}
-                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full border text-xs sm:text-sm font-semibold transition-all btn-press ${
-                      active
-                        ? 'bg-primary text-primary-foreground border-primary shadow-pill'
-                        : 'bg-card text-foreground border-border hover:bg-secondary'
-                    }`}
-                  >
-                    <span className="text-base">{c.icon}</span>
-                    {language === 'en' ? c.en : c.mr}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="space-y-10 sm:space-y-14">
 
-            {/* Free Recipe of the Day */}
-            {recipes.length > 0 && (() => {
-              const today = new Date().toISOString().split('T')[0];
-              const seed = today.split('-').reduce((a, b) => a + parseInt(b), 0);
-              const freeIndex = seed % recipes.length;
-              const freeRecipe = recipes[freeIndex];
-              localStorage.setItem('free_recipe_of_day', freeRecipe.id);
-              localStorage.setItem('free_recipe_date', today);
+            {/* BENTO: Featured of the Day + Quick Bites tiles + CTA */}
+            {freeRecipe && (
+              <section className="grid grid-cols-1 md:grid-cols-6 gap-3 sm:gap-5">
+                {/* Big featured tile */}
+                <Link
+                  to={`/recipe/${freeRecipe.id}`}
+                  className="md:col-span-4 relative group overflow-hidden rounded-3xl border border-border shadow-card hover:shadow-warm transition-shadow"
+                >
+                  <div className="aspect-[16/10] md:aspect-[16/11] overflow-hidden bg-muted">
+                    <img
+                      src={freeRecipe.thumbnailUrl}
+                      alt={freeRecipe.title}
+                      loading="eager"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+                  <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 bg-white/95 text-foreground rounded-full px-3 py-1 text-xs font-semibold shadow-soft">
+                    <Gift className="w-3.5 h-3.5 text-primary" />
+                    {language === 'en' ? "Today's free recipe" : 'आजची मोफत रेसिपी'}
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7 text-white">
+                    <p className="text-xs sm:text-sm opacity-90 mb-1">by {freeRecipe.creator}</p>
+                    <h2 className="text-xl sm:text-3xl font-bold leading-tight mb-2 line-clamp-2">{freeRecipe.title}</h2>
+                    <div className="flex items-center gap-3 text-xs sm:text-sm opacity-90">
+                      <span>⏱ {freeRecipe.cookTime}</span>
+                      <span>· {freeRecipe.servings} {language === 'en' ? 'servings' : 'लोक'}</span>
+                      <span className="ml-auto inline-flex items-center gap-1 font-semibold">
+                        {language === 'en' ? 'Cook it' : 'बनवा'} <ArrowRight className="w-4 h-4" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* Right column: two stacked tiles */}
+                <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-1 gap-3 sm:gap-5">
+                  {/* Quick bites tile */}
+                  <button
+                    onClick={() => setFilters({ ...filters, cookTimeRange: ['Quick'] })}
+                    className="relative overflow-hidden rounded-3xl p-5 text-left bg-gradient-to-br from-accent/25 to-primary/20 border border-border shadow-soft hover:shadow-card transition-shadow group"
+                  >
+                    <Zap className="w-7 h-7 text-primary mb-3" />
+                    <h3 className="text-base sm:text-lg font-bold text-foreground leading-tight mb-1">
+                      {language === 'en' ? 'In a hurry?' : 'घाईत आहात?'}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-2">
+                      {language === 'en' ? `${quickBites.length} recipes under 20 min` : `२० मिनिटांच्या ${quickBites.length} रेसिपी`}
+                    </p>
+                    <span className="text-xs font-semibold text-primary inline-flex items-center gap-1">
+                      {language === 'en' ? 'Show quick bites' : 'पहा'} <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </span>
+                  </button>
+
+                  {/* Premium / veg tile */}
+                  <Link
+                    to="/premium"
+                    className="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-foreground to-foreground/85 text-background shadow-soft hover:shadow-card transition-shadow group"
+                  >
+                    <Sparkles className="w-7 h-7 mb-3 text-primary-glow" />
+                    <h3 className="text-base sm:text-lg font-bold leading-tight mb-1">
+                      {language === 'en' ? 'Unlock every recipe' : 'सर्व रेसिपी अनलॉक करा'}
+                    </h3>
+                    <p className="text-xs sm:text-sm opacity-80 mb-2">
+                      {language === 'en' ? 'Premium from ₹49/mo' : 'फक्त ₹४९/महिना'}
+                    </p>
+                    <span className="text-xs font-semibold inline-flex items-center gap-1 text-primary-glow">
+                      {language === 'en' ? 'Go premium' : 'प्रीमियम मिळवा'} <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </span>
+                  </Link>
+                </div>
+              </section>
+            )}
+
+            {/* Hot right now — bento asymmetric */}
+            {filteredRecipes.length > 2 && (
+              <section>
+                <div className="flex items-end justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+                      <Flame className="w-5 h-5 text-primary" />
+                      {language === 'en' ? 'Hot right now' : 'सध्या ट्रेंडिंग'}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      {language === 'en' ? "What everyone's cooking today" : 'आज सर्वजण काय बनवत आहेत'}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                  {filteredRecipes.slice(0, 8).map((r) => (
+                    <RecipeCard key={`hot-${r.id}`} recipe={r} language={language} loading="lazy" />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Quick bites row */}
+            {quickBites.length >= 3 && (
+              <section>
+                <div className="flex items-end justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-accent" />
+                      {language === 'en' ? 'Quick bites' : 'झटपट रेसिपी'}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      {language === 'en' ? 'Ready in 20 minutes or less' : '२० मिनिटांत तयार'}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                  {quickBites.slice(0, 8).map((r) => (
+                    <RecipeCard key={`quick-${r.id}`} recipe={r} language={language} loading="lazy" />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Browse by category — one section per meal */}
+            {Object.entries(groupedRecipes).map(([meal, list]) => {
+              if (list.length === 0) return null;
+              const icons: Record<string, string> = { Breakfast: '🌅', Snack: '🍿', Lunch: '🍱', Dinner: '🌙', Dessert: '🍨', Other: '🍽️' };
+              const mr: Record<string, string> = { Breakfast: 'नाश्ता', Snack: 'चाळण', Lunch: 'दुपारचे जेवण', Dinner: 'रात्रीचे जेवण', Dessert: 'मिठाई', Other: 'इतर' };
               return (
-                <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
-                  <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-emerald-500/20">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-3xl sm:text-4xl floating">🎁</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h2 className="text-xl sm:text-3xl font-bold text-foreground">
-                            {language === 'en' ? 'Free Recipe of the Day' : 'आजची मोफत रेसिपी'}
-                          </h2>
-                          <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30">
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            {language === 'en' ? 'FREE' : 'मोफत'}
-                          </Badge>
-                        </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                          {language === 'en' ? 'Enjoy this recipe completely free today!' : 'आज ही रेसिपी पूर्णपणे मोफत आनंद घ्या!'}
+                <section key={meal}>
+                  <div className="flex items-end justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{icons[meal]}</span>
+                      <div>
+                        <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+                          {language === 'en' ? meal : mr[meal]}
+                        </h2>
+                        <p className="text-xs text-muted-foreground">
+                          {list.length} {language === 'en' ? 'recipes' : 'रेसिपी'}
                         </p>
                       </div>
                     </div>
-                    <div className="max-w-[200px] sm:max-w-sm">
-                      <RecipeCard recipe={freeRecipe} language={language} loading="eager" />
-                    </div>
                   </div>
-                </div>
-              );
-            })()}
-
-            {/* Hot Recipes — horizontal rail */}
-            {filteredRecipes.length > 0 && (
-              <HorizontalRail
-                title={language === 'en' ? 'Hot Right Now' : 'सध्या ट्रेंडिंग'}
-                subtitle={language === 'en' ? "What everyone's cooking today" : 'आज सर्वजण काय बनवत आहेत'}
-                icon="🔥"
-                accent="from-orange-500/10 via-primary/10 to-red-500/10"
-              >
-                {filteredRecipes.slice(0, 12).map((recipe) => (
-                  <div key={`hot-${recipe.id}`} className={RAIL_ITEM}>
-                    <RecipeCard recipe={recipe} language={language} loading="eager" />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                    {list.slice(0, 8).map((r) => (
+                      <RecipeCard key={`${meal}-${r.id}`} recipe={r} language={language} loading="lazy" />
+                    ))}
                   </div>
-                ))}
-              </HorizontalRail>
-            )}
-
-            {/* Quick Bites — under 20 min */}
-            {(() => {
-              const quick = filteredRecipes.filter((r) => {
-                const t = (r.cookTime || '').toLowerCase();
-                const m = parseInt(t) || 30;
-                const mins = t.includes('hour') ? m * 60 : m;
-                return mins <= 20;
-              });
-              if (quick.length < 3) return null;
-              return (
-                <HorizontalRail
-                  title={language === 'en' ? 'Quick Bites' : 'झटपट रेसिपी'}
-                  subtitle={language === 'en' ? 'Ready in 20 minutes or less' : '२० मिनिटांत तयार'}
-                  icon="⚡"
-                  accent="from-yellow-400/10 via-amber-400/10 to-orange-400/10"
-                >
-                  {quick.slice(0, 12).map((recipe) => (
-                    <div key={`quick-${recipe.id}`} className={RAIL_ITEM}>
-                      <RecipeCard recipe={recipe} language={language} loading="lazy" />
-                    </div>
-                  ))}
-                </HorizontalRail>
-              );
-            })()}
-
-            {/* Fresh Additions rail */}
-            {recipes.length > 0 && (
-              <HorizontalRail
-                title={language === 'en' ? 'New Recipe Everyday' : 'दररोज नवीन रेसिपी'}
-                subtitle={language === 'en' ? 'Fresh additions to inspire your cooking' : 'नवीन रेसिपी'}
-                icon="✨"
-                accent="from-primary/10 via-accent/10 to-primary/10"
-              >
-                {recipes.slice(0, 12).map((recipe) => (
-                  <div key={`new-${recipe.id}`} className={RAIL_ITEM}>
-                    <RecipeCard recipe={recipe} language={language} loading="lazy" />
-                  </div>
-                ))}
-              </HorizontalRail>
-            )}
-
-            {/* Browse by Category header */}
-            <div className="flex items-center justify-between pt-2 opacity-0 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                {language === 'en' ? 'Browse by Category' : 'श्रेणीनुसार पहा'}
-              </h2>
-              <div className="bg-gradient-pill px-3 py-1.5 rounded-full border border-border">
-                <p className="text-xs sm:text-sm font-semibold text-foreground">
-                  {filteredRecipes.length} {language === 'en' ? 'recipes' : 'रेसिपी'}
-                </p>
-              </div>
-            </div>
-
-            {/* Grouped Recipes by Meal Type — horizontal rails */}
-            {Object.entries(groupedRecipes).map(([mealType, mealRecipes]) => {
-              if (mealRecipes.length === 0) return null;
-
-              const mealIcons: Record<string, string> = {
-                Breakfast: '🌅', Snack: '🍿', Lunch: '🍱', Dinner: '🌙', Dessert: '🍨', Other: '🍽️',
-              };
-              const mealTranslations: Record<string, string> = {
-                Breakfast: 'नाश्ता', Snack: 'चाळण', Lunch: 'दुपारचे जेवण',
-                Dinner: 'रात्रीचे जेवण', Dessert: 'मिठाई', Other: 'इतर',
-              };
-
-              return (
-                <HorizontalRail
-                  key={mealType}
-                  title={language === 'en' ? mealType : mealTranslations[mealType]}
-                  subtitle={`${mealRecipes.length} ${language === 'en' ? 'recipes' : 'रेसिपी'}`}
-                  icon={mealIcons[mealType]}
-                >
-                  {mealRecipes.map((recipe) => (
-                    <div key={`${mealType}-${recipe.id}`} className={RAIL_ITEM}>
-                      <RecipeCard recipe={recipe} language={language} loading="lazy" />
-                    </div>
-                  ))}
-                </HorizontalRail>
+                </section>
               );
             })}
 
-            {/* Load More Button */}
-            {hasMore && !loading && (
-              <div className="flex justify-center mt-8 opacity-0 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+            {hasMore && (
+              <div className="flex justify-center pt-4">
                 <Button
                   onClick={loadMore}
                   disabled={loadingMore}
                   size="lg"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 ripple btn-press transition-all duration-300 hover:shadow-warm hover:-translate-y-1"
+                  variant="outline"
+                  className="rounded-full px-8 border-border hover:border-primary hover:text-primary transition-colors"
                 >
-                  {loadingMore ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
-                      {language === 'en' ? 'Loading...' : 'लोड करत आहे...'}
-                    </>
-                  ) : (
-                    language === 'en' ? 'Load More Recipes' : 'अधिक रेसिपी लोड करा'
-                  )}
+                  {loadingMore
+                    ? (language === 'en' ? 'Loading…' : 'लोड करत आहे…')
+                    : (language === 'en' ? 'Show more recipes' : 'अधिक रेसिपी पहा')}
                 </Button>
               </div>
             )}
           </div>
         ) : (
           <div className="text-center py-20 space-y-4">
-            <div className="text-6xl mb-4">🔍</div>
-            <p className="text-2xl font-bold text-foreground mb-2">
-              {language === 'en' 
-                ? 'No recipes found'
-                : 'रेसिपी सापडल्या नाहीत'}
+            <div className="text-6xl mb-2">🔍</div>
+            <p className="text-2xl font-bold text-foreground">
+              {language === 'en' ? 'No recipes found' : 'रेसिपी सापडल्या नाहीत'}
             </p>
             <p className="text-muted-foreground">
-              {language === 'en'
-                ? 'Try adjusting your filters or search query'
-                : 'तुमचे फिल्टर्स किंवा शोध बदलून पहा'}
+              {language === 'en' ? 'Try adjusting your filters or search' : 'तुमचे फिल्टर्स बदलून पहा'}
             </p>
           </div>
         )}
@@ -578,5 +454,4 @@ const IndexContent = () => {
 };
 
 const Index = () => <IndexContent />;
-
 export default Index;
