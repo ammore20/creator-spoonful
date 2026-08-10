@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Crown, Check, ArrowLeft, Sparkles, Clock, Heart, MessageSquare, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/layout/AppShell';
 import { Footer } from '@/components/Footer';
 import { SEO } from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
@@ -298,7 +298,7 @@ export default function Premium() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-subtle">
+    <AppShell contained={false} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}>
       <SEO
         title="Premium Membership - Unlock Exclusive Marathi Recipes"
         description="Subscribe to RecipeMaker Premium and get access to 1000+ exclusive Marathi recipes, save unlimited favorites, download recipes, AI-powered suggestions, and personalized meal planning. Plans starting at ₹49/month."
@@ -485,6 +485,6 @@ export default function Premium() {
       </main>
 
       <Footer language={language} />
-    </div>
+    </AppShell>
   );
 }

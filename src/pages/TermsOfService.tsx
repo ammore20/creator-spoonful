@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/layout/AppShell';
 import { Footer } from '@/components/Footer';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ export default function TermsOfService() {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-subtle">
+    <AppShell contained={false} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}>
       <SEO
         title="Terms of Service - RecipeMaker Legal"
         description="Read RecipeMaker's Terms of Service to understand the rules and regulations governing your use of our platform, including user accounts, content usage, and premium subscriptions."
@@ -144,6 +144,6 @@ export default function TermsOfService() {
       </main>
 
       <Footer language={language} />
-    </div>
+    </AppShell>
   );
 }
