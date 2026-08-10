@@ -10,7 +10,9 @@ import {
   Bookmark, Share2, Play, Copy, Printer, Star,
   Timer, Flame, UtensilsCrossed, Heart
 } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/layout/AppShell';
+import { EmptyState } from '@/components/ds/EmptyState';
+import { RecipeCardSkeleton } from '@/components/RecipeCardSkeleton';
 import { ServingAdjuster } from '@/components/recipe/ServingAdjuster';
 
 import { CreatorCard } from '@/components/recipe/CreatorCard';
@@ -145,39 +147,38 @@ const RecipePageContent = () => {
     }
   };
 
+  const shellProps = {
+    contained: false as const,
+    language,
+    onLanguageToggle: () => setLanguage(language === 'en' ? 'mr' : 'en'),
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar 
-          onSearch={() => {}} 
-          language={language}
-          onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}
-        />
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-4xl font-bold mb-4">Loading...</h1>
+      <AppShell {...shellProps}>
+        <div className="px-3 sm:px-6 py-6 max-w-5xl mx-auto space-y-4">
+          <div className="h-8 w-2/3 rounded-xl bg-muted animate-pulse" />
+          <div className="aspect-video rounded-2xl bg-muted animate-pulse" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[...Array(4)].map((_, i) => <RecipeCardSkeleton key={i} />)}
+          </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   if (!recipe) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar 
-          onSearch={() => {}} 
-          language={language}
-          onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}
-        />
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-4xl font-bold mb-4">Recipe Not Found</h1>
-          <Link to="/">
-            <Button>
-              <ArrowLeft className="mr-2 w-4 h-4" />
-              Back to Home
-            </Button>
-          </Link>
+      <AppShell {...shellProps}>
+        <div className="px-3 sm:px-6 py-10 max-w-2xl mx-auto">
+          <EmptyState
+            icon={<UtensilsCrossed className="w-6 h-6" />}
+            title={language === 'en' ? 'Recipe not found' : 'रेसिपी सापडली नाही'}
+            description={language === 'en' ? 'This recipe may have been removed or the link is incorrect.' : 'ही रेसिपी काढली असावी किंवा लिंक चुकीची आहे.'}
+            action={<Link to="/"><Button variant="soft"><ArrowLeft className="mr-2 w-4 h-4" />{language === 'en' ? 'Back to recipes' : 'रेसिपींकडे परत'}</Button></Link>}
+          />
         </div>
-      </div>
+      </AppShell>
     );
   }
 
@@ -265,7 +266,7 @@ const RecipePageContent = () => {
     : description;
 
   return (
-    <div className="min-h-screen bg-background">
+    <AppShell {...shellProps}>
       <SEO
         title={`${title} | Authentic Marathi Recipe by RecipeMaker`}
         description={metaDescription}
@@ -307,13 +308,8 @@ const RecipePageContent = () => {
           "keywords": [...recipe.tasteProfile, ...recipe.mealType, ...recipe.cuisine, recipe.difficulty].join(", ")
         }}
       />
-      <Navbar 
-        onSearch={() => {}} 
-        language={language}
-        onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}
-      />
 
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="px-3 sm:px-6 py-5 sm:py-7 max-w-5xl mx-auto">
         <Link to="/">
           <Button variant="ghost" className="mb-6">
             <ArrowLeft className="mr-2 w-4 h-4" />
@@ -642,7 +638,7 @@ const RecipePageContent = () => {
         )}
 
       </div>
-    </div>
+    </AppShell>
   );
 };
 

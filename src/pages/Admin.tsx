@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/layout/AppShell';
 import { RefreshCw, Play, Loader2, ArrowLeftRight, Plus, Link, IndianRupee } from 'lucide-react';
 import type { User, Session } from '@supabase/supabase-js';
 import { AICostDashboard } from '@/components/admin/AICostDashboard';
@@ -434,10 +434,8 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar onSearch={() => {}} language="en" onLanguageToggle={() => {}} />
-      
-      <div className="container mx-auto px-4 py-8">
+    <AppShell contained={false} language="en" onLanguageToggle={() => {}}>
+      <div className="px-3 sm:px-6 py-5 sm:py-7 max-w-[1200px] mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold">Admin Panel</h1>
           <Button onClick={grantPremiumAndNavigate} disabled={loading} variant="outline" size="lg">
@@ -635,7 +633,7 @@ const Admin = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AppShell>
   );
 };
 
