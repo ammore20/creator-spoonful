@@ -1,40 +1,13 @@
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-
-export const RecipeCardSkeleton = () => {
-  return (
-    <Card className="overflow-hidden bg-gradient-card border-border">
-      <CardHeader className="p-0">
-        <Skeleton className="aspect-video w-full" />
-      </CardHeader>
-      
-      <CardContent className="p-5">
-        <Skeleton className="h-7 w-3/4 mb-2" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-2/3 mb-4" />
-        
-        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-border">
-          <Skeleton className="h-4 w-4 rounded-full" />
-          <Skeleton className="h-4 w-24" />
-        </div>
-
-        <div className="flex gap-2 mb-4">
-          <Skeleton className="h-7 w-20 rounded-full" />
-          <Skeleton className="h-7 w-16 rounded-full" />
-          <Skeleton className="h-7 w-14 rounded-full" />
-        </div>
-
-        <div className="flex gap-2">
-          <Skeleton className="h-5 w-16 rounded-full" />
-          <Skeleton className="h-5 w-20 rounded-full" />
-          <Skeleton className="h-5 w-14 rounded-full" />
-        </div>
-      </CardContent>
-      
-      <CardFooter className="p-5 pt-0 flex items-center justify-between">
-        <Skeleton className="h-8 w-24 rounded-full" />
-        <Skeleton className="h-9 w-28 rounded-md" />
-      </CardFooter>
-    </Card>
-  );
-};
+export const RecipeCardSkeleton = () => (
+  <div className="rounded-2xl border border-border/70 bg-card overflow-hidden shadow-soft">
+    <div className="aspect-[4/3] bg-muted animate-pulse" />
+    <div className="p-3 space-y-2">
+      <div className="h-3.5 w-4/5 rounded-full bg-muted animate-pulse" />
+      <div className="h-3 w-2/5 rounded-full bg-muted animate-pulse" />
+      <div className="flex gap-1.5 pt-1">
+        <div className="h-5 w-14 rounded-full bg-muted animate-pulse" />
+        <div className="h-5 w-10 rounded-full bg-muted animate-pulse" />
+      </div>
+    </div>
+  </div>
+);

@@ -6,96 +6,61 @@ interface FooterProps {
 }
 
 export const Footer = ({ language }: FooterProps) => {
+  const linkCls = 'text-muted-foreground hover:text-primary transition-colors';
+
   return (
-    <footer className="bg-gradient-card border-t border-border mt-20">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          {/* Brand */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-hero rounded-xl flex items-center justify-center shadow-warm">
-                <img src={logo} alt="RecipeMaker" className="w-8 h-8" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">RecipeMaker</h2>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'en' ? 'AI Recipes by Your Favorite Creators' : 'तुमच्या आवडत्या क्रिएटर्सच्या AI रेसिपी'}
-                </p>
-              </div>
-            </div>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              {language === 'en' 
-                ? 'Discover amazing recipes transcribed by AI from your favorite YouTube creators. Filter by taste, mood, cuisine, and more!'
-                : 'तुमच्या आवडत्या YouTube क्रिएटर्सकडून AI द्वारे प्रतिलेखित अद्भुत रेसिपी शोधा. चव, मूड, पाककृती आणि अधिक फिल्टर करा!'}
-            </p>
+    <footer className="rounded-2xl border border-border/70 bg-card p-6 sm:p-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+        <div className="col-span-2">
+          <div className="flex items-center gap-2.5 mb-3">
+            <span className="w-9 h-9 rounded-xl bg-primary/10 grid place-items-center">
+              <img src={logo} alt="" className="w-5 h-5" />
+            </span>
+            <span className="font-display text-lg font-bold text-foreground">
+              Recipe<span className="text-primary">Maker</span>
+            </span>
           </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="font-bold text-foreground mb-4">
-              {language === 'en' ? 'Quick Links' : 'द्रुत लिंक्स'}
-            </h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'en' ? 'Home' : 'होम'}
-                </Link>
-              </li>
-              <li>
-                <Link to="/premium" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'en' ? 'Premium Plans' : 'प्रीमियम योजना'}
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'en' ? 'Contact Us' : 'आमच्याशी संपर्क साधा'}
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h3 className="font-bold text-foreground mb-4">
-              {language === 'en' ? 'Legal' : 'कायदेशीर'}
-            </h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'en' ? 'Privacy Policy' : 'गोपनीयता धोरण'}
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'en' ? 'Terms of Service' : 'सेवा अटी'}
-                </Link>
-              </li>
-              <li>
-                <Link to="/refund" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'en' ? 'Refund Policy' : 'परतावा धोरण'}
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground text-center md:text-left">
-            © 2024 RecipeMaker. {language === 'en' ? 'All rights reserved.' : 'सर्व हक्क राखीव.'}
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
+            {language === 'en'
+              ? 'Authentic recipes from your favourite creators — filter by taste, mood, cuisine and cooking time.'
+              : 'तुमच्या आवडत्या क्रिएटर्सच्या अस्सल रेसिपी — चव, मूड, पाककृती आणि वेळेनुसार फिल्टर करा.'}
           </p>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{language === 'en' ? 'Powered by' : 'द्वारा संचालित'}</span>
-            <a 
-              href="https://nimbusware.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="font-semibold text-primary hover:text-primary/80 transition-colors"
-            >
-              Nimbus Ware
-            </a>
-          </div>
         </div>
+
+        <div>
+          <h3 className="font-display text-sm font-bold text-foreground mb-3">
+            {language === 'en' ? 'Product' : 'उत्पादन'}
+          </h3>
+          <ul className="space-y-2 text-sm">
+            <li><Link to="/" className={linkCls}>{language === 'en' ? 'Discover' : 'शोधा'}</Link></li>
+            <li><Link to="/premium" className={linkCls}>{language === 'en' ? 'Premium' : 'प्रीमियम'}</Link></li>
+            <li><Link to="/for-creators" className={linkCls}>{language === 'en' ? 'For creators' : 'क्रिएटर्ससाठी'}</Link></li>
+            <li><Link to="/contact" className={linkCls}>{language === 'en' ? 'Contact' : 'संपर्क'}</Link></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="font-display text-sm font-bold text-foreground mb-3">
+            {language === 'en' ? 'Legal' : 'कायदेशीर'}
+          </h3>
+          <ul className="space-y-2 text-sm">
+            <li><Link to="/privacy" className={linkCls}>{language === 'en' ? 'Privacy policy' : 'गोपनीयता धोरण'}</Link></li>
+            <li><Link to="/terms" className={linkCls}>{language === 'en' ? 'Terms of service' : 'सेवा अटी'}</Link></li>
+            <li><Link to="/refund" className={linkCls}>{language === 'en' ? 'Refund policy' : 'परतावा धोरण'}</Link></li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="border-t border-border/70 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          © {new Date().getFullYear()} RecipeMaker. {language === 'en' ? 'All rights reserved.' : 'सर्व हक्क राखीव.'}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {language === 'en' ? 'Powered by' : 'द्वारा संचालित'}{' '}
+          <a href="https://nimbusware.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary">
+            Nimbus Ware
+          </a>
+        </p>
       </div>
     </footer>
   );

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/layout/AppShell';
 import { Footer } from '@/components/Footer';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -76,13 +76,12 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-subtle">
+    <AppShell contained={false} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}>
       <SEO
         title="Contact Us - RecipeMaker Support"
         description="Get in touch with RecipeMaker team. Have questions, feedback, or need support? Contact us for help with recipes, subscriptions, or technical issues. We're here to help!"
         url="/contact"
       />
-      <Navbar onSearch={() => {}} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} />
       
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
         <Link to="/">
@@ -269,6 +268,6 @@ export default function Contact() {
       </main>
 
       <Footer language={language} />
-    </div>
+    </AppShell>
   );
 }

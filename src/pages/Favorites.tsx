@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/layout/AppShell';
 import { Footer } from '@/components/Footer';
 import { RecipeCard } from '@/components/RecipeCard';
 import { SEO } from '@/components/SEO';
@@ -85,12 +85,11 @@ const FavoritesContent = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-primary">
+    <AppShell contained={false} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}>
       <SEO
         title={language === 'en' ? 'My Favorites' : 'माझे आवडते'}
         description={language === 'en' ? 'Your favorite recipes collection' : 'तुमचे आवडते रेसिपी संग्रह'}
       />
-      <Navbar language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} onSearch={() => {}} />
       
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
@@ -137,7 +136,7 @@ const FavoritesContent = () => {
       </main>
       
       <Footer language={language} />
-    </div>
+    </AppShell>
   );
 };
 

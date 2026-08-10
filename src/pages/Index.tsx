@@ -1,16 +1,21 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { FilterOptions, MealType } from '@/types/recipe';
-import { Navbar } from '@/components/Navbar';
-import { Hero } from '@/components/Hero';
+import { AppShell } from '@/components/layout/AppShell';
 import { RecipeCard } from '@/components/RecipeCard';
 import { RecipeCardSkeleton } from '@/components/RecipeCardSkeleton';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PartyPopper, X, Flame, Zap, Sparkles, Gift, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Panel } from '@/components/ds/Panel';
+import { Chip } from '@/components/ds/Chip';
+import { SectionHeader } from '@/components/ds/SectionHeader';
+import { EmptyState } from '@/components/ds/EmptyState';
+import { StatCard } from '@/components/ds/StatCard';
+import {
+  PartyPopper, X, Flame, Zap, Sparkles, Gift, ArrowRight, SlidersHorizontal,
+  Search as SearchIcon, BookOpen, Clock, Crown, ChevronRight,
+} from 'lucide-react';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
@@ -27,10 +32,16 @@ const CATEGORIES: { key: 'all' | MealType; icon: string; en: string; mr: string 
   { key: 'Dessert', icon: '🍨', en: 'Dessert', mr: 'मिठाई' },
 ];
 
+const GREETINGS = {
+  en: ['Good morning', 'Good afternoon', 'Good evening'],
+  mr: ['सुप्रभात', 'नमस्कार', 'शुभ संध्याकाळ'],
+};
+
 const IndexContent = () => {
   const [searchParams] = useSearchParams();
   const { user, isPremium, subscriptionDetails } = usePremiumStatus();
   const [showFreeBanner, setShowFreeBanner] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('creator_access') === 'true') {
@@ -189,8 +200,18 @@ const IndexContent = () => {
     return r;
   }, [recipes]);
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? GREETINGS[language][0] : hour < 17 ? GREETINGS[language][1] : GREETINGS[language][2];
+  const firstName = user?.email?.split('@')[0]?.split('.')[0] ?? (language === 'en' ? 'Chef' : 'शेफ');
+
+  const grid = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4';
+
   return (
-    <div className="min-h-screen bg-background">
+    <AppShell
+      language={language}
+      onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}
+      onSearch={setSearchQuery}
+    >
       <SEO
         title="RecipeMaker - Discover & Personalize Authentic Marathi Recipes"
         description="Discover and personalize authentic Marathi recipes with step-by-step videos, ingredients, and instructions."
@@ -206,80 +227,99 @@ const IndexContent = () => {
           },
         }}
       />
-      <Navbar onSearch={setSearchQuery} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} />
-      <Hero language={language} />
 
-      {showFreeBanner && (
-        <div className="container mx-auto px-4 mt-4">
-          <div className="relative bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-primary/20 rounded-2xl p-5 animate-fade-in">
-            <button
-              onClick={() => { setShowFreeBanner(false); sessionStorage.setItem('free_banner_dismissed', 'true'); }}
-              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
-              aria-label="Dismiss"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="flex items-center gap-3">
-              <PartyPopper className="w-8 h-8 text-primary flex-shrink-0" />
-              <div>
-                <h3 className="text-base font-bold text-foreground">
-                  {language === 'en' ? '🎉 You\'re one of the first 50!' : '🎉 तुम्ही पहिल्या ५० मध्ये आहात!'}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  {language === 'en' ? '1 month of FREE premium unlocked.' : '१ महिन्याचा मोफत प्रीमियम अनलॉक.'}
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* Greeting */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
+        <div>
+          <h1 className="font-display text-2xl sm:text-[28px] font-bold text-foreground leading-tight">
+            {greeting}, <span className="text-primary capitalize">{firstName}</span>
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {language === 'en'
+              ? 'What are we cooking today? Fresh recipes, updated daily.'
+              : 'आज काय बनवायचं? रोज नवीन रेसिपी.'}
+          </p>
         </div>
-      )}
-
-      {/* Category chips — sticky under nav, always in reach */}
-      <div className="sticky top-[64px] sm:top-[72px] z-30 bg-background/85 backdrop-blur border-b border-border/60">
-        <div className="container mx-auto px-3 sm:px-6 py-3">
-          <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {CATEGORIES.map((c) => {
-              const active = c.key === 'all' ? filters.mealType.length === 0 : filters.mealType.includes(c.key as MealType);
-              return (
-                <button
-                  key={c.key}
-                  onClick={() => setFilters({ ...filters, mealType: c.key === 'all' ? [] : [c.key as MealType] })}
-                  className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
-                    active
-                      ? 'bg-foreground text-background shadow-soft'
-                      : 'bg-secondary text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <span className="text-base leading-none">{c.icon}</span>
-                  {language === 'en' ? c.en : c.mr}
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowFilters((v) => !v)} className="gap-2">
+            <SlidersHorizontal className="w-4 h-4" />
+            {language === 'en' ? 'Filters' : 'फिल्टर्स'}
+          </Button>
+          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-card border border-border/70 px-3 py-1.5 text-xs text-muted-foreground">
+            <BookOpen className="w-3.5 h-3.5 text-primary" />
+            {recipes.length} {language === 'en' ? 'recipes loaded' : 'रेसिपी'}
+          </span>
         </div>
       </div>
 
-      <Suspense fallback={<div className="h-16" />}>
-        <FilterBar filters={filters} onFilterChange={setFilters} language={language} />
-      </Suspense>
+      {showFreeBanner && (
+        <Panel className="relative mb-5 border-primary/25 bg-primary/[0.06]">
+          <button
+            onClick={() => { setShowFreeBanner(false); sessionStorage.setItem('free_banner_dismissed', 'true'); }}
+            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
+            aria-label="Dismiss"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-primary/12 grid place-items-center shrink-0">
+              <PartyPopper className="w-5 h-5 text-primary" />
+            </span>
+            <div>
+              <h3 className="font-display text-base font-bold text-foreground">
+                {language === 'en' ? "You're one of the first 50!" : 'तुम्ही पहिल्या ५० मध्ये आहात!'}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {language === 'en' ? '1 month of free premium unlocked.' : '१ महिन्याचा मोफत प्रीमियम अनलॉक.'}
+              </p>
+            </div>
+          </div>
+        </Panel>
+      )}
 
-      <main id="recipes-section" className="container mx-auto px-3 sm:px-6 py-6 sm:py-10">
+      {/* Category chips */}
+      <div className="sticky top-16 z-30 -mx-3 sm:-mx-6 px-3 sm:px-6 py-2.5 bg-background/90 backdrop-blur mb-5">
+        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {CATEGORIES.map((c) => {
+            const active = c.key === 'all' ? filters.mealType.length === 0 : filters.mealType.includes(c.key as MealType);
+            return (
+              <Chip
+                key={c.key}
+                active={active}
+                icon={<span className="text-base leading-none">{c.icon}</span>}
+                onClick={() => setFilters({ ...filters, mealType: c.key === 'all' ? [] : [c.key as MealType] })}
+              >
+                {language === 'en' ? c.en : c.mr}
+              </Chip>
+            );
+          })}
+        </div>
+      </div>
+
+      {showFilters && (
+        <Panel className="mb-6 p-0 overflow-hidden">
+          <Suspense fallback={<div className="h-20" />}>
+            <FilterBar filters={filters} onFilterChange={setFilters} language={language} />
+          </Suspense>
+        </Panel>
+      )}
+
+      <div id="recipes-section">
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+          <div className={grid}>
             {[...Array(8)].map((_, i) => <RecipeCardSkeleton key={i} />)}
           </div>
         ) : filteredRecipes.length > 0 ? (
-          <div className="space-y-10 sm:space-y-14">
+          <div className="space-y-8 sm:space-y-10">
 
-            {/* BENTO: Featured of the Day + Quick Bites tiles + CTA */}
+            {/* Featured of the day + side tiles */}
             {freeRecipe && (
-              <section className="grid grid-cols-1 md:grid-cols-6 gap-3 sm:gap-5">
-                {/* Big featured tile */}
+              <section className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
                 <Link
                   to={`/recipe/${freeRecipe.id}`}
-                  className="md:col-span-4 relative group overflow-hidden rounded-3xl border border-border shadow-card hover:shadow-warm transition-shadow"
+                  className="lg:col-span-2 relative group overflow-hidden rounded-2xl border border-border/70 shadow-soft hover:shadow-card transition-shadow"
                 >
-                  <div className="aspect-[16/10] md:aspect-[16/11] overflow-hidden bg-muted">
+                  <div className="aspect-[16/9] overflow-hidden bg-muted">
                     <img
                       src={freeRecipe.thumbnailUrl}
                       alt={freeRecipe.title}
@@ -287,78 +327,86 @@ const IndexContent = () => {
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-                  <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 bg-white/95 text-foreground rounded-full px-3 py-1 text-xs font-semibold shadow-soft">
-                    <Gift className="w-3.5 h-3.5 text-primary" />
-                    {language === 'en' ? "Today's free recipe" : 'आजची मोफत रेसिपी'}
+                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent" />
+                  <div className="absolute top-4 left-4 flex gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-card/95 px-3 py-1 text-[11px] font-semibold text-foreground">
+                      <Gift className="w-3.5 h-3.5 text-primary" />
+                      {language === 'en' ? "Today's free recipe" : 'आजची मोफत रेसिपी'}
+                    </span>
+                    <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-foreground/60 px-3 py-1 text-[11px] font-semibold text-background backdrop-blur">
+                      <Clock className="w-3 h-3" /> {freeRecipe.cookTime}
+                    </span>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7 text-white">
-                    <p className="text-xs sm:text-sm opacity-90 mb-1">by {freeRecipe.creator}</p>
-                    <h2 className="text-xl sm:text-3xl font-bold leading-tight mb-2 line-clamp-2">{freeRecipe.title}</h2>
-                    <div className="flex items-center gap-3 text-xs sm:text-sm opacity-90">
-                      <span>⏱ {freeRecipe.cookTime}</span>
-                      <span>· {freeRecipe.servings} {language === 'en' ? 'servings' : 'लोक'}</span>
-                      <span className="ml-auto inline-flex items-center gap-1 font-semibold">
-                        {language === 'en' ? 'Cook it' : 'बनवा'} <ArrowRight className="w-4 h-4" />
-                      </span>
-                    </div>
+                  <div className="absolute bottom-0 inset-x-0 p-4 sm:p-6 text-background">
+                    <p className="text-xs opacity-85 mb-1">by {freeRecipe.creator}</p>
+                    <h2 className="font-display text-xl sm:text-2xl font-bold leading-tight line-clamp-2 mb-3">
+                      {freeRecipe.title}
+                    </h2>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-pill">
+                      {language === 'en' ? 'Cook now' : 'बनवा'} <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
                   </div>
                 </Link>
 
-                {/* Right column: two stacked tiles */}
-                <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-1 gap-3 sm:gap-5">
-                  {/* Quick bites tile */}
+                <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4">
                   <button
                     onClick={() => setFilters({ ...filters, cookTimeRange: ['Quick'] })}
-                    className="relative overflow-hidden rounded-3xl p-5 text-left bg-gradient-to-br from-accent/25 to-primary/20 border border-border shadow-soft hover:shadow-card transition-shadow group"
+                    className="group text-left rounded-2xl border border-border/70 bg-card p-4 shadow-soft hover:shadow-card hover:border-primary/30 transition-all"
                   >
-                    <Zap className="w-7 h-7 text-primary mb-3" />
-                    <h3 className="text-base sm:text-lg font-bold text-foreground leading-tight mb-1">
+                    <span className="w-9 h-9 rounded-xl bg-accent/20 grid place-items-center mb-3">
+                      <Zap className="w-4 h-4 text-accent-foreground" />
+                    </span>
+                    <h3 className="font-display text-base font-bold text-foreground leading-tight">
                       {language === 'en' ? 'In a hurry?' : 'घाईत आहात?'}
                     </h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-2">
+                    <p className="text-xs text-muted-foreground mt-1 mb-2">
                       {language === 'en' ? `${quickBites.length} recipes under 20 min` : `२० मिनिटांच्या ${quickBites.length} रेसिपी`}
                     </p>
-                    <span className="text-xs font-semibold text-primary inline-flex items-center gap-1">
-                      {language === 'en' ? 'Show quick bites' : 'पहा'} <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                      {language === 'en' ? 'Show quick bites' : 'पहा'}
+                      <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </button>
 
-                  {/* Premium / veg tile */}
                   <Link
                     to="/premium"
-                    className="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-foreground to-foreground/85 text-background shadow-soft hover:shadow-card transition-shadow group"
+                    className="group rounded-2xl border border-border/70 bg-foreground p-4 text-background shadow-soft hover:shadow-card transition-all"
                   >
-                    <Sparkles className="w-7 h-7 mb-3 text-primary-glow" />
-                    <h3 className="text-base sm:text-lg font-bold leading-tight mb-1">
+                    <span className="w-9 h-9 rounded-xl bg-background/15 grid place-items-center mb-3">
+                      <Crown className="w-4 h-4 text-primary-glow" />
+                    </span>
+                    <h3 className="font-display text-base font-bold leading-tight">
                       {language === 'en' ? 'Unlock every recipe' : 'सर्व रेसिपी अनलॉक करा'}
                     </h3>
-                    <p className="text-xs sm:text-sm opacity-80 mb-2">
+                    <p className="text-xs opacity-75 mt-1 mb-2">
                       {language === 'en' ? 'Premium from ₹49/mo' : 'फक्त ₹४९/महिना'}
                     </p>
-                    <span className="text-xs font-semibold inline-flex items-center gap-1 text-primary-glow">
-                      {language === 'en' ? 'Go premium' : 'प्रीमियम मिळवा'} <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary-glow">
+                      {language === 'en' ? 'Go premium' : 'प्रीमियम मिळवा'}
+                      <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </Link>
                 </div>
               </section>
             )}
 
-            {/* Hot right now — bento asymmetric */}
+            {/* Stats strip */}
+            <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <StatCard icon={<BookOpen className="w-4 h-4" />} value={recipes.length} label={language === 'en' ? 'Recipes available' : 'उपलब्ध रेसिपी'} />
+              <StatCard icon={<Zap className="w-4 h-4" />} tone="accent" value={quickBites.length} label={language === 'en' ? 'Under 20 minutes' : '२० मिनिटांत'} />
+              <StatCard icon={<Flame className="w-4 h-4" />} value={Object.values(groupedRecipes).filter(l => l.length > 0).length} label={language === 'en' ? 'Meal categories' : 'श्रेणी'} />
+              <StatCard icon={<Sparkles className="w-4 h-4" />} tone="neutral" value={isPremium ? (language === 'en' ? 'Active' : 'सक्रिय') : (language === 'en' ? 'Free' : 'मोफत')} label={language === 'en' ? 'Your plan' : 'तुमची योजना'} />
+            </section>
+
+            {/* Hot right now */}
             {filteredRecipes.length > 2 && (
               <section>
-                <div className="flex items-end justify-between mb-4">
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                      <Flame className="w-5 h-5 text-primary" />
-                      {language === 'en' ? 'Hot right now' : 'सध्या ट्रेंडिंग'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {language === 'en' ? "What everyone's cooking today" : 'आज सर्वजण काय बनवत आहेत'}
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                <SectionHeader
+                  icon={<Flame className="w-4 h-4" />}
+                  title={language === 'en' ? 'Hot right now' : 'सध्या ट्रेंडिंग'}
+                  subtitle={language === 'en' ? "What everyone's cooking today" : 'आज सर्वजण काय बनवत आहेत'}
+                />
+                <div className={grid}>
                   {filteredRecipes.slice(0, 8).map((r) => (
                     <RecipeCard key={`hot-${r.id}`} recipe={r} language={language} loading="lazy" />
                   ))}
@@ -366,21 +414,15 @@ const IndexContent = () => {
               </section>
             )}
 
-            {/* Quick bites row */}
+            {/* Quick bites */}
             {quickBites.length >= 3 && (
               <section>
-                <div className="flex items-end justify-between mb-4">
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-accent" />
-                      {language === 'en' ? 'Quick bites' : 'झटपट रेसिपी'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {language === 'en' ? 'Ready in 20 minutes or less' : '२० मिनिटांत तयार'}
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                <SectionHeader
+                  icon={<Zap className="w-4 h-4" />}
+                  title={language === 'en' ? 'Quick bites' : 'झटपट रेसिपी'}
+                  subtitle={language === 'en' ? 'Ready in 20 minutes or less' : '२० मिनिटांत तयार'}
+                />
+                <div className={grid}>
                   {quickBites.slice(0, 8).map((r) => (
                     <RecipeCard key={`quick-${r.id}`} recipe={r} language={language} loading="lazy" />
                   ))}
@@ -388,27 +430,19 @@ const IndexContent = () => {
               </section>
             )}
 
-            {/* Browse by category — one section per meal */}
+            {/* By meal type */}
             {Object.entries(groupedRecipes).map(([meal, list]) => {
               if (list.length === 0) return null;
               const icons: Record<string, string> = { Breakfast: '🌅', Snack: '🍿', Lunch: '🍱', Dinner: '🌙', Dessert: '🍨', Other: '🍽️' };
               const mr: Record<string, string> = { Breakfast: 'नाश्ता', Snack: 'चाळण', Lunch: 'दुपारचे जेवण', Dinner: 'रात्रीचे जेवण', Dessert: 'मिठाई', Other: 'इतर' };
               return (
                 <section key={meal}>
-                  <div className="flex items-end justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{icons[meal]}</span>
-                      <div>
-                        <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                          {language === 'en' ? meal : mr[meal]}
-                        </h2>
-                        <p className="text-xs text-muted-foreground">
-                          {list.length} {language === 'en' ? 'recipes' : 'रेसिपी'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                  <SectionHeader
+                    icon={<span className="text-lg leading-none">{icons[meal]}</span>}
+                    title={language === 'en' ? meal : mr[meal]}
+                    subtitle={`${list.length} ${language === 'en' ? 'recipes' : 'रेसिपी'}`}
+                  />
+                  <div className={grid}>
                     {list.slice(0, 8).map((r) => (
                       <RecipeCard key={`${meal}-${r.id}`} recipe={r} language={language} loading="lazy" />
                     ))}
@@ -418,14 +452,8 @@ const IndexContent = () => {
             })}
 
             {hasMore && (
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                  size="lg"
-                  variant="outline"
-                  className="rounded-full px-8 border-border hover:border-primary hover:text-primary transition-colors"
-                >
+              <div className="flex justify-center pt-2">
+                <Button onClick={loadMore} disabled={loadingMore} variant="outline" size="pill">
                   {loadingMore
                     ? (language === 'en' ? 'Loading…' : 'लोड करत आहे…')
                     : (language === 'en' ? 'Show more recipes' : 'अधिक रेसिपी पहा')}
@@ -434,22 +462,28 @@ const IndexContent = () => {
             )}
           </div>
         ) : (
-          <div className="text-center py-20 space-y-4">
-            <div className="text-6xl mb-2">🔍</div>
-            <p className="text-2xl font-bold text-foreground">
-              {language === 'en' ? 'No recipes found' : 'रेसिपी सापडल्या नाहीत'}
-            </p>
-            <p className="text-muted-foreground">
-              {language === 'en' ? 'Try adjusting your filters or search' : 'तुमचे फिल्टर्स बदलून पहा'}
-            </p>
-          </div>
+          <EmptyState
+            icon={<SearchIcon className="w-6 h-6" />}
+            title={language === 'en' ? 'No recipes found' : 'रेसिपी सापडल्या नाहीत'}
+            description={language === 'en' ? 'Try adjusting your filters or search terms.' : 'तुमचे फिल्टर्स बदलून पहा.'}
+            action={
+              <Button
+                variant="soft"
+                onClick={() => setFilters({ creator: [], tasteProfile: [], mealType: [], cuisine: [], mood: [], cookTimeRange: [], dietType: [] })}
+              >
+                {language === 'en' ? 'Clear filters' : 'फिल्टर्स रीसेट करा'}
+              </Button>
+            }
+          />
         )}
-      </main>
+      </div>
 
-      <Suspense fallback={<div className="h-40" />}>
-        <Footer language={language} />
-      </Suspense>
-    </div>
+      <div className="mt-12">
+        <Suspense fallback={<div className="h-40" />}>
+          <Footer language={language} />
+        </Suspense>
+      </div>
+    </AppShell>
   );
 };
 

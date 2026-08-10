@@ -1,14 +1,13 @@
 import { useState, useEffect, memo } from 'react';
 import { Recipe } from '@/types/recipe';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Users, ChefHat, Lock, Heart, Star, Flame } from 'lucide-react';
+import { Clock, Users, Lock, Heart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import logo from '@/assets/logo.png';
+
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -92,118 +91,95 @@ const RecipeCardComponent = ({ recipe, language, loading = 'lazy' }: RecipeCardP
   };
 
   return (
-    <Card className="group overflow-hidden card-3d spotlight hover-glow transition-all duration-500 bg-gradient-card border-border relative opacity-0 animate-fade-in-scale">
-      <Link to={`/recipe/${recipe.id}`}>
-        <CardHeader className="p-0 relative img-zoom">
-          <div className="aspect-[16/10] sm:aspect-video overflow-hidden relative bg-muted">
-            {!imageLoaded && (
-              <div className="absolute inset-0 shimmer"></div>
-            )}
-            <img
-              src={recipe.thumbnailUrl}
-              alt={title}
-              loading={loading}
-              onLoad={() => setImageLoaded(true)}
-              className={`w-full h-full object-cover transition-all duration-700 ${
-                imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-soft transition-all duration-300 hover:shadow-card hover:border-primary/30">
+      <Link to={`/recipe/${recipe.id}`} className="block">
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+          {!imageLoaded && <div className="absolute inset-0 shimmer" />}
+          <img
+            src={recipe.thumbnailUrl}
+            alt={title}
+            loading={loading}
+            onLoad={() => setImageLoaded(true)}
+            className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.04] ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+
+          {recipe.isPremium && (
+            <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-foreground/85 px-2 py-1 text-[10px] font-semibold text-background backdrop-blur">
+              <Lock className="w-2.5 h-2.5" />
+              {language === 'en' ? 'Premium' : 'प्रीमियम'}
+            </span>
+          )}
+
+          {recipe.difficulty && !recipe.isPremium && (
+            <span className="absolute top-2 left-2 rounded-full bg-card/90 px-2 py-1 text-[10px] font-semibold text-foreground backdrop-blur">
+              {recipe.difficulty}
+            </span>
+          )}
+
+          <button
+            onClick={toggleFavorite}
+            aria-label="Toggle favorite"
+            className="absolute top-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-card/90 backdrop-blur transition-transform duration-200 hover:scale-110"
+          >
+            <Heart
+              className={`w-4 h-4 transition-colors ${
+                isFavorite ? 'fill-primary text-primary' : 'text-muted-foreground'
               }`}
             />
-            {/* Overlay on hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-              <div className="text-white text-xl font-bold animate-zoom-in">
-                🎥 {language === 'en' ? 'Watch Recipe' : 'रेसिपी पहा'}
-              </div>
-            </div>
-            
-            {/* Creator Avatar Badge */}
-            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white rounded-full p-0.5 sm:p-1 shadow-lg">
-              <img src={logo} alt={creator} className="w-6 h-6 sm:w-8 sm:h-8 rounded-full" />
-            </div>
-
-            {/* Premium Badge */}
-            {recipe.isPremium && (
-              <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-accent text-accent-foreground px-2 py-1 sm:px-3 sm:py-1.5 rounded-full flex items-center gap-1 text-xs sm:text-sm font-semibold shadow-lg">
-                <Lock className="w-3 h-3" />
-                {language === 'en' ? 'Premium' : 'प्रीमियम'}
-              </div>
-            )}
-
-            {/* Difficulty Badge */}
-            {recipe.difficulty && (
-              <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3">
-                <Badge variant="secondary" className="backdrop-blur-md bg-white/90 text-foreground shadow-md font-medium text-[10px] sm:text-xs px-1.5 sm:px-2">
-                  {recipe.difficulty}
-                </Badge>
-              </div>
-            )}
-
-            {/* Favorite Heart */}
-            <button
-              onClick={toggleFavorite}
-              className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 bg-white/90 backdrop-blur-sm rounded-full p-1.5 sm:p-2 shadow-lg hover:scale-125 btn-press transition-all duration-300"
-            >
-              <Heart 
-                className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ${
-                  isFavorite ? 'fill-red-500 text-red-500 animate-heart-beat' : 'text-muted-foreground hover:text-red-400'
-                }`}
-              />
-            </button>
-          </div>
-        </CardHeader>
+          </button>
+        </div>
       </Link>
-      
-      <CardContent className="p-2 sm:p-4">
-        <Link to={`/recipe/${recipe.id}`} className="link-underline">
-          <h3 className="text-xs sm:text-base font-bold mb-0.5 sm:mb-1 group-hover:text-primary transition-colors duration-300 line-clamp-2 leading-tight">
+
+      <div className="flex flex-1 flex-col p-3 sm:p-3.5">
+        <div className="flex items-center gap-1 mb-1.5">
+          <Star className="w-3 h-3 fill-accent text-accent" />
+          <span className="text-[11px] font-semibold text-foreground">4.8</span>
+          <span className="text-[11px] text-muted-foreground truncate">· {creator}</span>
+        </div>
+
+        <Link to={`/recipe/${recipe.id}`}>
+          <h3 className="font-display text-sm sm:text-[15px] font-bold leading-snug text-foreground line-clamp-2 transition-colors group-hover:text-primary">
             {title}
           </h3>
         </Link>
-        
-        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground mb-1.5 sm:mb-2">
-          <ChefHat className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary" />
-          <span className="font-medium truncate">{creator}</span>
+
+        <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="w-3 h-3 text-primary" />
+            {recipe.cookTime}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Users className="w-3 h-3" />
+            {recipe.servings}
+          </span>
         </div>
 
-        {/* Info Chips */}
-        <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
-          <div className="flex items-center gap-0.5 sm:gap-1 bg-gradient-pill px-1.5 sm:px-2 py-0.5 rounded-full border border-border">
-            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary" />
-            <span className="text-[9px] sm:text-[10px] font-medium">{recipe.cookTime}</span>
+        {(recipe.mealType.length > 0 || recipe.tasteProfile.length > 0) && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {recipe.mealType.slice(0, 1).map((meal) => (
+              <Badge key={meal} variant="soft">
+                {meal}
+              </Badge>
+            ))}
+            {recipe.tasteProfile.slice(0, 1).map((taste) => (
+              <Badge key={taste} variant="outline">
+                {taste}
+              </Badge>
+            ))}
           </div>
-          <div className="flex items-center gap-0.5 sm:gap-1 bg-gradient-pill px-1.5 sm:px-2 py-0.5 rounded-full border border-border">
-            <Users className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-            <span className="text-[9px] sm:text-[10px] font-medium">{recipe.servings}</span>
-          </div>
-          <div className="flex items-center gap-0.5 sm:gap-1 bg-gradient-pill px-1.5 sm:px-2 py-0.5 rounded-full border border-border">
-            <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-accent fill-accent" />
-            <span className="text-[9px] sm:text-[10px] font-medium">4.8</span>
-          </div>
-        </div>
+        )}
 
-        {/* Tags - single row */}
-        <div className="flex flex-wrap gap-1">
-          {recipe.mealType.slice(0, 1).map((meal) => (
-            <Badge key={meal} className="text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 bg-primary/10 text-primary hover:bg-primary/20 border-0">
-              {meal}
-            </Badge>
-          ))}
-          {recipe.tasteProfile.slice(0, 1).map((taste) => (
-            <Badge key={taste} variant="outline" className="text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0">
-              {taste}
-            </Badge>
-          ))}
-        </div>
-      </CardContent>
-      
-      <CardFooter className="p-2 sm:p-4 pt-0">
-        <Link to={`/recipe/${recipe.id}`} className="w-full">
-          <Button size="sm" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 ripple btn-press font-semibold shadow-pill text-[10px] sm:text-xs h-7 sm:h-8 transition-all duration-300 hover:shadow-warm">
-            {language === 'en' ? 'View Recipe' : 'रेसिपी पहा'} →
+        <Link to={`/recipe/${recipe.id}`} className="mt-3 mt-auto pt-3">
+          <Button variant="soft" size="sm" className="w-full">
+            {language === 'en' ? 'View details' : 'रेसिपी पहा'}
           </Button>
         </Link>
-      </CardFooter>
-    </Card>
+      </div>
+    </article>
   );
 };
+
 
 export const RecipeCard = memo(RecipeCardComponent);

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/layout/AppShell';
 import { Footer } from '@/components/Footer';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -10,13 +10,12 @@ export default function RefundPolicy() {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-subtle">
+    <AppShell contained={false} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}>
       <SEO
         title="Refund & Cancellation Policy - RecipeMaker Premium"
         description="Understand RecipeMaker's refund and cancellation policy for premium subscriptions. Learn about eligibility, refund process, timelines, and how to cancel your subscription."
         url="/refund"
       />
-      <Navbar onSearch={() => {}} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} />
       
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
         <Link to="/">
@@ -184,6 +183,6 @@ export default function RefundPolicy() {
       </main>
 
       <Footer language={language} />
-    </div>
+    </AppShell>
   );
 }

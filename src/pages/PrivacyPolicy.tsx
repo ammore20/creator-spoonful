@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/layout/AppShell';
 import { Footer } from '@/components/Footer';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -10,13 +10,12 @@ export default function PrivacyPolicy() {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-subtle">
+    <AppShell contained={false} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}>
       <SEO
         title="Privacy Policy - RecipeMaker Data Protection"
         description="Learn how RecipeMaker collects, uses, and protects your personal information. Our privacy policy explains data handling, cookies, security measures, and your privacy rights."
         url="/privacy"
       />
-      <Navbar onSearch={() => {}} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} />
       
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
         <Link to="/">
@@ -199,6 +198,6 @@ export default function PrivacyPolicy() {
       </main>
 
       <Footer language={language} />
-    </div>
+    </AppShell>
   );
 }
