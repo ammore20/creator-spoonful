@@ -90,7 +90,6 @@ const FavoritesContent = () => {
         title={language === 'en' ? 'My Favorites' : 'माझे आवडते'}
         description={language === 'en' ? 'Your favorite recipes collection' : 'तुमचे आवडते रेसिपी संग्रह'}
       />
-      <Navbar language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} onSearch={() => {}} />
       
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">

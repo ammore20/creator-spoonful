@@ -16,7 +16,6 @@ export default function TermsOfService() {
         description="Read RecipeMaker's Terms of Service to understand the rules and regulations governing your use of our platform, including user accounts, content usage, and premium subscriptions."
         url="/terms"
       />
-      <Navbar onSearch={() => {}} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} />
       
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
         <Link to="/">

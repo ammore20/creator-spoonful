@@ -82,7 +82,6 @@ export default function Contact() {
         description="Get in touch with RecipeMaker team. Have questions, feedback, or need support? Contact us for help with recipes, subscriptions, or technical issues. We're here to help!"
         url="/contact"
       />
-      <Navbar onSearch={() => {}} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} />
       
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
         <Link to="/">

@@ -16,7 +16,6 @@ export default function PrivacyPolicy() {
         description="Learn how RecipeMaker collects, uses, and protects your personal information. Our privacy policy explains data handling, cookies, security measures, and your privacy rights."
         url="/privacy"
       />
-      <Navbar onSearch={() => {}} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} />
       
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
         <Link to="/">

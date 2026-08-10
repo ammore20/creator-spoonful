@@ -304,7 +304,6 @@ export default function Premium() {
         description="Subscribe to RecipeMaker Premium and get access to 1000+ exclusive Marathi recipes, save unlimited favorites, download recipes, AI-powered suggestions, and personalized meal planning. Plans starting at ₹49/month."
         url="/premium"
       />
-      <Navbar onSearch={() => {}} language={language} onLanguageToggle={toggleLanguage} />
       
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="flex justify-between items-center mb-8">

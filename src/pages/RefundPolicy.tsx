@@ -16,7 +16,6 @@ export default function RefundPolicy() {
         description="Understand RecipeMaker's refund and cancellation policy for premium subscriptions. Learn about eligibility, refund process, timelines, and how to cancel your subscription."
         url="/refund"
       />
-      <Navbar onSearch={() => {}} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')} />
       
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
         <Link to="/">
