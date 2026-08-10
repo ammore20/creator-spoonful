@@ -1,14 +1,13 @@
 import { useState, useEffect, memo } from 'react';
 import { Recipe } from '@/types/recipe';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Users, ChefHat, Lock, Heart, Star, Flame } from 'lucide-react';
+import { Clock, Users, Lock, Heart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import logo from '@/assets/logo.png';
+
 
 interface RecipeCardProps {
   recipe: Recipe;
