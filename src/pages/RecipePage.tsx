@@ -642,24 +642,4 @@ const RecipePageContent = () => {
   );
 };
 
-const RecipePage = () => {
-  const { id } = useParams();
-  
-  // Check if this is the free recipe of the day
-  const today = new Date().toISOString().split('T')[0];
-  const freeRecipeId = localStorage.getItem('free_recipe_of_day');
-  const freeRecipeDate = localStorage.getItem('free_recipe_date');
-  const isFreeRecipe = freeRecipeId === id && freeRecipeDate === today;
-
-  if (isFreeRecipe) {
-    return <RecipePageContent />;
-  }
-
-  return (
-    <PremiumGate>
-      <RecipePageContent />
-    </PremiumGate>
-  );
-};
-
-export default RecipePage;
+export default RecipePageContent;
