@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCreatorBeta } from '@/hooks/useCreatorBeta';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -81,6 +82,7 @@ export const AppShell = ({
   contained = true,
 }: AppShellProps) => {
   const user = useCurrentUser();
+  const isCreatorBeta = useCreatorBeta();
   const [query, setQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toast } = useToast();
@@ -229,6 +231,11 @@ export const AppShell = ({
             </form>
 
             <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+              {isCreatorBeta && (
+                <span className="rounded-full bg-primary/10 text-primary text-[10px] font-bold tracking-[0.14em] px-2.5 py-1">
+                  CREATOR BETA
+                </span>
+              )}
               <Button variant="ghost" size="sm" onClick={onLanguageToggle} className="gap-1.5 px-2.5">
                 <Languages className="w-4 h-4" />
                 <span className="hidden sm:inline">{language === 'en' ? 'मराठी' : 'English'}</span>

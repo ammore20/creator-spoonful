@@ -19,6 +19,7 @@ const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
 const Contact = lazy(() => import("./pages/Contact"));
 const ForCreators = lazy(() => import("./pages/ForCreators"));
 const CreatorLanding = lazy(() => import("./pages/CreatorLanding"));
+const CreatorBeta = lazy(() => import("./pages/CreatorBeta"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/for-creators" element={<ForCreators />} />
             <Route path="/c/:slug" element={<CreatorLanding />} />
+            <Route path="/creator-beta" element={<CreatorBeta />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

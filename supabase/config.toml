@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.health-check]
 verify_jwt = false
+
+[functions.creator-beta-enter]
+verify_jwt = false
