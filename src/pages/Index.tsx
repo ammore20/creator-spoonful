@@ -158,7 +158,8 @@ const IndexContent = () => {
 
       const matchesDiet = (() => {
         if (filters.dietType.length === 0) return true;
-        const ing = recipe.ingredients.join(' ').toLowerCase();
+        if (recipe.diet) return filters.dietType.includes(recipe.diet);
+        const ing = '';
         const title = recipe.title.toLowerCase();
         const nv = ['chicken','mutton','fish','prawn','shrimp','meat','lamb','pork','crab','surmai','pomfret','bombil','kolambi','kombdi','murg','keema','gosht','चिकन','मटण','मासा','कोळंबी','सुरमई','मांस'];
         const eg = ['egg','anda','अंड'];
