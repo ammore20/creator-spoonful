@@ -219,7 +219,9 @@ const IndexContent = () => {
     () => (todayUnlock ? recipes.find((r) => r.id === todayUnlock.video_id) ?? null : null),
     [todayUnlock, recipes],
   );
-  const freeRecipe = unlockedRecipe;
+  const dailyState: 'premium' | 'guest' | 'used' | 'available' =
+    isPremium ? 'premium' : !user ? 'guest' : unlockedRecipe ? 'used' : 'available';
+  const freeRecipe = unlockedRecipe ?? recipes[0] ?? null;
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? GREETINGS[language][0] : hour < 17 ? GREETINGS[language][1] : GREETINGS[language][2];
