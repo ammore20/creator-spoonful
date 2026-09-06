@@ -192,16 +192,33 @@ const IndexContent = () => {
     return g;
   }, [filteredRecipes]);
 
-  const freeRecipe = useMemo(() => {
-    if (recipes.length === 0) return null;
-    const today = new Date().toISOString().split('T')[0];
-    const seed = today.split('-').reduce((a, b) => a + parseInt(b), 0);
-    const idx = seed % recipes.length;
-    const r = recipes[idx];
-    localStorage.setItem('free_recipe_of_day', r.id);
-    localStorage.setItem('free_recipe_date', today);
-    return r;
-  }, [recipes]);
+  // Today's free unlock, read from the database (never from browser storage).
+  const [todayUnlock, setTodayUnlock] = useState<{ video_id: string } | null>(null);
+  const [unlockChecked, setUnlockChecked] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setTodayUnlock(null); setUnlockChecked(true); return; }
+    let active = true;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('daily_recipe_unlocks')
+        .select('video_id, unlock_date')
+        .order('unlock_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!active) return;
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      setTodayUnlock(data && data.unlock_date === today ? { video_id: data.video_id } : null);
+      setUnlockChecked(true);
+    })();
+    return () => { active = false; };
+  }, [user]);
+
+  const unlockedRecipe = useMemo(
+    () => (todayUnlock ? recipes.find((r) => r.id === todayUnlock.video_id) ?? null : null),
+    [todayUnlock, recipes],
+  );
+  const freeRecipe = unlockedRecipe;
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? GREETINGS[language][0] : hour < 17 ? GREETINGS[language][1] : GREETINGS[language][2];
