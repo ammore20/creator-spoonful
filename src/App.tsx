@@ -8,19 +8,40 @@ import Index from "./pages/Index";
 
 // Route-level code splitting: keep the landing page in the main bundle
 // (it's the most common entry) and lazy-load the rest.
-const RecipePage = lazy(() => import("./pages/RecipePage"));
-const Admin = lazy(() => import("./pages/Admin"));
-const Auth = lazy(() => import("./pages/Auth"));
-const Premium = lazy(() => import("./pages/Premium"));
-const Favorites = lazy(() => import("./pages/Favorites"));
-const TermsOfService = lazy(() => import("./pages/TermsOfService"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
-const Contact = lazy(() => import("./pages/Contact"));
-const ForCreators = lazy(() => import("./pages/ForCreators"));
-const CreatorLanding = lazy(() => import("./pages/CreatorLanding"));
-const CreatorBeta = lazy(() => import("./pages/CreatorBeta"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Stale chunks (after a redeploy or an old cached bundle) make dynamic imports
+// fail with "Failed to fetch dynamically imported module" and a blank screen.
+// Retry once, then reload the page to pick up the current bundle.
+const lazyPage = (importer: () => Promise<{ default: React.ComponentType<any> }>) =>
+  lazy(() =>
+    importer().catch(async (err) => {
+      await new Promise((r) => setTimeout(r, 600));
+      try {
+        return await importer();
+      } catch {
+        const key = "chunk-reload-at";
+        const last = Number(sessionStorage.getItem(key) || 0);
+        if (Date.now() - last > 10_000) {
+          sessionStorage.setItem(key, String(Date.now()));
+          window.location.reload();
+        }
+        throw err;
+      }
+    })
+  );
+
+const RecipePage = lazyPage(() => import("./pages/RecipePage"));
+const Admin = lazyPage(() => import("./pages/Admin"));
+const Auth = lazyPage(() => import("./pages/Auth"));
+const Premium = lazyPage(() => import("./pages/Premium"));
+const Favorites = lazyPage(() => import("./pages/Favorites"));
+const TermsOfService = lazyPage(() => import("./pages/TermsOfService"));
+const PrivacyPolicy = lazyPage(() => import("./pages/PrivacyPolicy"));
+const RefundPolicy = lazyPage(() => import("./pages/RefundPolicy"));
+const Contact = lazyPage(() => import("./pages/Contact"));
+const ForCreators = lazyPage(() => import("./pages/ForCreators"));
+const CreatorLanding = lazyPage(() => import("./pages/CreatorLanding"));
+const CreatorBeta = lazyPage(() => import("./pages/CreatorBeta"));
+const NotFound = lazyPage(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
