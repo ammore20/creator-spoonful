@@ -339,7 +339,7 @@ const IndexContent = () => {
             {freeRecipe && (
               <section className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
                 <Link
-                  to={`/recipe/${freeRecipe.id}`}
+                  to={dailyState === 'guest' ? '/auth' : `/recipe/${freeRecipe.id}`}
                   className="lg:col-span-2 relative group overflow-hidden rounded-2xl border border-border/70 shadow-soft hover:shadow-card transition-shadow"
                 >
                   <div className="aspect-[16/9] overflow-hidden bg-muted">
