@@ -60,18 +60,30 @@ const FavoritesContent = () => {
 
       if (videosError) throw videosError;
 
-      const recipes: Recipe[] = (videos || [])
-        .filter((v: any) => v.extracted_recipe_json)
-        .map((v: any) => {
-          const json = v.extracted_recipe_json as any;
-          return {
-            id: v.video_id,
-            ...json,
-            youtubeUrl: `https://www.youtube.com/watch?v=${v.video_id}`,
-            videoId: v.video_id,
-            thumbnailUrl: v.thumbnail_url || '',
-          };
-        });
+      const recipes: Recipe[] = (videos || []).map((v: any) => {
+        const preview = (v.recipe_preview as any) || {};
+        return {
+          id: v.video_id,
+          title: preview.title || v.title,
+          titleMr: preview.title_mr,
+          creator: v.creator_name || 'Unknown',
+          description: v.description || '',
+          descriptionMr: preview.description_mr,
+          youtubeUrl: `https://www.youtube.com/watch?v=${v.video_id}`,
+          videoId: v.video_id,
+          thumbnailUrl: v.thumbnail_url || '',
+          tasteProfile: Array.isArray(preview.taste_tags) ? preview.taste_tags : [],
+          mealType: preview.meal_type ? [preview.meal_type] : [],
+          cuisine: preview.cuisine ? [preview.cuisine] : [],
+          mood: [],
+          difficulty: preview.difficulty || 'Medium',
+          cookTime: preview.prep_time || '30 mins',
+          servings: preview.servings || 4,
+          ingredients: [],
+          steps: [],
+          isPremium: false,
+        } as Recipe;
+      });
 
       setFavorites(recipes);
     } catch (error) {
