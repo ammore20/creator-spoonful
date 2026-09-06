@@ -38,7 +38,6 @@ const GREETINGS = {
 };
 
 const IndexContent = () => {
-  const [searchParams] = useSearchParams();
   const { user, isPremium, subscriptionDetails } = usePremiumStatus();
   const [showFreeBanner, setShowFreeBanner] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
