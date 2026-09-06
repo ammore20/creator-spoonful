@@ -22,7 +22,7 @@ import { CommentsSection } from '@/components/recipe/CommentsSection';
 import { SEO } from '@/components/SEO';
 import { toast } from '@/hooks/use-toast';
 import { useToast } from '@/hooks/use-toast';
-import { PremiumGate } from '@/components/PremiumGate';
+import { RecipeAccessGate, type AccessState } from '@/components/recipe/RecipeAccessGate';
 
 const RecipePageContent = () => {
   const { id } = useParams();
