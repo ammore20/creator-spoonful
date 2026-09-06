@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCreatorBeta } from '@/hooks/useCreatorBeta';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -81,6 +82,7 @@ export const AppShell = ({
   contained = true,
 }: AppShellProps) => {
   const user = useCurrentUser();
+  const isCreatorBeta = useCreatorBeta();
   const [query, setQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toast } = useToast();
