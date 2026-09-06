@@ -43,11 +43,6 @@ const IndexContent = () => {
   const [showFreeBanner, setShowFreeBanner] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    if (searchParams.get('creator_access') === 'true') {
-      sessionStorage.setItem('creator_preview', 'true');
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const refSlug = localStorage.getItem('ref_creator_slug');
