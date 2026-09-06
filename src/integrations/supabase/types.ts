@@ -528,7 +528,7 @@ export type Database = {
       unlock_daily_recipe: { Args: { _video_id: string }; Returns: Json }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "creator_beta"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -656,7 +656,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "creator_beta"],
     },
   },
 } as const
