@@ -242,6 +242,30 @@ const RecipePageContent = () => {
     );
   }
 
+  if (access !== 'granted') {
+    return (
+      <AppShell {...shellProps}>
+        <SEO
+          title={`${recipe.title} | RecipeMaker`}
+          description={recipe.description?.slice(0, 150) || recipe.title}
+          image={recipe.thumbnailUrl}
+          url={`/recipe/${recipe.id}`}
+        />
+        <RecipeAccessGate
+          state={access === 'not_found' ? 'locked' : access}
+          language={language}
+          title={recipe.title}
+          thumbnailUrl={recipe.thumbnailUrl}
+          creator={recipe.creator}
+          cookTime={recipe.cookTime}
+          servings={recipe.servings}
+          unlocking={unlocking}
+          onUnlock={handleUnlock}
+        />
+      </AppShell>
+    );
+  }
+
   const title = language === 'mr' && recipe.titleMr ? recipe.titleMr : recipe.title;
   const creator = language === 'mr' && recipe.creatorMr ? recipe.creatorMr : recipe.creator;
   const ingredients = language === 'mr' && recipe.ingredientsMr ? recipe.ingredientsMr : recipe.ingredients;
