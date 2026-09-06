@@ -37,6 +37,8 @@ const RecipePageContent = () => {
   const [activeTimer, setActiveTimer] = useState<number | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [access, setAccess] = useState<AccessState>('login_required');
+  const [unlocking, setUnlocking] = useState(false);
 
   useEffect(() => {
     checkAuthAndFetchRecipe();
