@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { FilterOptions, MealType } from '@/types/recipe';
 import { AppShell } from '@/components/layout/AppShell';
