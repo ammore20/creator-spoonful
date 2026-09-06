@@ -104,6 +104,7 @@ const IndexContent = () => {
           difficulty: recipe.difficulty || 'Medium',
           cookTime: recipe.prep_time || '30 mins',
           servings: recipe.servings || 4,
+          diet: recipe.diet,
           ingredientCount: recipe.ingredient_count ?? 0,
           stepCount: recipe.step_count ?? 0,
           ingredients: [],
