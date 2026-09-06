@@ -81,7 +81,7 @@ const IndexContent = () => {
 
       const { data, error, count } = await (supabase as any)
         .from('public_videos')
-        .select(`id, video_id, title, description, thumbnail_url, published_at, extracted_recipe_json, creator_name`, { count: 'exact' })
+        .select(`id, video_id, title, description, thumbnail_url, published_at, recipe_preview, creator_name`, { count: 'exact' })
         .order('published_at', { ascending: false })
         .range(from, to);
 
