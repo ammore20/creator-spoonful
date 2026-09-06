@@ -88,7 +88,7 @@ const IndexContent = () => {
       if (error) throw error;
 
       const transformed = data?.map((video: any) => {
-        const recipe = video.extracted_recipe_json as any || {};
+        const recipe = (video.recipe_preview as any) || {};
         return {
           id: video.video_id,
           title: recipe.title || video.title,
@@ -104,8 +104,10 @@ const IndexContent = () => {
           difficulty: recipe.difficulty || 'Medium',
           cookTime: recipe.prep_time || '30 mins',
           servings: recipe.servings || 4,
-          ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
-          steps: Array.isArray(recipe.steps) ? recipe.steps : [],
+          ingredientCount: recipe.ingredient_count ?? 0,
+          stepCount: recipe.step_count ?? 0,
+          ingredients: [],
+          steps: [],
           isPremium: false,
         };
       }) || [];
@@ -113,7 +115,7 @@ const IndexContent = () => {
       const valid = transformed.filter((r) => {
         const t = r.title.toLowerCase();
         const bad = t.includes('no recipe') || t.includes('not found') || t.includes('no specific') || t === 'recipe' || t === 'cooking' || t === 'food';
-        return !bad && r.ingredients.length >= 5 && r.steps.length >= 5;
+        return !bad && r.ingredientCount >= 5 && r.stepCount >= 5;
       });
 
       setRecipes(prev => reset ? valid : [...prev, ...valid]);
