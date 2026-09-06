@@ -140,10 +140,4 @@ const FavoritesContent = () => {
   );
 };
 
-const Favorites = () => (
-  <PremiumGate>
-    <FavoritesContent />
-  </PremiumGate>
-);
-
-export default Favorites;
+export default FavoritesContent;
