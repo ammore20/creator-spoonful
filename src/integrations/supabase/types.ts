@@ -138,6 +138,33 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_recipe_unlocks: {
+        Row: {
+          created_at: string
+          id: string
+          unlock_date: string
+          updated_at: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          unlock_date?: string
+          updated_at?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          unlock_date?: string
+          updated_at?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: []
+      }
       processing_jobs: {
         Row: {
           batch_size: number
@@ -468,9 +495,9 @@ export type Database = {
           creator_slug: string | null
           description: string | null
           duration: string | null
-          extracted_recipe_json: Json | null
           id: string | null
           published_at: string | null
+          recipe_preview: Json | null
           thumbnail_url: string | null
           title: string | null
           updated_at: string | null
@@ -488,6 +515,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_recipe_content: { Args: { _video_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -495,6 +523,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_premium: { Args: { _user_id: string }; Returns: boolean }
+      recipe_preview_json: { Args: { _j: Json }; Returns: Json }
+      unlock_daily_recipe: { Args: { _video_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"

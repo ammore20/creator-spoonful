@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { FilterOptions, MealType } from '@/types/recipe';
 import { AppShell } from '@/components/layout/AppShell';
@@ -38,16 +38,10 @@ const GREETINGS = {
 };
 
 const IndexContent = () => {
-  const [searchParams] = useSearchParams();
   const { user, isPremium, subscriptionDetails } = usePremiumStatus();
   const [showFreeBanner, setShowFreeBanner] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    if (searchParams.get('creator_access') === 'true') {
-      sessionStorage.setItem('creator_preview', 'true');
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const refSlug = localStorage.getItem('ref_creator_slug');
@@ -81,14 +75,14 @@ const IndexContent = () => {
 
       const { data, error, count } = await (supabase as any)
         .from('public_videos')
-        .select(`id, video_id, title, description, thumbnail_url, published_at, extracted_recipe_json, creator_name`, { count: 'exact' })
+        .select(`id, video_id, title, description, thumbnail_url, published_at, recipe_preview, creator_name`, { count: 'exact' })
         .order('published_at', { ascending: false })
         .range(from, to);
 
       if (error) throw error;
 
       const transformed = data?.map((video: any) => {
-        const recipe = video.extracted_recipe_json as any || {};
+        const recipe = (video.recipe_preview as any) || {};
         return {
           id: video.video_id,
           title: recipe.title || video.title,
@@ -104,8 +98,11 @@ const IndexContent = () => {
           difficulty: recipe.difficulty || 'Medium',
           cookTime: recipe.prep_time || '30 mins',
           servings: recipe.servings || 4,
-          ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
-          steps: Array.isArray(recipe.steps) ? recipe.steps : [],
+          diet: recipe.diet,
+          ingredientCount: recipe.ingredient_count ?? 0,
+          stepCount: recipe.step_count ?? 0,
+          ingredients: [],
+          steps: [],
           isPremium: false,
         };
       }) || [];
@@ -113,7 +110,7 @@ const IndexContent = () => {
       const valid = transformed.filter((r) => {
         const t = r.title.toLowerCase();
         const bad = t.includes('no recipe') || t.includes('not found') || t.includes('no specific') || t === 'recipe' || t === 'cooking' || t === 'food';
-        return !bad && r.ingredients.length >= 5 && r.steps.length >= 5;
+        return !bad && r.ingredientCount >= 5 && r.stepCount >= 5;
       });
 
       setRecipes(prev => reset ? valid : [...prev, ...valid]);
@@ -156,7 +153,8 @@ const IndexContent = () => {
 
       const matchesDiet = (() => {
         if (filters.dietType.length === 0) return true;
-        const ing = recipe.ingredients.join(' ').toLowerCase();
+        if (recipe.diet) return filters.dietType.includes(recipe.diet);
+        const ing = '';
         const title = recipe.title.toLowerCase();
         const nv = ['chicken','mutton','fish','prawn','shrimp','meat','lamb','pork','crab','surmai','pomfret','bombil','kolambi','kombdi','murg','keema','gosht','चिकन','मटण','मासा','कोळंबी','सुरमई','मांस'];
         const eg = ['egg','anda','अंड'];
@@ -189,16 +187,35 @@ const IndexContent = () => {
     return g;
   }, [filteredRecipes]);
 
-  const freeRecipe = useMemo(() => {
-    if (recipes.length === 0) return null;
-    const today = new Date().toISOString().split('T')[0];
-    const seed = today.split('-').reduce((a, b) => a + parseInt(b), 0);
-    const idx = seed % recipes.length;
-    const r = recipes[idx];
-    localStorage.setItem('free_recipe_of_day', r.id);
-    localStorage.setItem('free_recipe_date', today);
-    return r;
-  }, [recipes]);
+  // Today's free unlock, read from the database (never from browser storage).
+  const [todayUnlock, setTodayUnlock] = useState<{ video_id: string } | null>(null);
+  const [unlockChecked, setUnlockChecked] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setTodayUnlock(null); setUnlockChecked(true); return; }
+    let active = true;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('daily_recipe_unlocks')
+        .select('video_id, unlock_date')
+        .order('unlock_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!active) return;
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      setTodayUnlock(data && data.unlock_date === today ? { video_id: data.video_id } : null);
+      setUnlockChecked(true);
+    })();
+    return () => { active = false; };
+  }, [user]);
+
+  const unlockedRecipe = useMemo(
+    () => (todayUnlock ? recipes.find((r) => r.id === todayUnlock.video_id) ?? null : null),
+    [todayUnlock, recipes],
+  );
+  const dailyState: 'premium' | 'guest' | 'used' | 'available' =
+    isPremium ? 'premium' : !user ? 'guest' : unlockedRecipe ? 'used' : 'available';
+  const freeRecipe = unlockedRecipe ?? recipes[0] ?? null;
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? GREETINGS[language][0] : hour < 17 ? GREETINGS[language][1] : GREETINGS[language][2];
@@ -316,7 +333,7 @@ const IndexContent = () => {
             {freeRecipe && (
               <section className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
                 <Link
-                  to={`/recipe/${freeRecipe.id}`}
+                  to={dailyState === 'guest' ? '/auth' : `/recipe/${freeRecipe.id}`}
                   className="lg:col-span-2 relative group overflow-hidden rounded-2xl border border-border/70 shadow-soft hover:shadow-card transition-shadow"
                 >
                   <div className="aspect-[16/9] overflow-hidden bg-muted">
@@ -331,7 +348,11 @@ const IndexContent = () => {
                   <div className="absolute top-4 left-4 flex gap-2">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-card/95 px-3 py-1 text-[11px] font-semibold text-foreground">
                       <Gift className="w-3.5 h-3.5 text-primary" />
-                      {language === 'en' ? "Today's free recipe" : 'आजची मोफत रेसिपी'}
+                      {dailyState === 'premium'
+                        ? (language === 'en' ? 'Fresh today' : 'आजचे नवीन')
+                        : dailyState === 'used'
+                          ? (language === 'en' ? "Your free recipe today" : 'तुमची आजची मोफत रेसिपी')
+                          : (language === 'en' ? '1 free recipe every day' : 'दररोज १ रेसिपी मोफत')}
                     </span>
                     <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-foreground/60 px-3 py-1 text-[11px] font-semibold text-background backdrop-blur">
                       <Clock className="w-3 h-3" /> {freeRecipe.cookTime}
@@ -339,11 +360,23 @@ const IndexContent = () => {
                   </div>
                   <div className="absolute bottom-0 inset-x-0 p-4 sm:p-6 text-background">
                     <p className="text-xs opacity-85 mb-1">by {freeRecipe.creator}</p>
-                    <h2 className="font-display text-xl sm:text-2xl font-bold leading-tight line-clamp-2 mb-3">
+                    <h2 className="font-display text-xl sm:text-2xl font-bold leading-tight line-clamp-2 mb-2">
                       {freeRecipe.title}
                     </h2>
+                    <p className="text-xs opacity-85 mb-3 max-w-md">
+                      {dailyState === 'guest'
+                        ? (language === 'en' ? 'Sign up free and open any one recipe every day.' : 'मोफत खाते तयार करा आणि दररोज कोणतीही एक रेसिपी उघडा.')
+                        : dailyState === 'available'
+                          ? (language === 'en' ? 'Pick any recipe today — your free unlock is waiting.' : 'आज कोणतीही रेसिपी निवडा — तुमची मोफत अनलॉक तयार आहे.')
+                          : dailyState === 'used'
+                            ? (language === 'en' ? 'Open again any time today.' : 'आज कधीही पुन्हा उघडा.')
+                            : (language === 'en' ? 'Unlimited access with Premium.' : 'प्रीमियमसह अमर्यादित प्रवेश.')}
+                    </p>
                     <span className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-pill">
-                      {language === 'en' ? 'Cook now' : 'बनवा'} <ArrowRight className="w-3.5 h-3.5" />
+                      {dailyState === 'guest'
+                        ? (language === 'en' ? 'Create free account' : 'मोफत खाते तयार करा')
+                        : (language === 'en' ? 'Cook now' : 'बनवा')}
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
                 </Link>

@@ -22,7 +22,7 @@ import { CommentsSection } from '@/components/recipe/CommentsSection';
 import { SEO } from '@/components/SEO';
 import { toast } from '@/hooks/use-toast';
 import { useToast } from '@/hooks/use-toast';
-import { PremiumGate } from '@/components/PremiumGate';
+import { RecipeAccessGate, type AccessState } from '@/components/recipe/RecipeAccessGate';
 
 const RecipePageContent = () => {
   const { id } = useParams();
@@ -37,6 +37,8 @@ const RecipePageContent = () => {
   const [activeTimer, setActiveTimer] = useState<number | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [access, setAccess] = useState<AccessState>('login_required');
+  const [unlocking, setUnlocking] = useState(false);
 
   useEffect(() => {
     checkAuthAndFetchRecipe();
@@ -100,50 +102,108 @@ const RecipePageContent = () => {
     }
   };
 
+  const buildRecipe = (data: any, content: any) => {
+    const preview = (data.recipe_preview as any) || {};
+    const full = content || {};
+    return {
+      id: data.video_id,
+      title: preview.title || data.title,
+      titleMr: preview.title_mr ?? full.title_mr,
+      creator: data.creator_name || 'Unknown',
+      creatorMr: full.creator_mr,
+      description: data.description || '',
+      descriptionMr: preview.description_mr ?? full.description_mr,
+      youtubeUrl: `https://www.youtube.com/watch?v=${data.video_id}`,
+      videoId: data.video_id,
+      thumbnailUrl: data.thumbnail_url,
+      tasteProfile: Array.isArray(preview.taste_tags) ? preview.taste_tags : [],
+      mealType: preview.meal_type ? [preview.meal_type] : [],
+      cuisine: preview.cuisine ? [preview.cuisine] : [],
+      mood: [],
+      difficulty: preview.difficulty || 'Medium',
+      cookTime: preview.prep_time || '30 mins',
+      servings: preview.servings || full.servings || 4,
+      ingredients: Array.isArray(full.ingredients) ? full.ingredients : [],
+      ingredientsMr: Array.isArray(full.ingredients_mr) ? full.ingredients_mr : [],
+      steps: Array.isArray(full.steps) ? full.steps : [],
+      stepsMr: Array.isArray(full.steps_mr) ? full.steps_mr : [],
+      isPremium: false,
+    };
+  };
+
   const fetchRecipe = async () => {
     try {
       const { data, error } = await (supabase as any)
         .from('public_videos')
         .select('*')
         .eq('video_id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-
-      if (data) {
-        const recipeJson = data.extracted_recipe_json as any || {};
-        const transformedRecipe = {
-          id: data.video_id,
-          title: recipeJson.title || data.title,
-          titleMr: recipeJson.title_mr,
-          creator: data.creator_name || 'Unknown',
-          creatorMr: recipeJson.creator_mr,
-          description: data.description || '',
-          descriptionMr: recipeJson.description_mr,
-          youtubeUrl: `https://www.youtube.com/watch?v=${data.video_id}`,
-          videoId: data.video_id,
-          thumbnailUrl: data.thumbnail_url,
-          tasteProfile: Array.isArray(recipeJson.taste_tags) ? recipeJson.taste_tags : [],
-          mealType: recipeJson.meal_type ? [recipeJson.meal_type] : [],
-          cuisine: recipeJson.cuisine ? [recipeJson.cuisine] : [],
-          mood: [],
-          difficulty: recipeJson.difficulty || 'Medium',
-          cookTime: recipeJson.prep_time || '30 mins',
-          servings: recipeJson.servings || 4,
-          ingredients: Array.isArray(recipeJson.ingredients) ? recipeJson.ingredients : [],
-          ingredientsMr: Array.isArray(recipeJson.ingredients_mr) ? recipeJson.ingredients_mr : [],
-          steps: Array.isArray(recipeJson.steps) ? recipeJson.steps : [],
-          stepsMr: Array.isArray(recipeJson.steps_mr) ? recipeJson.steps_mr : [],
-          isPremium: false
-        };
-        setRecipe(transformedRecipe);
-        setServings(transformedRecipe.servings);
-        setOriginalServings(transformedRecipe.servings);
+      if (!data) {
+        setRecipe(null);
+        return;
       }
+
+      // Server decides whether the protected content is returned at all.
+      const { data: result, error: rpcError } = await (supabase as any).rpc('get_recipe_content', {
+        _video_id: id,
+      });
+      if (rpcError) throw rpcError;
+
+      const state = (result?.access ?? 'login_required') as AccessState;
+      setAccess(state);
+
+      const built = buildRecipe(data, state === 'granted' ? result.recipe : null);
+      setRecipe(built);
+      setServings(built.servings);
+      setOriginalServings(built.servings);
     } catch (error) {
       console.error('Error fetching recipe:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUnlock = async () => {
+    setUnlocking(true);
+    try {
+      const { data: result, error } = await (supabase as any).rpc('unlock_daily_recipe', {
+        _video_id: id,
+      });
+      if (error) throw error;
+
+      const state = (result?.access ?? 'locked') as AccessState;
+      setAccess(state);
+
+      if (state === 'granted') {
+        setRecipe((prev: any) => ({ ...prev, ...buildRecipe(
+          { video_id: prev.videoId, title: prev.title, description: prev.description, thumbnail_url: prev.thumbnailUrl, creator_name: prev.creator, recipe_preview: {} },
+          result.recipe,
+        ), title: prev.title, tasteProfile: prev.tasteProfile, mealType: prev.mealType, cuisine: prev.cuisine, difficulty: prev.difficulty, cookTime: prev.cookTime }));
+        toast({
+          description: language === 'en'
+            ? "Unlocked — this is today's free recipe."
+            : 'अनलॉक झाले — ही आजची मोफत रेसिपी आहे.',
+        });
+      } else if (state === 'locked') {
+        toast({
+          title: language === 'en' ? "Today's free recipe is used" : 'आजची मोफत रेसिपी वापरली आहे',
+          description: language === 'en'
+            ? 'Upgrade to Premium or come back tomorrow.'
+            : 'प्रीमियम घ्या किंवा उद्या पुन्हा भेट द्या.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error unlocking recipe:', error);
+      toast({
+        title: language === 'en' ? 'Could not unlock' : 'अनलॉक झाले नाही',
+        description: language === 'en' ? 'Please try again.' : 'कृपया पुन्हा प्रयत्न करा.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUnlocking(false);
     }
   };
 
@@ -178,6 +238,30 @@ const RecipePageContent = () => {
             action={<Link to="/"><Button variant="soft"><ArrowLeft className="mr-2 w-4 h-4" />{language === 'en' ? 'Back to recipes' : 'रेसिपींकडे परत'}</Button></Link>}
           />
         </div>
+      </AppShell>
+    );
+  }
+
+  if (access !== 'granted') {
+    return (
+      <AppShell {...shellProps}>
+        <SEO
+          title={`${recipe.title} | RecipeMaker`}
+          description={recipe.description?.slice(0, 150) || recipe.title}
+          image={recipe.thumbnailUrl}
+          url={`/recipe/${recipe.id}`}
+        />
+        <RecipeAccessGate
+          state={access === 'not_found' ? 'locked' : access}
+          language={language}
+          title={recipe.title}
+          thumbnailUrl={recipe.thumbnailUrl}
+          creator={recipe.creator}
+          cookTime={recipe.cookTime}
+          servings={recipe.servings}
+          unlocking={unlocking}
+          onUnlock={handleUnlock}
+        />
       </AppShell>
     );
   }
@@ -642,24 +726,4 @@ const RecipePageContent = () => {
   );
 };
 
-const RecipePage = () => {
-  const { id } = useParams();
-  
-  // Check if this is the free recipe of the day
-  const today = new Date().toISOString().split('T')[0];
-  const freeRecipeId = localStorage.getItem('free_recipe_of_day');
-  const freeRecipeDate = localStorage.getItem('free_recipe_date');
-  const isFreeRecipe = freeRecipeId === id && freeRecipeDate === today;
-
-  if (isFreeRecipe) {
-    return <RecipePageContent />;
-  }
-
-  return (
-    <PremiumGate>
-      <RecipePageContent />
-    </PremiumGate>
-  );
-};
-
-export default RecipePage;
+export default RecipePageContent;
