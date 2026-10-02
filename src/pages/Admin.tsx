@@ -12,6 +12,8 @@ import type { User, Session } from '@supabase/supabase-js';
 import { AICostDashboard } from '@/components/admin/AICostDashboard';
 import { ReviewQueue } from '@/components/admin/ReviewQueue';
 import { CreatorProcessing } from '@/components/admin/CreatorProcessing';
+import { BookBuilder } from '@/components/admin/BookBuilder';
+import { PurchasesAdmin } from '@/components/admin/PurchasesAdmin';
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -604,6 +606,10 @@ const Admin = () => {
             </div>
           </CardContent>
         </Card>
+
+        <PurchasesAdmin />
+
+        <BookBuilder creators={creators} />
 
         <ReviewQueue />
 
