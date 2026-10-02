@@ -32,6 +32,155 @@ export type Database = {
         }
         Relationships: []
       }
+      book_earnings: {
+        Row: {
+          book_id: string
+          created_at: string
+          creator_id: string
+          id: string
+          paid_out_at: string | null
+          payable_at: string
+          purchase_id: string
+          reversed_at: string | null
+          share_paise: number
+          status: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          paid_out_at?: string | null
+          payable_at: string
+          purchase_id: string
+          reversed_at?: string | null
+          share_paise: number
+          status?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          paid_out_at?: string | null
+          payable_at?: string
+          purchase_id?: string
+          reversed_at?: string | null
+          share_paise?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_earnings_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_earnings_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_earnings_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: true
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_recipes: {
+        Row: {
+          book_id: string
+          created_at: string
+          id: string
+          is_free_sample: boolean
+          position: number
+          video_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          id?: string
+          is_free_sample?: boolean
+          position?: number
+          video_id: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          id?: string
+          is_free_sample?: boolean
+          position?: number
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_recipes_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      books: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          creator_id: string
+          id: string
+          list_price_paise: number
+          payment_link_url: string | null
+          price_paise: number
+          slug: string
+          status: string
+          title_en: string
+          title_mr: string | null
+          updated_at: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          creator_id: string
+          id?: string
+          list_price_paise?: number
+          payment_link_url?: string | null
+          price_paise?: number
+          slug: string
+          status?: string
+          title_en: string
+          title_mr?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          creator_id?: string
+          id?: string
+          list_price_paise?: number
+          payment_link_url?: string | null
+          price_paise?: number
+          slug?: string
+          status?: string
+          title_en?: string
+          title_mr?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "books_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: true
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cost_tracking: {
         Row: {
           actual_cost: number | null
@@ -195,6 +344,48 @@ export type Database = {
         }
         Relationships: []
       }
+      link_visits: {
+        Row: {
+          book_id: string
+          created_at: string
+          creator_id: string
+          day: string
+          id: string
+          visitor_hash: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          creator_id: string
+          day?: string
+          id?: string
+          visitor_hash: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          creator_id?: string
+          day?: string
+          id?: string
+          visitor_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "link_visits_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "link_visits_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       processing_jobs: {
         Row: {
           batch_size: number
@@ -309,6 +500,125 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      purchase_intents: {
+        Row: {
+          book_id: string
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_intents_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchases: {
+        Row: {
+          amount_paise: number
+          book_id: string
+          created_at: string
+          currency: string
+          fulfilment: string
+          gateway_fee_paise: number
+          gateway_fee_percent: number
+          granted_by: string | null
+          id: string
+          intent_id: string | null
+          net_paise: number
+          paid_at: string
+          provider: string
+          provider_ref: string | null
+          refund_reason: string | null
+          refunded_at: string | null
+          status: string
+          tax_paise: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paise: number
+          book_id: string
+          created_at?: string
+          currency?: string
+          fulfilment?: string
+          gateway_fee_paise?: number
+          gateway_fee_percent?: number
+          granted_by?: string | null
+          id?: string
+          intent_id?: string | null
+          net_paise?: number
+          paid_at?: string
+          provider?: string
+          provider_ref?: string | null
+          refund_reason?: string | null
+          refunded_at?: string | null
+          status?: string
+          tax_paise?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paise?: number
+          book_id?: string
+          created_at?: string
+          currency?: string
+          fulfilment?: string
+          gateway_fee_paise?: number
+          gateway_fee_percent?: number
+          granted_by?: string | null
+          id?: string
+          intent_id?: string | null
+          net_paise?: number
+          paid_at?: string
+          provider?: string
+          provider_ref?: string | null
+          refund_reason?: string | null
+          refunded_at?: string | null
+          status?: string
+          tax_paise?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_intent_id_fkey"
+            columns: ["intent_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_intents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recipe_comments: {
         Row: {
@@ -570,12 +880,96 @@ export type Database = {
         Args: { _order_id: string; _payment_id: string; _signature?: string }
         Returns: Json
       }
+      admin_dismiss_intent: { Args: { _intent_id: string }; Returns: Json }
+      admin_grant_book_to_email: {
+        Args: {
+          _amount_paise: number
+          _book_id: string
+          _email: string
+          _provider_ref: string
+        }
+        Returns: Json
+      }
+      admin_grant_intent: {
+        Args: {
+          _amount_paise: number
+          _intent_id: string
+          _provider_ref: string
+        }
+        Returns: Json
+      }
+      admin_list_purchase_intents: {
+        Args: never
+        Returns: {
+          book_id: string
+          book_title: string
+          created_at: string
+          email: string
+          id: string
+          status: string
+          user_id: string
+        }[]
+      }
+      admin_list_purchases: {
+        Args: never
+        Returns: {
+          amount_paise: number
+          book_title: string
+          earning_status: string
+          email: string
+          fulfilment: string
+          gateway_fee_paise: number
+          id: string
+          net_paise: number
+          paid_at: string
+          payable_at: string
+          provider_ref: string
+          refunded_at: string
+          share_paise: number
+          status: string
+          tax_paise: number
+        }[]
+      }
+      admin_refund_purchase: {
+        Args: { _purchase_id: string; _reason?: string }
+        Returns: Json
+      }
+      admin_set_book_recipes: {
+        Args: { _book_id: string; _items: Json }
+        Returns: Json
+      }
+      admin_set_gateway_fee: { Args: { _percent: number }; Returns: Json }
       check_internal_key: {
         Args: { _name: string; _value: string }
         Returns: boolean
       }
+      create_purchase_intent: { Args: { _book_id: string }; Returns: Json }
       creator_beta_active: { Args: never; Returns: boolean }
+      gateway_fee_percent: { Args: never; Returns: number }
+      get_book: { Args: { _slug: string }; Returns: Json }
+      get_book_recipe: {
+        Args: { _slug: string; _video_id: string }
+        Returns: Json
+      }
+      get_published_books: {
+        Args: never
+        Returns: {
+          cover_url: string
+          creator_name: string
+          id: string
+          list_price_paise: number
+          price_paise: number
+          recipe_count: number
+          slug: string
+          title_en: string
+          title_mr: string
+        }[]
+      }
       get_recipe_content: { Args: { _video_id: string }; Returns: Json }
+      has_book_access: {
+        Args: { _book_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -584,7 +978,41 @@ export type Database = {
         Returns: boolean
       }
       is_premium: { Args: { _user_id: string }; Returns: boolean }
+      log_book_visit: {
+        Args: { _slug: string; _visitor: string }
+        Returns: undefined
+      }
+      my_books: {
+        Args: never
+        Returns: {
+          access_source: string
+          cover_url: string
+          creator_name: string
+          id: string
+          purchased_at: string
+          recipe_count: number
+          slug: string
+          title_en: string
+          title_mr: string
+        }[]
+      }
       recipe_preview_json: { Args: { _j: Json }; Returns: Json }
+      record_book_purchase: {
+        Args: {
+          _amount_paise: number
+          _book_id: string
+          _fulfilment?: string
+          _granted_by?: string
+          _intent_id?: string
+          _provider_ref: string
+          _user_id: string
+        }
+        Returns: Json
+      }
+      refund_book_purchase: {
+        Args: { _purchase_id: string; _reason?: string }
+        Returns: Json
+      }
       unlock_daily_recipe: { Args: { _video_id: string }; Returns: Json }
     }
     Enums: {

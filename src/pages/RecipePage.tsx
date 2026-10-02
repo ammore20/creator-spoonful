@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { scaleIngredient, parseServings } from '@/lib/scaleIngredient';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -122,7 +123,7 @@ const RecipePageContent = () => {
       mood: [],
       difficulty: preview.difficulty || 'Medium',
       cookTime: preview.prep_time || '30 mins',
-      servings: preview.servings || full.servings || 4,
+      servings: parseServings(preview.servings ?? full.servings),
       ingredients: Array.isArray(full.ingredients) ? full.ingredients : [],
       ingredientsMr: Array.isArray(full.ingredients_mr) ? full.ingredients_mr : [],
       steps: Array.isArray(full.steps) ? full.steps : [],
@@ -235,7 +236,7 @@ const RecipePageContent = () => {
             icon={<UtensilsCrossed className="w-6 h-6" />}
             title={language === 'en' ? 'Recipe not found' : 'रेसिपी सापडली नाही'}
             description={language === 'en' ? 'This recipe may have been removed or the link is incorrect.' : 'ही रेसिपी काढली असावी किंवा लिंक चुकीची आहे.'}
-            action={<Link to="/"><Button variant="soft"><ArrowLeft className="mr-2 w-4 h-4" />{language === 'en' ? 'Back to recipes' : 'रेसिपींकडे परत'}</Button></Link>}
+            action={<Link to="/recipes"><Button variant="soft"><ArrowLeft className="mr-2 w-4 h-4" />{language === 'en' ? 'Back to recipes' : 'रेसिपींकडे परत'}</Button></Link>}
           />
         </div>
       </AppShell>
@@ -302,13 +303,9 @@ const RecipePageContent = () => {
 
   const description = generateRecipeDescription();
 
-  const scaledIngredients = ingredients.map((ingredient: string) => {
-    const ratio = servings / originalServings;
-    return ingredient.replace(/(\d+\.?\d*)/g, (match) => {
-      const num = parseFloat(match);
-      return (num * ratio).toFixed(num % 1 === 0 ? 0 : 1);
-    });
-  });
+  const scaledIngredients = ingredients.map((ingredient: unknown) =>
+    scaleIngredient(ingredient, servings / (originalServings || 1), language),
+  );
 
 
   const handleCopyIngredients = () => {

@@ -10,6 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import type { User, Session } from '@supabase/supabase-js';
 
+// Pages like a book page store where to send the buyer back after sign-in.
+const takeReturnPath = () => {
+  const v = sessionStorage.getItem('auth_return_to');
+  if (v) sessionStorage.removeItem('auth_return_to');
+  return v && v.startsWith('/') && !v.startsWith('//') ? v : null;
+};
+
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,11 +43,10 @@ const Auth = () => {
               .eq('role', 'admin')
               .single();
             
-            if (data) {
-              navigate('/admin');
-            } else {
-              navigate('/');
-            }
+            const back = takeReturnPath();
+            if (back) navigate(back);
+            else if (data) navigate('/admin');
+            else navigate('/');
           }, 0);
         }
       }
@@ -60,11 +66,10 @@ const Auth = () => {
             .eq('role', 'admin')
             .single();
           
-          if (data) {
-            navigate('/admin');
-          } else {
-            navigate('/');
-          }
+          const back = takeReturnPath();
+          if (back) navigate(back);
+          else if (data) navigate('/admin');
+          else navigate('/');
         }, 0);
       }
     });

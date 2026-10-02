@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Compass,
+  BookOpen,
+  Library,
   Heart,
   Crown,
   Sparkles,
@@ -32,7 +34,9 @@ interface NavItem {
 }
 
 const MAIN_NAV: NavItem[] = [
-  { to: '/', icon: Compass, en: 'Discover', mr: 'शोधा' },
+  { to: '/', icon: BookOpen, en: 'Books', mr: 'पुस्तके' },
+  { to: '/library', icon: Library, en: 'My books', mr: 'माझी पुस्तके', authOnly: true },
+  { to: '/recipes', icon: Compass, en: 'Recipes', mr: 'रेसिपी' },
   { to: '/favorites', icon: Heart, en: 'Favorites', mr: 'आवडते', authOnly: true },
   { to: '/premium', icon: Crown, en: 'Premium', mr: 'प्रीमियम' },
 ];
@@ -112,7 +116,7 @@ export const AppShell = ({
   const sidebarBody = (onNavigate?: () => void) => (
     <>
       <div className="px-2">
-        <Link to="/" onClick={onNavigate}>
+        <Link to="/recipes" onClick={onNavigate}>
           <Button className="w-full justify-start gap-2 h-11" size="lg">
             <ChefHat className="w-4 h-4" />
             {language === 'en' ? 'Explore recipes' : 'रेसिपी पहा'}
@@ -223,7 +227,7 @@ export const AppShell = ({
                   onSearch?.(e.target.value);
                 }}
                 onFocus={() => {
-                  if (!onSearch && pathname !== '/') navigate('/');
+                  if (!onSearch && pathname !== '/recipes') navigate('/recipes');
                 }}
                 placeholder={placeholder}
                 className="w-full h-10 rounded-xl border border-border/70 bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground/80 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 transition-all"
