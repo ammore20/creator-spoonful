@@ -71,6 +71,7 @@ export const AICostDashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <Stat label="Requests" value={requests.toString()} />
           <Stat label="Tokens" value={totalTokens.toLocaleString()} />
+          <Stat label="Speech minutes" value={audioMinutes.toLocaleString()} />
           <Stat label="Est. cost" value={`$${totalCost.toFixed(3)}`} />
           <Stat label="Failed videos" value={failed.toString()} />
           <Stat label="Warn / Crit" value={`$${WARN_DAILY_USD} / $${CRIT_DAILY_USD}`} />
