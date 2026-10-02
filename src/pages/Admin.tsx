@@ -10,6 +10,8 @@ import { AppShell } from '@/components/layout/AppShell';
 import { RefreshCw, Play, Loader2, ArrowLeftRight, Plus, Link, IndianRupee } from 'lucide-react';
 import type { User, Session } from '@supabase/supabase-js';
 import { AICostDashboard } from '@/components/admin/AICostDashboard';
+import { ReviewQueue } from '@/components/admin/ReviewQueue';
+import { CreatorProcessing } from '@/components/admin/CreatorProcessing';
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -23,6 +25,7 @@ const Admin = () => {
   const [creatorEarnings, setCreatorEarnings] = useState<Record<string, { total: number; referrals: number }>>({});
   const [newCreatorHandle, setNewCreatorHandle] = useState('');
   const [addingCreator, setAddingCreator] = useState(false);
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string>('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -206,6 +209,7 @@ const Admin = () => {
       const { data, error } = await supabase.functions.invoke('admin-operations', {
         body: {
           operation: 'backfill',
+          creatorId: selectedCreatorId,
           batchSize,
           pageToken
         }
@@ -559,17 +563,23 @@ const Admin = () => {
                 </div>
               </div>
             )}
+            <CreatorProcessing
+              creators={creators}
+              selectedCreatorId={selectedCreatorId}
+              onSelect={(id) => { setSelectedCreatorId(id); setPageToken(null); }}
+              onQueued={() => { loadQueue(); loadStats(); }}
+            />
             <div className="flex gap-4 flex-wrap">
               <Button 
                 onClick={() => runBackfill(20)}
-                disabled={loading}
+                disabled={loading || !selectedCreatorId}
               >
                 {loading ? <Loader2 className="mr-2 w-4 h-4 animate-spin" /> : <RefreshCw className="mr-2 w-4 h-4" />}
                 {pageToken ? 'Fetch Next 20' : 'Seed (20 videos)'}
               </Button>
               <Button 
                 onClick={() => runBackfill(10)}
-                disabled={loading}
+                disabled={loading || !selectedCreatorId}
                 variant="outline"
               >
                 {pageToken ? 'Fetch Next 10' : 'Backfill (10 videos)'}
@@ -594,6 +604,8 @@ const Admin = () => {
             </div>
           </CardContent>
         </Card>
+
+        <ReviewQueue />
 
         {/* Queue */}
         <Card>
