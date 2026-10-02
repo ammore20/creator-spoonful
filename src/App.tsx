@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import Index from "./pages/Index";
+import Home from "./pages/Home";
 
 // Route-level code splitting: keep the landing page in the main bundle
 // (it's the most common entry) and lazy-load the rest.
@@ -29,6 +29,11 @@ const lazyPage = (importer: () => Promise<{ default: React.ComponentType<any> }>
     })
   );
 
+const Index = lazyPage(() => import("./pages/Index"));
+const BookPage = lazyPage(() => import("./pages/BookPage"));
+const BookReader = lazyPage(() => import("./pages/BookReader"));
+const BookRecipe = lazyPage(() => import("./pages/BookRecipe"));
+const Library = lazyPage(() => import("./pages/Library"));
 const RecipePage = lazyPage(() => import("./pages/RecipePage"));
 const Admin = lazyPage(() => import("./pages/Admin"));
 const Auth = lazyPage(() => import("./pages/Auth"));
@@ -39,7 +44,6 @@ const PrivacyPolicy = lazyPage(() => import("./pages/PrivacyPolicy"));
 const RefundPolicy = lazyPage(() => import("./pages/RefundPolicy"));
 const Contact = lazyPage(() => import("./pages/Contact"));
 const ForCreators = lazyPage(() => import("./pages/ForCreators"));
-const CreatorLanding = lazyPage(() => import("./pages/CreatorLanding"));
 const CreatorBeta = lazyPage(() => import("./pages/CreatorBeta"));
 const NotFound = lazyPage(() => import("./pages/NotFound"));
 
@@ -68,7 +72,11 @@ const App = () => (
       <BrowserRouter>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/recipes" element={<Index />} />
+            <Route path="/library" element={<Library />} />
+            <Route path="/book/:slug" element={<BookReader />} />
+            <Route path="/book/:slug/:recipeId" element={<BookRecipe />} />
             <Route path="/recipe/:id" element={<RecipePage />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/auth" element={<Auth />} />
@@ -79,7 +87,7 @@ const App = () => (
             <Route path="/refund" element={<RefundPolicy />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/for-creators" element={<ForCreators />} />
-            <Route path="/c/:slug" element={<CreatorLanding />} />
+            <Route path="/c/:slug" element={<BookPage />} />
             <Route path="/creator-beta" element={<CreatorBeta />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
