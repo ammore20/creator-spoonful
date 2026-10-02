@@ -81,91 +81,22 @@ serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       );
 
-      // Find the subscription by order ID
-      const { data: subscription, error: fetchError } = await supabaseAdmin
-        .from('subscriptions')
-        .select('*')
-        .eq('razorpay_order_id', orderId)
-        .single();
-
-      if (fetchError || !subscription) {
-        console.error('Subscription not found for order:', orderId, fetchError);
+      // Shared idempotent step: activates once and records creator earnings exactly once
+      const { data: result, error: activateError } = await supabaseAdmin.rpc('activate_subscription', {
+        _order_id: orderId,
+        _payment_id: paymentId,
+      });
+      if (activateError) {
+        console.error('Failed to activate subscription:', activateError.message);
+        throw new Error('Failed to update subscription');
+      }
+      if (!(result as any)?.ok) {
         return new Response(
           JSON.stringify({ error: 'Subscription not found' }),
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-
-      // Check if already processed
-      if (subscription.status === 'active' || subscription.status === 'completed') {
-        console.log('Payment already processed for order:', orderId);
-        return new Response(
-          JSON.stringify({ success: true, message: 'Already processed' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Determine expiry based on amount
-      let expiresAt: Date | null = null;
-      
-      if (subscription.amount === 4900) {
-        // Monthly plan - 1 month
-        expiresAt = new Date();
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
-      } else if (subscription.amount === 49900 || subscription.amount === 29900) {
-        // Yearly plan (regular or creator discount) - 1 year
-        expiresAt = new Date();
-        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-      }
-
-      console.log(`Activating subscription: order=${orderId}, amount=${subscription.amount}, expiry=${expiresAt?.toISOString() || 'lifetime'}`);
-
-      // Update subscription status
-      const updateData: any = {
-        razorpay_payment_id: paymentId,
-        status: 'active',
-      };
-
-      if (expiresAt) {
-        updateData.expires_at = expiresAt.toISOString();
-      }
-
-      const { error: updateError } = await supabaseAdmin
-        .from('subscriptions')
-        .update(updateData)
-        .eq('razorpay_order_id', orderId);
-
-      if (updateError) {
-        console.error('Failed to update subscription:', updateError);
-        throw new Error('Failed to update subscription');
-      }
-
-      console.log('Subscription activated successfully:', orderId);
-
-      // Track affiliate earnings - check if user was referred by a creator
-      try {
-        const { data: referral } = await supabaseAdmin
-          .from('referrals')
-          .select('id, creator_id')
-          .eq('user_id', subscription.user_id)
-          .single();
-
-        if (referral) {
-          const creatorShare = Math.floor(amount / 2); // 50% split
-          await supabaseAdmin
-            .from('creator_earnings')
-            .insert({
-              creator_id: referral.creator_id,
-              subscription_id: subscription.id,
-              referral_id: referral.id,
-              subscription_amount: amount,
-              creator_share: creatorShare,
-            });
-          console.log(`Creator earning recorded: creator=${referral.creator_id}, share=${creatorShare}`);
-        }
-      } catch (refErr) {
-        console.error('Error tracking referral earnings (non-fatal):', refErr);
-      }
+      console.log('Subscription processed:', orderId, 'amount', amount, 'activated', (result as any).activated);
 
       return new Response(
         JSON.stringify({ success: true, message: 'Payment processed successfully' }),
