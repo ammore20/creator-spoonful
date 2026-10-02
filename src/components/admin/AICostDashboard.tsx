@@ -13,6 +13,7 @@ type Row = {
   tokens_used: number | null;
   created_at: string;
   video_id: string | null;
+  audio_minutes: number | null;
 };
 
 export const AICostDashboard = () => {
@@ -26,7 +27,7 @@ export const AICostDashboard = () => {
       const [{ data }, { count }] = await Promise.all([
         supabase
           .from('cost_tracking')
-          .select('operation_type, estimated_cost, tokens_used, created_at, video_id')
+          .select('operation_type, estimated_cost, tokens_used, created_at, video_id, audio_minutes')
           .gte('created_at', since)
           .order('estimated_cost', { ascending: false }),
         supabase
@@ -46,6 +47,7 @@ export const AICostDashboard = () => {
 
   const requests = rows.length;
   const totalTokens = rows.reduce((s, r) => s + (r.tokens_used || 0), 0);
+  const audioMinutes = rows.reduce((s, r) => s + (Number(r.audio_minutes) || 0), 0);
   const totalCost = rows.reduce((s, r) => s + (Number(r.estimated_cost) || 0), 0);
   const topOps = Object.entries(
     rows.reduce<Record<string, number>>((acc, r) => {
