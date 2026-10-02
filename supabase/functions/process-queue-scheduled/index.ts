@@ -20,6 +20,8 @@ Deno.serve(async (req) => {
   const { data: ok } = await db.rpc("check_internal_key", { _name: "cron", _value: key });
   if (ok !== true) return json({ error: "forbidden" }, 403);
 
+  if (!Deno.env.get("SUPADATA_API_KEY")) return json({ skipped: "no_transcript_provider_key" });
+
   // IST midnight in UTC
   const now = new Date();
   const ist = new Date(now.getTime() + 5.5 * 3600_000);
