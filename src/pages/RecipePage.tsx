@@ -123,7 +123,7 @@ const RecipePageContent = () => {
       mood: [],
       difficulty: preview.difficulty || 'Medium',
       cookTime: preview.prep_time || '30 mins',
-      servings: preview.servings || full.servings || 4,
+      servings: parseServings(preview.servings ?? full.servings),
       ingredients: Array.isArray(full.ingredients) ? full.ingredients : [],
       ingredientsMr: Array.isArray(full.ingredients_mr) ? full.ingredients_mr : [],
       steps: Array.isArray(full.steps) ? full.steps : [],
