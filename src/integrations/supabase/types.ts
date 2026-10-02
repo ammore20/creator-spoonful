@@ -14,31 +14,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       cost_tracking: {
         Row: {
           actual_cost: number | null
+          audio_minutes: number | null
           created_at: string | null
           estimated_cost: number | null
           id: string
+          input_tokens: number | null
           operation_type: string
+          output_tokens: number | null
+          provider: string | null
           tokens_used: number | null
           video_id: string | null
         }
         Insert: {
           actual_cost?: number | null
+          audio_minutes?: number | null
           created_at?: string | null
           estimated_cost?: number | null
           id?: string
+          input_tokens?: number | null
           operation_type: string
+          output_tokens?: number | null
+          provider?: string | null
           tokens_used?: number | null
           video_id?: string | null
         }
         Update: {
           actual_cost?: number | null
+          audio_minutes?: number | null
           created_at?: string | null
           estimated_cost?: number | null
           id?: string
+          input_tokens?: number | null
           operation_type?: string
+          output_tokens?: number | null
+          provider?: string | null
           tokens_used?: number | null
           video_id?: string | null
         }
@@ -422,56 +452,77 @@ export type Database = {
       }
       videos: {
         Row: {
+          confidence: number | null
           created_at: string | null
           creator_id: string | null
           description: string | null
           duration: string | null
+          duration_seconds: number | null
           error_message: string | null
           extracted_recipe_json: Json | null
           id: string
+          legacy_approved: boolean
           manual_reviewed: boolean | null
           published_at: string | null
           raw_transcript: string | null
           retry_count: number | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           thumbnail_url: string | null
           title: string
+          transcript_source: string | null
           updated_at: string | null
           video_id: string
         }
         Insert: {
+          confidence?: number | null
           created_at?: string | null
           creator_id?: string | null
           description?: string | null
           duration?: string | null
+          duration_seconds?: number | null
           error_message?: string | null
           extracted_recipe_json?: Json | null
           id?: string
+          legacy_approved?: boolean
           manual_reviewed?: boolean | null
           published_at?: string | null
           raw_transcript?: string | null
           retry_count?: number | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           thumbnail_url?: string | null
           title: string
+          transcript_source?: string | null
           updated_at?: string | null
           video_id: string
         }
         Update: {
+          confidence?: number | null
           created_at?: string | null
           creator_id?: string | null
           description?: string | null
           duration?: string | null
+          duration_seconds?: number | null
           error_message?: string | null
           extracted_recipe_json?: Json | null
           id?: string
+          legacy_approved?: boolean
           manual_reviewed?: boolean | null
           published_at?: string | null
           raw_transcript?: string | null
           retry_count?: number | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           thumbnail_url?: string | null
           title?: string
+          transcript_source?: string | null
           updated_at?: string | null
           video_id?: string
         }
@@ -515,6 +566,15 @@ export type Database = {
       }
     }
     Functions: {
+      activate_subscription: {
+        Args: { _order_id: string; _payment_id: string; _signature?: string }
+        Returns: Json
+      }
+      check_internal_key: {
+        Args: { _name: string; _value: string }
+        Returns: boolean
+      }
+      creator_beta_active: { Args: never; Returns: boolean }
       get_recipe_content: { Args: { _video_id: string }; Returns: Json }
       has_role: {
         Args: {

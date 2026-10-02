@@ -119,7 +119,7 @@ export const RecipeAccessGate = ({
           </div>
           <ul className="space-y-2 text-sm">
             {(en
-              ? ['Every recipe, unlimited', 'Marathi translations', 'Timers, scaling & favorites', 'Ad-free']
+              ? ['Every recipe, unlimited', 'Marathi translations', 'Timers, scaling & favorites']
               : ['सर्व रेसिपी, अमर्यादित', 'मराठी भाषांतर', 'टायमर, प्रमाण व आवडते', 'जाहिरातमुक्त']
             ).map((f) => (
               <li key={f} className="flex items-center gap-2 text-muted-foreground">

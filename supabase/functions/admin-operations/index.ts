@@ -65,7 +65,9 @@ serve(async (req) => {
     
     // Validate request body
     const requestSchema = z.object({
-      operation: z.enum(['backfill', 'reprocess', 'mark_done', 'update_recipe', 'get_stats', 'process_batch']),
+      operation: z.enum(['backfill', 'reprocess', 'mark_done', 'update_recipe', 'get_stats', 'process_batch', 'review', 'estimate_reprocess_creator', 'reprocess_creator']),
+      creatorId: z.string().uuid().nullish(),
+      decision: z.enum(['approve', 'reject']).nullish(),
       channelId: z.string().nullish(),
       maxResults: z.number().int().min(1).max(50).nullish(),
       batchSize: z.number().int().min(1).max(100).nullish(),
@@ -96,15 +98,15 @@ serve(async (req) => {
         const { batchSize, pageToken } = params;
         const actualBatchSize = batchSize ?? 10;
         
-        // Get the most recent channel ID from creators table
+        if (!params.creatorId) throw new Error('Select a creator first');
         const { data: creators, error: creatorError } = await supabase
           .from('creators')
           .select('channel_id')
-          .order('created_at', { ascending: false })
+          .eq('id', params.creatorId)
           .limit(1);
 
         if (creatorError || !creators || creators.length === 0) {
-          throw new Error('No creator configured');
+          throw new Error('Creator not found');
         }
         
         const creator = creators[0];
@@ -196,7 +198,9 @@ serve(async (req) => {
           .from('videos')
           .update({
             extracted_recipe_json: recipe,
-            manual_reviewed: true
+            manual_reviewed: true,
+            reviewed_by: user.id,
+            reviewed_at: new Date().toISOString(),
           })
           .eq('video_id', videoId);
 
@@ -284,6 +288,44 @@ serve(async (req) => {
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      }
+
+      case 'review': {
+        const { videoId, decision } = params;
+        if (!videoId || !decision) throw new Error('videoId and decision required');
+        const { error } = await supabase.from('videos').update({
+          review_status: decision === 'approve' ? 'approved' : 'rejected',
+          manual_reviewed: true,
+          reviewed_by: user.id,
+          reviewed_at: new Date().toISOString(),
+        }).eq('video_id', videoId).eq('status', 'done');
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      case 'estimate_reprocess_creator':
+      case 'reprocess_creator': {
+        if (!params.creatorId) throw new Error('creatorId required');
+        const { data: vids, error } = await supabase.from('videos')
+          .select('id, duration_seconds').eq('creator_id', params.creatorId);
+        if (error) throw error;
+        const count = vids?.length ?? 0;
+        const knownSec = (vids ?? []).reduce((n: number, v: any) => n + (v.duration_seconds ?? 0), 0);
+        const unknown = (vids ?? []).filter((v: any) => !v.duration_seconds).length;
+        const minutes = Math.ceil(knownSec / 60) + unknown * 10; // assume 10 min when unknown
+        // gpt-4o-mini ~6k in + 1k out per video, Marathi translation similar; speech transcripts billed by Supadata per minute
+        const aiUsd = count * (6000 * 0.15 + 1000 * 0.6) / 1_000_000 * 2;
+        const estimate = { videos: count, approxMinutes: minutes, aiUsd: Number(aiUsd.toFixed(3)), supadataMinutesIfNoCaptions: minutes };
+        if (operation === 'estimate_reprocess_creator') {
+          return new Response(JSON.stringify({ success: true, estimate }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        const ids = (vids ?? []).map((v: any) => v.id);
+        if (ids.length) {
+          const { error: qErr } = await supabase.from('processing_queue')
+            .insert(ids.map((id: string) => ({ video_id: id, status: 'queued', attempts: 0 })));
+          if (qErr) throw qErr;
+        }
+        return new Response(JSON.stringify({ success: true, queued: ids.length, estimate }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
       default:

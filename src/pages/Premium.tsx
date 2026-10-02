@@ -131,20 +131,11 @@ export default function Premium() {
       // Track referral if exists
       const refSlug = localStorage.getItem('ref_creator_slug');
       if (refSlug) {
-        const { data: refData } = await supabase.functions.invoke('razorpay-checkout', {
+        await supabase.functions.invoke('razorpay-checkout', {
           body: { action: 'track-referral', creatorSlug: refSlug },
           headers: { Authorization: `Bearer ${session?.access_token}` },
         }).catch(() => ({ data: null }));
         
-        if (refData?.freeMonthGranted) {
-          localStorage.removeItem('ref_creator_slug');
-          toast({
-            title: language === 'en' ? '🎉 Free Month Activated!' : '🎉 मोफत महिना सक्रिय!',
-            description: language === 'en' ? 'You got 1 month free premium access!' : 'तुम्हाला 1 महिना मोफत प्रीमियम मिळाले!',
-          });
-          navigate('/');
-          return;
-        }
         localStorage.removeItem('ref_creator_slug');
       }
       
@@ -237,26 +228,8 @@ export default function Premium() {
     }
   };
 
-  const isReferred = !!localStorage.getItem('ref_creator_slug');
 
-  const pricingPlans = isReferred ? [
-    {
-      name: language === 'en' ? 'Monthly Plan' : 'मासिक योजना',
-      price: 49,
-      period: language === 'en' ? '/month' : '/महिना',
-      description: language === 'en' ? 'Billed monthly' : 'मासिक बिल',
-      amount: 4900,
-    },
-    {
-      name: language === 'en' ? 'Yearly Plan' : 'वार्षिक योजना',
-      price: 299,
-      originalPrice: 499,
-      period: language === 'en' ? '/year' : '/वर्ष',
-      description: language === 'en' ? 'Creator special — 40% off!' : 'क्रिएटर स्पेशल — 40% सवलत!',
-      amount: 29900,
-      popular: true,
-    },
-  ] : [
+  const pricingPlans = [
     {
       name: language === 'en' ? 'Monthly Plan' : 'मासिक योजना',
       price: 49,
@@ -301,7 +274,7 @@ export default function Premium() {
     <AppShell contained={false} language={language} onLanguageToggle={() => setLanguage(language === 'en' ? 'mr' : 'en')}>
       <SEO
         title="Premium Membership - Unlock Exclusive Marathi Recipes"
-        description="Subscribe to RecipeMaker Premium and get access to 1000+ exclusive Marathi recipes, save unlimited favorites, download recipes, AI-powered suggestions, and personalized meal planning. Plans starting at ₹49/month."
+        description="Subscribe to RecipeMaker Premium and get full access to every Marathi recipe, unlimited favorites, cooking timers, serving adjuster and Marathi translations. Plans starting at ₹49/month."
         url="/premium"
       />
       
@@ -338,8 +311,8 @@ export default function Premium() {
                   ? 'Thank you for being a premium member! Enjoy all exclusive features.'
                   : 'प्रीमियम सदस्य असल्याबद्दल धन्यवाद! सर्व खास वैशिष्ट्यांचा आनंद घ्या.')
               : (language === 'en' 
-                  ? 'Access 1000+ premium recipes, smart tools, and AI-powered suggestions to enhance your cooking experience.'
-                  : '1000+ प्रीमियम रेसिपी, स्मार्ट टूल्स आणि AI-आधारित सूचना मिळवून तुमचा कुकिंग अनुभव वाढवा.')
+                  ? 'Unlock every recipe on RecipeMaker with cooking timers, serving adjuster, favorites and Marathi translations.'
+                  : 'कुकिंग टाइमर, सर्व्हिंग अ‍ॅडजस्टर, आवडी आणि मराठी भाषांतरासह RecipeMaker वरील सर्व रेसिपी अनलॉक करा.')
             }
           </p>
         </div>
@@ -372,12 +345,9 @@ export default function Premium() {
               <div className="bg-white/50 dark:bg-black/20 rounded-lg p-4 space-y-3">
                 {[
                   language === 'en' ? '✓ Unlimited recipe saves' : '✓ असीम रेसिपी सेव्ह',
-                  language === 'en' ? '✓ AI recipe suggestions' : '✓ AI रेसिपी सूचना',
-                  language === 'en' ? '✓ Smart cooking timers' : '✓ स्मार्ट कुकिंग टाइमर',
-                  language === 'en' ? '✓ Print & copy recipes' : '✓ रेसिपी प्रिंट आणि कॉपी',
-                  language === 'en' ? '✓ Comment & rate recipes' : '✓ कमेंट आणि रेट रेसिपी',
-                  language === 'en' ? '✓ Ad-free experience' : '✓ जाहिरात-मुक्त अनुभव',
-                  language === 'en' ? '✓ Priority support' : '✓ प्राथमिकता समर्थन'
+                  language === 'en' ? '✓ Cooking timers & serving adjuster' : '✓ कुकिंग टाइमर आणि सर्व्हिंग अ‍ॅडजस्टर',
+                  language === 'en' ? '✓ Marathi translations' : '✓ मराठी भाषांतर',
+                  language === 'en' ? '✓ Comment on recipes' : '✓ रेसिपीवर कमेंट',
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3">
                     <span className="text-sm font-medium text-foreground">{item}</span>
@@ -427,12 +397,9 @@ export default function Premium() {
                 <div className="space-y-3">
                   {[
                     language === 'en' ? 'Unlimited recipe saves' : 'असीम रेसिपी सेव्ह',
-                    language === 'en' ? 'AI recipe suggestions' : 'AI रेसिपी सूचना',
-                    language === 'en' ? 'Smart cooking timers' : 'स्मार्ट कुकिंग टाइमर',
-                    language === 'en' ? 'Print & copy recipes' : 'रेसिपी प्रिंट आणि कॉपी',
-                    language === 'en' ? 'Comment & rate recipes' : 'कमेंट आणि रेट रेसिपी',
-                    language === 'en' ? 'Ad-free experience' : 'जाहिरात-मुक्त अनुभव',
-                    language === 'en' ? 'Priority support' : 'प्राथमिकता समर्थन'
+                    language === 'en' ? 'Cooking timers & serving adjuster' : 'कुकिंग टाइमर आणि सर्व्हिंग अ‍ॅडजस्टर',
+                  language === 'en' ? 'Marathi translations' : 'मराठी भाषांतर',
+                    language === 'en' ? 'Comment on recipes' : 'रेसिपीवर कमेंट',
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">

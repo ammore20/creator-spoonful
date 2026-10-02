@@ -59,12 +59,6 @@ const ForCreators = () => {
     "Mobile-friendly experience for your fans"
   ];
 
-  const stats = [
-    { value: "10K+", label: "Monthly Visitors" },
-    { value: "500+", label: "Recipes Available" },
-    { value: "50+", label: "Featured Creators" },
-    { value: "4.9★", label: "User Rating" }
-  ];
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
@@ -126,21 +120,12 @@ const ForCreators = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 px-4 bg-muted/30">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
-              <div 
-                key={index}
-                className="text-center p-6 rounded-2xl bg-background/50 backdrop-blur-sm border border-border/50 animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
-          </div>
+      {/* Revenue share */}
+      <section className="py-10 px-4 bg-muted/30">
+        <div className="container mx-auto text-center">
+          <p className="text-lg md:text-xl font-medium text-foreground">
+            Creators earn a 50% revenue share when their audience buys their recipe book.
+          </p>
         </div>
       </section>
 
@@ -186,7 +171,7 @@ const ForCreators = () => {
           <div className="space-y-8">
             {[
               { step: 1, title: "Share Your Channel", desc: "Just send us your YouTube channel link - that's all we need to get started." },
-              { step: 2, title: "We Extract Recipes", desc: "Our AI watches your videos and extracts detailed recipes with ingredients, steps, and timing." },
+              { step: 2, title: "We Extract Recipes", desc: "We read your video's spoken transcript and captions, turn only what you actually say into a recipe, and a person reviews it before it goes live." },
               { step: 3, title: "Get Featured", desc: "Your recipes go live on our platform with full credit and links back to your channel." }
             ].map((item, index) => (
               <div 
@@ -237,15 +222,8 @@ const ForCreators = () => {
                   <div className="w-20 h-20 rounded-full bg-gradient-hero mx-auto mb-6 flex items-center justify-center">
                     <ChefHat className="w-10 h-10 text-white" />
                   </div>
-                  <div className="flex justify-center gap-1 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <blockquote className="text-lg mb-4 italic">
-                    "RecipeMaker has helped me reach thousands of new viewers. My subscribers love having easy access to my recipes!"
-                  </blockquote>
-                  <p className="font-medium">— Featured Creator</p>
+                  <p className="text-lg mb-2 font-medium">Your recipes, your credit</p>
+                  <p className="text-muted-foreground">Every recipe links back to your channel, and you approve what goes into your book.</p>
                 </CardContent>
               </Card>
             </div>

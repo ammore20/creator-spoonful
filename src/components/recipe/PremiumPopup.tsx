@@ -26,8 +26,8 @@ export const PremiumPopup = ({ isOpen, onClose, language }: PremiumPopupProps) =
           </DialogTitle>
           <DialogDescription className="text-base">
             {language === 'en'
-              ? 'Access 1000+ premium recipes, smart tools & AI suggestions.'
-              : '1000+ प्रीमियम रेसिपी, स्मार्ट टूल्स आणि AI सूचना मिळवा.'}
+              ? 'Unlock every recipe with timers, serving adjuster and Marathi.'
+              : 'टाइमर, सर्व्हिंग अ‍ॅडजस्टर आणि मराठीसह सर्व रेसिपी अनलॉक करा.'}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">

@@ -13,6 +13,7 @@ type Row = {
   tokens_used: number | null;
   created_at: string;
   video_id: string | null;
+  audio_minutes: number | null;
 };
 
 export const AICostDashboard = () => {
@@ -26,7 +27,7 @@ export const AICostDashboard = () => {
       const [{ data }, { count }] = await Promise.all([
         supabase
           .from('cost_tracking')
-          .select('operation_type, estimated_cost, tokens_used, created_at, video_id')
+          .select('operation_type, estimated_cost, tokens_used, created_at, video_id, audio_minutes')
           .gte('created_at', since)
           .order('estimated_cost', { ascending: false }),
         supabase
@@ -46,6 +47,7 @@ export const AICostDashboard = () => {
 
   const requests = rows.length;
   const totalTokens = rows.reduce((s, r) => s + (r.tokens_used || 0), 0);
+  const audioMinutes = rows.reduce((s, r) => s + (Number(r.audio_minutes) || 0), 0);
   const totalCost = rows.reduce((s, r) => s + (Number(r.estimated_cost) || 0), 0);
   const topOps = Object.entries(
     rows.reduce<Record<string, number>>((acc, r) => {
@@ -69,6 +71,7 @@ export const AICostDashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <Stat label="Requests" value={requests.toString()} />
           <Stat label="Tokens" value={totalTokens.toLocaleString()} />
+          <Stat label="Speech minutes" value={audioMinutes.toLocaleString()} />
           <Stat label="Est. cost" value={`$${totalCost.toFixed(3)}`} />
           <Stat label="Failed videos" value={failed.toString()} />
           <Stat label="Warn / Crit" value={`$${WARN_DAILY_USD} / $${CRIT_DAILY_USD}`} />

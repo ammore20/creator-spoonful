@@ -7,6 +7,7 @@ interface SEOProps {
   url?: string;
   type?: string;
   structuredData?: object;
+  noindex?: boolean;
 }
 
 export const SEO = ({ 
@@ -15,7 +16,8 @@ export const SEO = ({
   image = '/logo.png',
   url = 'https://recipemaker.in',
   type = 'website',
-  structuredData 
+  structuredData,
+  noindex = false,
 }: SEOProps) => {
   const fullTitle = `${title} | RecipeMaker`;
   const canonicalUrl = url.startsWith('http') ? url : `https://recipemaker.in${url}`;
@@ -28,6 +30,7 @@ export const SEO = ({
       <meta name="title" content={fullTitle} />
       <meta name="description" content={description} />
       <link rel="canonical" href={canonicalUrl} />
+      {noindex && <meta name="robots" content="noindex, nofollow" />}
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
