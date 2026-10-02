@@ -17,4 +17,12 @@
 - [x] Scheduled job every 15 min, 30/day cap, error stop; real cost tracking
 - [x] process-video requires service role or admin
 
-## Later (not started): Phases 2-6
+## Phase 3 (done)
+- [x] books, book_recipes (100 cap, approved only, 3 samples), purchases, purchase_intents, book_earnings, link_visits, fee setting
+- [x] Server entitlement + my_books(); admin book builder; manual PayU grant/refund
+- [x] Scaling handles "unknown" and Marathi digits
+
+## Phase 4 (done)
+- [x] /c/:slug book page, home book grid (recipes at /recipes), reader /book/:slug, 7-day refund page
+
+## Later (not started): Phase 2 (PayU API, needs credentials), Phases 5-6
