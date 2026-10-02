@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChefHat, Sparkles, Infinity as InfinityIcon, Users, Check, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,20 +9,27 @@ import logo from '@/assets/logo.png';
 
 const BENEFITS = [
   { icon: InfinityIcon, text: 'Unlimited recipe access' },
-  { icon: Sparkles, text: 'AI-powered recipe features' },
-  { icon: Users, text: 'Creator-focused tools' },
+  { icon: Sparkles, text: 'English and Marathi recipes' },
+  { icon: Users, text: 'Timers and serving adjuster' },
   { icon: ChefHat, text: 'Full platform access' },
 ];
 
 export default function CreatorBeta() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const token = params.get('t') ?? '';
   const { toast } = useToast();
 
   const enter = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('creator-beta-enter', { body: {} });
+      const { data, error } = await supabase.functions.invoke('creator-beta-enter', { body: { token } });
+      if (data?.error === 'expired' || data?.error === 'invalid_token') {
+        toast({ variant: 'destructive', description: data.error === 'expired' ? 'This Creator Beta link has ended.' : 'This Creator Beta link is not valid.' });
+        setLoading(false);
+        return;
+      }
       if (error || !data?.access_token) throw error ?? new Error('no session');
 
       const { error: sessionError } = await supabase.auth.setSession({
@@ -44,6 +51,7 @@ export default function CreatorBeta() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <SEO
+        noindex
         title="RecipeMaker Creator Beta — Full Access for Food Creators"
         description="Invited creators get the full RecipeMaker experience: unlimited recipes, AI features and creator tools. No sign-up needed."
       />

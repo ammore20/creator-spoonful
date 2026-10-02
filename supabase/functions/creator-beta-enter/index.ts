@@ -8,6 +8,13 @@ const corsHeaders = {
 
 const BETA_EMAIL = "creator-beta@recipemaker.in";
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -25,6 +32,19 @@ serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+
+  // 0) Secret token + server-side expiry
+  const expected = Deno.env.get("CREATOR_BETA_TOKEN") ?? "";
+  let provided = "";
+  try {
+    const body = await req.json();
+    provided = typeof body?.token === "string" ? body.token.slice(0, 256) : "";
+  } catch { /* empty body */ }
+  if (!expected || expected.length < 16 || !timingSafeEqual(provided, expected)) {
+    return json({ error: "invalid_token" }, 200);
+  }
+  const { data: active } = await admin.rpc("creator_beta_active");
+  if (active === false) return json({ error: "expired" }, 200);
 
   try {
     // 1) Resolve (or provision) the single shared Creator Beta account.
