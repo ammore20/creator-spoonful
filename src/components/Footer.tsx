@@ -32,7 +32,7 @@ export const Footer = ({ language }: FooterProps) => {
             {language === 'en' ? 'Product' : 'उत्पादन'}
           </h3>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/" className={linkCls}>{language === 'en' ? 'Discover' : 'शोधा'}</Link></li>
+            <li><Link to="/recipes" className={linkCls}>{language === "en" ? "Recipes" : "रेसिपी"}</Link></li>
             <li><Link to="/premium" className={linkCls}>{language === 'en' ? 'Premium' : 'प्रीमियम'}</Link></li>
             <li><Link to="/for-creators" className={linkCls}>{language === 'en' ? 'For creators' : 'क्रिएटर्ससाठी'}</Link></li>
             <li><Link to="/contact" className={linkCls}>{language === 'en' ? 'Contact' : 'संपर्क'}</Link></li>

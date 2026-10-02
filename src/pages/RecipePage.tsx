@@ -235,7 +235,7 @@ const RecipePageContent = () => {
             icon={<UtensilsCrossed className="w-6 h-6" />}
             title={language === 'en' ? 'Recipe not found' : 'रेसिपी सापडली नाही'}
             description={language === 'en' ? 'This recipe may have been removed or the link is incorrect.' : 'ही रेसिपी काढली असावी किंवा लिंक चुकीची आहे.'}
-            action={<Link to="/"><Button variant="soft"><ArrowLeft className="mr-2 w-4 h-4" />{language === 'en' ? 'Back to recipes' : 'रेसिपींकडे परत'}</Button></Link>}
+            action={<Link to="/recipes"><Button variant="soft"><ArrowLeft className="mr-2 w-4 h-4" />{language === 'en' ? 'Back to recipes' : 'रेसिपींकडे परत'}</Button></Link>}
           />
         </div>
       </AppShell>
