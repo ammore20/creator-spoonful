@@ -228,7 +228,6 @@ export default function Premium() {
     }
   };
 
-  const isReferred = !!localStorage.getItem('ref_creator_slug');
 
   const pricingPlans = [
     {
