@@ -11,8 +11,8 @@ const corsHeaders = {
 const MAX_BODY_BYTES = 4 * 1024; // 4 KB
 
 // Server-side plan whitelist. Any amount not in this set is rejected.
-// 4900 = ₹49 monthly, 29900 = ₹299 yearly (referral), 49900 = ₹499 yearly
-const ALLOWED_AMOUNTS = new Set<number>([4900, 29900, 49900]);
+// 4900 = ₹49 monthly, 49900 = ₹499 yearly
+const ALLOWED_AMOUNTS = new Set<number>([4900, 49900]);
 
 // Simple in-memory rate limiter (per-edge-instance)
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -142,31 +142,8 @@ serve(async (req) => {
         .from('referrals')
         .upsert({ creator_id: creator.id, user_id: user.id }, { onConflict: 'user_id' });
 
-      const { count: referralCount } = await adminClient
-        .from('referrals')
-        .select('id', { count: 'exact', head: true })
-        .eq('creator_id', creator.id);
-
-      let freeMonthGranted = false;
-      if ((referralCount || 0) <= 50) {
-        const { data: existingSub } = await adminClient
-          .from('subscriptions').select('id')
-          .eq('user_id', user.id).in('status', ['active', 'completed']).limit(1);
-
-        if (!existingSub || existingSub.length === 0) {
-          const expiresAt = new Date();
-          expiresAt.setMonth(expiresAt.getMonth() + 1);
-          await adminClient.from('subscriptions').insert({
-            user_id: user.id, amount: 0, status: 'active', currency: 'INR',
-            expires_at: expiresAt.toISOString(),
-            razorpay_order_id: `free_creator_${body.creatorSlug}`,
-            razorpay_payment_id: `free_creator_${body.creatorSlug}`,
-          });
-          freeMonthGranted = true;
-          console.log('free_month_granted', { userId: user.id, creatorSlug: body.creatorSlug });
-        }
-      }
-      return jsonResponse({ success: true, freeMonthGranted });
+      // Free creator month removed (Phase 0). Existing rows are kept.
+      return jsonResponse({ success: true, freeMonthGranted: false });
     }
 
     // ---- create-order ----
@@ -196,7 +173,11 @@ serve(async (req) => {
 
       const order: RazorpayOrder = await orderResponse.json();
 
-      const { error: dbError } = await supabaseClient.from('subscriptions').insert({
+      const serverClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      );
+      const { error: dbError } = await serverClient.from('subscriptions').insert({
         user_id: user.id,
         razorpay_order_id: order.id,
         amount, currency, status: 'pending',
@@ -240,26 +221,17 @@ serve(async (req) => {
         return jsonResponse({ error: 'Subscription not found' }, 404);
       }
 
-      let expiresAt: Date | null = null;
-      if (subscription.amount === 4900) {
-        expiresAt = new Date(); expiresAt.setMonth(expiresAt.getMonth() + 1);
-      } else if (subscription.amount === 49900 || subscription.amount === 29900) {
-        expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-      }
-
-      const updateData: Record<string, unknown> = {
-        razorpay_payment_id: body.razorpay_payment_id,
-        razorpay_signature: body.razorpay_signature,
-        status: 'active',
-      };
-      if (expiresAt) updateData.expires_at = expiresAt.toISOString();
-
-      const { error: updateError } = await supabaseClient
-        .from('subscriptions').update(updateData)
-        .eq('razorpay_order_id', body.razorpay_order_id).eq('user_id', user.id);
-
-      if (updateError) {
-        console.error('subscription_update_failed', { userId: user.id, err: updateError.message });
+      const serverClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      );
+      const { data: result, error: activateError } = await serverClient.rpc('activate_subscription', {
+        _order_id: body.razorpay_order_id,
+        _payment_id: body.razorpay_payment_id,
+        _signature: body.razorpay_signature,
+      });
+      if (activateError || !(result as any)?.ok) {
+        console.error('subscription_activate_failed', { userId: user.id, err: activateError?.message });
         throw new Error('Failed to update subscription');
       }
 
