@@ -48,41 +48,74 @@ function isRateLimited(req: Request): boolean {
   return false;
 }
 
-const RECIPE_EXTRACTION_PROMPT = `You are a recipe extraction expert. Analyze the video information and extract a structured recipe.
+const RECIPE_EXTRACTION_PROMPT = `You turn a cooking video's transcript into a structured recipe.
 
-IMPORTANT: The text may be in Marathi, English, Hindi or a mix. Extract the recipe information regardless of language.
+The transcript may be in Marathi, English, Hindi or a mix. Write field values in English.
 
-SPECIAL CASE: If you only have the video title and description (no full transcript), you should STILL extract the recipe by:
-1. Identifying the dish name from the title
-2. Making reasonable assumptions about common ingredients for that dish
-3. Providing standard cooking steps for that type of dish
-4. Only return { "no_recipe": true } if the video is clearly NOT about cooking (e.g., tips, cleaning, tutorials)
+STRICT RULES:
+1. Use ONLY what is said or shown in the transcript text. Never invent ingredients, quantities, steps or times.
+2. If a quantity is not stated, write the ingredient with "unknown" as the quantity, e.g. "unknown salt".
+3. If a step is not clearly described, write "unknown" for that part instead of guessing.
+4. If the transcript is not about cooking a dish (tips, cleaning, vlogs), return { "no_recipe": true }.
+5. prep_time, difficulty and servings: give them only if stated or directly implied; otherwise "unknown" (servings: null).
+6. confidence: a number from 0 to 1 for how completely the transcript supports this recipe.
+7. missing_info: a short list of what was not stated.
 
-Return ONLY valid JSON with this exact structure (use English for field values):
+Return ONLY valid JSON:
 {
-  "title": "Proper dish name in English (e.g., 'Aloo Paratha', 'Modak')",
-  "ingredients": ["specific ingredient with quantity like '2 cups rice flour'", "1 tsp salt"],
-  "steps": ["Detailed step 1 with actual cooking action", "Detailed step 2"],
-  "taste_tags": ["spicy", "sweet", "savory"], 
+  "title": "Dish name",
+  "ingredients": ["2 cups rice flour", "unknown salt"],
+  "steps": ["Step as described"],
+  "taste_tags": ["spicy"],
   "cuisine": "Maharashtrian",
   "meal_type": "Lunch",
   "prep_time": "30 mins",
   "difficulty": "Medium",
-  "servings": 4
+  "servings": 4,
+  "confidence": 0.8,
+  "missing_info": ["exact salt quantity"]
 }
-
-CRITICAL RULES:
-1. "title" must be the ACTUAL DISH NAME extracted from the video title
-2. "ingredients" must have at least 5 common ingredients for that dish (use standard recipes)
-3. "steps" must have at least 5 basic cooking steps (use standard methods for that dish)
-4. Only return { "no_recipe": true } if the video is NOT about cooking a dish (tips, cleaning, etc.)
-5. All fields must be in English even if source is in Marathi/Hindi
-6. Use your knowledge of Indian cuisine to fill in reasonable recipe details
 
 Valid taste_tags: spicy, sweet, sour, bitter, tangy, savory, balanced
 Valid cuisine: Maharashtrian, South Indian, North Indian, Fusion, Global
 Valid meal_type: Breakfast, Lunch, Dinner, Snack, Dessert
-Valid difficulty: Easy, Medium, Hard`;
+Valid difficulty: Easy, Medium, Hard, unknown`;
+
+// gpt-4o-mini pricing (USD per token)
+const PRICE_IN = 0.15 / 1_000_000;
+const PRICE_OUT = 0.60 / 1_000_000;
+const MIN_TRANSCRIPT_CHARS = 200;
+
+function parseIsoDuration(iso: string): number {
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return 0;
+  return (+(m[1] || 0)) * 3600 + (+(m[2] || 0)) * 60 + (+(m[3] || 0));
+}
+function formatDuration(sec: number): string {
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  const mm = h ? String(m).padStart(2, '0') : String(m);
+  return (h ? `${h}:` : '') + `${mm}:${String(s).padStart(2, '0')}`;
+}
+
+async function supadataTranscript(videoId: string, mode: 'native' | 'generate', key: string): Promise<string | null> {
+  const url = `https://api.supadata.ai/v1/transcript?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&text=true&mode=${mode}`;
+  const res = await fetch(url, { headers: { 'x-api-key': key } });
+  if (res.status === 202) {
+    const { jobId } = await res.json();
+    for (let i = 0; i < 20 && jobId; i++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      const poll = await fetch(`https://api.supadata.ai/v1/transcript/${jobId}`, { headers: { 'x-api-key': key } });
+      if (!poll.ok) return null;
+      const j = await poll.json();
+      if (j.status === 'completed') return typeof j.content === 'string' ? j.content : null;
+      if (j.status === 'failed') return null;
+    }
+    return null;
+  }
+  if (!res.ok) { await res.text(); return null; }
+  const j = await res.json();
+  return typeof j.content === 'string' ? j.content : null;
+}
 
 // Hard caps to prevent runaway AI cost
 const MAX_TRANSCRIPT_CHARS = 24_000; // ~6k tokens worst case
@@ -134,6 +167,29 @@ serve(async (req) => {
 
   let queueItemId: string | undefined;
   let supabase: any;
+
+  // Only the server (service role) or an admin may run processing
+  {
+    const auth = req.headers.get('Authorization') ?? '';
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    let allowed = !!serviceKey && auth === `Bearer ${serviceKey}`;
+    if (!allowed && auth.startsWith('Bearer ')) {
+      const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: auth } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user) {
+        const admin = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey);
+        const { data: isAdmin } = await admin.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+        allowed = isAdmin === true;
+      }
+    }
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  }
 
   try {
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
@@ -226,47 +282,48 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', videoDbId);
 
-    // Step 1: Get transcript from YouTube captions
-    console.log('Step 1: Fetching YouTube captions...');
-    
+    // Step 1: duration from YouTube + real transcript
     const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API_KEY');
-    let transcript = '';
-    
+    const SUPADATA_API_KEY = Deno.env.get('SUPADATA_API_KEY');
+    let durationSeconds = 0;
     try {
-      // Try to get captions/subtitles from YouTube
-      const captionsResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId=${videoId}&key=${YOUTUBE_API_KEY}`
-      );
-      
-      if (captionsResponse.ok) {
-        const captionsData = await captionsResponse.json();
-        console.log(`Found ${captionsData.items?.length || 0} caption tracks`);
-        
-        // Use title + description as transcript base
-        transcript = `Video Title: ${video.title}\n\nDescription: ${video.description || 'No description'}\n\nThis is a cooking video.`;
-      } else {
-        console.log('No captions available, using title and description');
-        transcript = `Video Title: ${video.title}\n\nDescription: ${video.description || 'No description'}\n\nThis is a cooking video.`;
+      const r = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${encodeURIComponent(videoId)}&key=${YOUTUBE_API_KEY}`);
+      if (r.ok) {
+        const j = await r.json();
+        durationSeconds = parseIsoDuration(j.items?.[0]?.contentDetails?.duration ?? '');
       }
-    } catch (error) {
-      console.error('Error fetching captions:', error);
-      transcript = `Video Title: ${video.title}\n\nDescription: ${video.description || 'No description'}\n\nThis is a cooking video.`;
-    }
-    
-    // Enforce hard transcript cap to bound AI cost
-    if (transcript.length > MAX_TRANSCRIPT_CHARS) {
-      console.warn('transcript_truncated', { original: transcript.length, cap: MAX_TRANSCRIPT_CHARS });
-      transcript = transcript.slice(0, MAX_TRANSCRIPT_CHARS);
-    }
-    console.log('transcript_prepared', { length: transcript.length });
+    } catch (e) { console.warn('duration_fetch_failed', e instanceof Error ? e.message : e); }
 
-    // Track transcription cost
-    await supabase.from('cost_tracking').insert({
-      video_id: videoDbId,
-      operation_type: 'transcription',
-      estimated_cost: 0.006,
-      tokens_used: transcript.length
-    });
+    let transcript = '';
+    let transcriptSource = 'none';
+    if (SUPADATA_API_KEY) {
+      const native = await supadataTranscript(videoId, 'native', SUPADATA_API_KEY).catch(() => null);
+      if (native && native.length >= MIN_TRANSCRIPT_CHARS) {
+        transcript = native; transcriptSource = 'captions';
+      } else {
+        const spoken = await supadataTranscript(videoId, 'generate', SUPADATA_API_KEY).catch(() => null);
+        if (spoken && spoken.length >= MIN_TRANSCRIPT_CHARS) {
+          transcript = spoken; transcriptSource = 'speech';
+          await supabase.from('cost_tracking').insert({
+            video_id: videoDbId, operation_type: 'transcription', provider: 'supadata',
+            audio_minutes: Math.ceil(durationSeconds / 60) || null,
+            estimated_cost: null, tokens_used: null,
+          });
+        }
+      }
+    } else {
+      console.warn('SUPADATA_API_KEY not configured');
+    }
+    if (!transcript && (video.description ?? '').length >= MIN_TRANSCRIPT_CHARS) {
+      transcript = `Video description (no spoken transcript available):\n${video.description}`;
+      transcriptSource = 'description';
+    }
+    if (!transcript) {
+      throw new Error('No transcript available for this video');
+    }
+    transcript = `Video title: ${video.title}\n\n${transcript}`;
+    if (transcript.length > MAX_TRANSCRIPT_CHARS) transcript = transcript.slice(0, MAX_TRANSCRIPT_CHARS);
+    console.log('transcript_prepared', { length: transcript.length, source: transcriptSource });
 
     // Step 2: Extract recipe using GPT (with timeout + exponential backoff on 429/5xx)
     console.log('extracting_recipe', { model: 'gpt-4o-mini', maxTokens: MAX_RECIPE_TOKENS });
@@ -283,10 +340,11 @@ serve(async (req) => {
           model: 'gpt-4o-mini',
           messages: [
             { role: 'system', content: RECIPE_EXTRACTION_PROMPT },
-            { role: 'user', content: `Extract recipe from this transcript:\n\n${transcript}` }
+            { role: 'user', content: `Turn this transcript into a recipe:\n\n${transcript}` }
           ],
-          temperature: 0.3,
+          temperature: 0.1,
           max_tokens: MAX_RECIPE_TOKENS,
+          response_format: { type: 'json_object' },
         }),
       },
       { attempts: 3, baseDelayMs: 800, timeoutMs: 30_000 },
@@ -323,6 +381,11 @@ serve(async (req) => {
           .from('videos')
           .update({
             status: 'done',
+            review_status: 'draft',
+            transcript_source: transcriptSource,
+            raw_transcript: transcript,
+            duration: durationSeconds ? formatDuration(durationSeconds) : null,
+            duration_seconds: durationSeconds || null,
             error_message: 'No recipe content found - video may be tips, cleaning, or non-recipe content',
             extracted_recipe_json: { no_recipe: true }
           })
@@ -345,62 +408,17 @@ serve(async (req) => {
         throw new Error('Recipe extraction missing required title field');
       }
       
-      // Check for invalid title patterns
-      const invalidTitlePatterns = [
-        /no recipe/i,
-        /not found/i,
-        /not available/i,
-        /^recipe$/i,
-        /^cooking$/i,
-        /^food$/i,
-        /see video/i,
-        /watch video/i
-      ];
-      
-      if (invalidTitlePatterns.some(pattern => pattern.test(extractedRecipe.title))) {
-        console.error('Invalid title pattern detected:', extractedRecipe.title);
-        throw new Error('Recipe title contains invalid or generic text');
+      if (!Array.isArray(extractedRecipe.ingredients) || extractedRecipe.ingredients.length === 0) {
+        throw new Error('No ingredients stated in transcript');
       }
-      
-      // Validate ingredients
-      if (!extractedRecipe.ingredients || !Array.isArray(extractedRecipe.ingredients) || extractedRecipe.ingredients.length < 5) {
-        console.error('Insufficient ingredients:', extractedRecipe.ingredients);
-        throw new Error('Recipe must have at least 5 ingredients');
+      if (!Array.isArray(extractedRecipe.steps) || extractedRecipe.steps.length === 0) {
+        throw new Error('No steps stated in transcript');
       }
-      
-      // Check for generic/placeholder ingredients
-      const invalidIngredients = extractedRecipe.ingredients.filter((ing: string) => 
-        /see video/i.test(ing) || 
-        /not available/i.test(ing) ||
-        /ingredient \d+/i.test(ing) ||
-        ing.trim().length < 3
-      );
-      
-      if (invalidIngredients.length > 0) {
-        console.error('Generic or invalid ingredients found:', invalidIngredients);
-        throw new Error('Recipe contains placeholder or invalid ingredients');
-      }
-      
-      // Validate steps
-      if (!extractedRecipe.steps || !Array.isArray(extractedRecipe.steps) || extractedRecipe.steps.length < 5) {
-        console.error('Insufficient steps:', extractedRecipe.steps);
-        throw new Error('Recipe must have at least 5 detailed steps');
-      }
-      
-      // Check for generic/placeholder steps
-      const invalidSteps = extractedRecipe.steps.filter((step: string) => 
-        /see video/i.test(step) || 
-        /watch video/i.test(step) ||
-        /not available/i.test(step) ||
-        /step \d+/i.test(step) ||
-        step.trim().length < 10
-      );
-      
-      if (invalidSteps.length > 0) {
-        console.error('Generic or invalid steps found:', invalidSteps);
-        throw new Error('Recipe contains placeholder or invalid steps');
-      }
-      
+      let conf = Number(extractedRecipe.confidence);
+      if (!Number.isFinite(conf)) conf = 0;
+      conf = Math.max(0, Math.min(1, conf));
+      if (transcriptSource === 'description') conf = Math.min(conf, 0.4);
+      extractedRecipe.confidence = conf;
       // Ensure taste_tags exist
       if (!extractedRecipe.taste_tags || !Array.isArray(extractedRecipe.taste_tags) || extractedRecipe.taste_tags.length === 0) {
         extractedRecipe.taste_tags = ['savory'];
@@ -414,14 +432,18 @@ serve(async (req) => {
     }
 
     // Track extraction cost (structured log)
-    const tokensUsed = extractionData.usage?.total_tokens || 0;
-    const estimatedCost = (tokensUsed / 1000) * 0.002; // GPT-4o-mini pricing
-    console.log('ai_extraction_cost', { videoId, tokensUsed, estimatedCost });
+    const inTok = extractionData.usage?.prompt_tokens || 0;
+    const outTok = extractionData.usage?.completion_tokens || 0;
+    const estimatedCost = inTok * PRICE_IN + outTok * PRICE_OUT;
+    console.log('ai_extraction_cost', { videoId, inTok, outTok, estimatedCost });
     await supabase.from('cost_tracking').insert({
       video_id: videoDbId,
       operation_type: 'extraction',
+      provider: 'openai:gpt-4o-mini',
       estimated_cost: estimatedCost,
-      tokens_used: tokensUsed
+      tokens_used: inTok + outTok,
+      input_tokens: inTok,
+      output_tokens: outTok,
     });
 
     // Step 3: Translate to Marathi using Lovable AI
@@ -467,6 +489,14 @@ serve(async (req) => {
       .from('videos')
       .update({
         status: 'done',
+        review_status: 'draft',
+        legacy_approved: false,
+        reviewed_at: null,
+        reviewed_by: null,
+        confidence: extractedRecipe.confidence,
+        transcript_source: transcriptSource,
+        duration: durationSeconds ? formatDuration(durationSeconds) : null,
+        duration_seconds: durationSeconds || null,
         raw_transcript: transcript,
         extracted_recipe_json: extractedRecipe,
         error_message: null,
