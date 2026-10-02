@@ -11,8 +11,10 @@ import { ArrowLeft, Clock, Gauge, Lock, Timer } from 'lucide-react';
 import { ServingAdjuster } from '@/components/recipe/ServingAdjuster';
 import { CookingTimer } from '@/components/recipe/CookingTimer';
 import { parseServings, scaleIngredient } from '@/lib/scaleIngredient';
+import { useBookPack } from '@/hooks/useBookPack';
+import { WifiOff } from 'lucide-react';
 
-type Access = 'granted' | 'locked' | 'login_required' | 'not_found';
+type Access = 'granted' | 'locked' | 'login_required' | 'not_found' | 'offline';
 
 const minutesFrom = (t?: string) => {
   const m = String(t ?? '').match(/(\d+)/);
@@ -29,11 +31,12 @@ export default function BookRecipe() {
   const [timerMin, setTimerMin] = useState(10);
   const [showTimer, setShowTimer] = useState(false);
   const en = language === 'en';
+  const { pack, online } = useBookPack(slug);
 
   useEffect(() => {
-    setRes(null);
-    (supabase as any).rpc('get_book_recipe', { _slug: slug, _video_id: recipeId }).then(({ data, error }: any) => {
-      const r = error ? { access: 'not_found' as Access } : data;
+    if (pack === undefined) return; // wait for the local check
+    const local = pack?.recipes.find((x) => x.video_id === recipeId);
+    const apply = (r: any) => {
       setRes(r);
       if (r?.recipe) {
         setServings(parseServings(r.recipe.servings));
@@ -41,20 +44,33 @@ export default function BookRecipe() {
         if (m) setTimerMin(m);
       }
       setChecked({});
+    };
+    // Saved copy first (works with no connection).
+    if (local) { apply({ access: 'granted', recipe: local.recipe, title: local.title }); return; }
+    if (!online) { setRes({ access: 'offline' as Access }); return; }
+    setRes(null);
+    (supabase as any).rpc('get_book_recipe', { _slug: slug, _video_id: recipeId }).then(({ data, error }: any) => {
+      const r = error ? { access: (navigator.onLine ? 'not_found' : 'offline') as Access } : data;
+      apply(r);
     });
-  }, [slug, recipeId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, recipeId, pack === undefined, pack?.version, online]);
 
   const shell = (children: React.ReactNode) => (
     <AppShell language={language} onLanguageToggle={() => setLanguage(en ? 'mr' : 'en')}>
       <SEO title={`${res?.recipe?.title || res?.title || 'Recipe'} | RecipeMaker`} description="Recipe from a creator book" url={`/book/${slug}/${recipeId}`} noindex />
       <div className="max-w-2xl mx-auto pb-12">
-        <Link to={`/book/${slug}`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground mb-3"><ArrowLeft className="w-4 h-4" />{en ? 'Book' : 'पुस्तक'}</Link>
+        <div className="flex items-center justify-between mb-3">
+          <Link to={`/book/${slug}`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"><ArrowLeft className="w-4 h-4" />{en ? 'Book' : 'पुस्तक'}</Link>
+          {!online && <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium"><WifiOff className="w-3 h-3" />{en ? 'Offline' : 'ऑफलाइन'}</span>}
+        </div>
         {children}
       </div>
     </AppShell>
   );
 
   if (!res) return shell(<div className="space-y-3"><Skeleton className="h-8" /><Skeleton className="h-40" /><Skeleton className="h-60" /></div>);
+  if (res.access === 'offline') return shell(<p className="py-16 text-center text-muted-foreground">{en ? 'You are offline and this recipe is not saved on this phone.' : 'तुम्ही ऑफलाइन आहात; ही रेसिपी फोनवर सेव्ह नाही.'}</p>);
   if (res.access === 'not_found') return shell(<p className="py-16 text-center text-muted-foreground">{en ? 'Recipe not found in this book.' : 'रेसिपी सापडली नाही.'}</p>);
 
   if (res.access !== 'granted') {

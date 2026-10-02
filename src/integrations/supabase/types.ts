@@ -386,6 +386,35 @@ export type Database = {
           },
         ]
       }
+      pack_download_log: {
+        Row: {
+          book_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pack_download_log_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       processing_jobs: {
         Row: {
           batch_size: number
@@ -939,6 +968,7 @@ export type Database = {
         Returns: Json
       }
       admin_set_gateway_fee: { Args: { _percent: number }; Returns: Json }
+      book_pack_status: { Args: { _slug: string }; Returns: Json }
       check_internal_key: {
         Args: { _name: string; _value: string }
         Returns: boolean
@@ -947,6 +977,7 @@ export type Database = {
       creator_beta_active: { Args: never; Returns: boolean }
       gateway_fee_percent: { Args: never; Returns: number }
       get_book: { Args: { _slug: string }; Returns: Json }
+      get_book_offline_pack: { Args: { _slug: string }; Returns: Json }
       get_book_recipe: {
         Args: { _slug: string; _video_id: string }
         Returns: Json

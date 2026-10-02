@@ -77,9 +77,9 @@ export default function BookPage() {
     setIntentSent(true);
   };
 
-  const benefits = [
+  const benefits: { icon: any; en: string; mr: string; soon?: boolean }[] = [
     { icon: InfinityIcon, en: 'Lifetime access', mr: 'आजीवन प्रवेश' },
-    { icon: WifiOff, en: 'Install it after buying to use offline', mr: 'खरेदीनंतर ऑफलाइन वापरा', soon: true },
+    { icon: WifiOff, en: 'Install it after buying to use offline', mr: 'खरेदीनंतर ऑफलाइन वापरा' },
     { icon: Languages, en: 'English and Marathi', mr: 'इंग्रजी आणि मराठी' },
   ];
 

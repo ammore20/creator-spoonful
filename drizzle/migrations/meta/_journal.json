@@ -15,6 +15,13 @@
       "when": 1790929721748,
       "tag": "0001_phase3_books_purchases",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790958636109,
+      "tag": "0002_phase5_offline_pack",
+      "breakpoints": true
     }
   ]
 }

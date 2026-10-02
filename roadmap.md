@@ -25,4 +25,7 @@
 ## Phase 4 (done)
 - [x] /c/:slug book page, home book grid (recipes at /recipes), reader /book/:slug, 7-day refund page
 
-## Later (not started): Phase 2 (PayU API, needs credentials), Phases 5-6
+## Phase 5 (done)
+- [x] Offline pack RPCs, IndexedDB storage, install banner + add-to-home-screen, update/restore/revoke, safe service worker, manifest + icons
+
+## Later (not started): Phase 2 (PayU API, needs credentials), Phase 6
