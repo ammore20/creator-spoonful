@@ -302,13 +302,9 @@ const RecipePageContent = () => {
 
   const description = generateRecipeDescription();
 
-  const scaledIngredients = ingredients.map((ingredient: string) => {
-    const ratio = servings / originalServings;
-    return ingredient.replace(/(\d+\.?\d*)/g, (match) => {
-      const num = parseFloat(match);
-      return (num * ratio).toFixed(num % 1 === 0 ? 0 : 1);
-    });
-  });
+  const scaledIngredients = ingredients.map((ingredient: unknown) =>
+    scaleIngredient(ingredient, servings / (originalServings || 1), language),
+  );
 
 
   const handleCopyIngredients = () => {
