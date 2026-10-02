@@ -4,6 +4,9 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
+// These run inside the service worker (functions are serialised into sw.js).
+declare const self: { location: { origin: string } };
+declare const caches: { match: (url: string, opts?: { ignoreSearch?: boolean }) => Promise<Response | undefined> };
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
