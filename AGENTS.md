@@ -12,3 +12,4 @@
 
 - Creator payouts go only through `admin_mark_payout`, which locks exactly the payable earnings, writes one payouts row (unique reference) and marks them paid in one transaction. Why: nothing can be paid twice.
 - Creators see their own numbers only via `my_creator_dashboard` (no buyer data). Why: buyer privacy.
+- Automatic book payments: payu-create-order creates a payu_orders row (server price); payu-return and payu-webhook verify the response hash, confirm with PayU verify_payment, then call settle_payu_order, which reuses record_book_purchase. Why: one idempotent settle path; browser status is never trusted.

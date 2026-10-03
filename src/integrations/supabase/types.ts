@@ -501,6 +501,63 @@ export type Database = {
           },
         ]
       }
+      payu_orders: {
+        Row: {
+          amount_paise: number
+          book_id: string
+          created_at: string
+          id: string
+          mihpayid: string | null
+          note: string | null
+          purchase_id: string | null
+          status: string
+          txnid: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paise: number
+          book_id: string
+          created_at?: string
+          id?: string
+          mihpayid?: string | null
+          note?: string | null
+          purchase_id?: string | null
+          status?: string
+          txnid: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paise?: number
+          book_id?: string
+          created_at?: string
+          id?: string
+          mihpayid?: string | null
+          note?: string | null
+          purchase_id?: string | null
+          status?: string
+          txnid?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payu_orders_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payu_orders_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       processing_jobs: {
         Row: {
           batch_size: number
@@ -1029,6 +1086,19 @@ export type Database = {
           reference: string
         }[]
       }
+      admin_list_payu_orders: {
+        Args: never
+        Returns: {
+          amount_paise: number
+          book_title: string
+          created_at: string
+          email: string
+          mihpayid: string
+          note: string
+          status: string
+          txnid: string
+        }[]
+      }
       admin_list_purchase_intents: {
         Args: never
         Returns: {
@@ -1092,6 +1162,7 @@ export type Database = {
         Returns: Json
       }
       admin_set_gateway_fee: { Args: { _percent: number }; Returns: Json }
+      admin_set_payu_enabled: { Args: { _enabled: boolean }; Returns: Json }
       book_pack_status: { Args: { _slug: string }; Returns: Json }
       check_internal_key: {
         Args: { _name: string; _value: string }
@@ -1152,6 +1223,7 @@ export type Database = {
         }[]
       }
       my_creator_dashboard: { Args: never; Returns: Json }
+      payu_checkout_enabled: { Args: never; Returns: boolean }
       recipe_preview_json: { Args: { _j: Json }; Returns: Json }
       record_book_purchase: {
         Args: {
@@ -1167,6 +1239,15 @@ export type Database = {
       }
       refund_book_purchase: {
         Args: { _purchase_id: string; _reason?: string }
+        Returns: Json
+      }
+      settle_payu_order: {
+        Args: {
+          _amount_paise: number
+          _mihpayid: string
+          _txnid: string
+          _verified_status: string
+        }
         Returns: Json
       }
       unlock_daily_recipe: { Args: { _video_id: string }; Returns: Json }

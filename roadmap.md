@@ -30,3 +30,4 @@
 
 ## Later (not started): Phase 2 (PayU API, needs credentials), Phase 6
 - [x] Phase 6: creator dashboard /creator, admin payouts, link creator
+- [x] Phase 2: PayU checkout for books (flag payu_checkout_enabled)
