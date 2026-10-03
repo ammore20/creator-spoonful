@@ -1,82 +1,106 @@
-# RecipeMaker → Creator Recipe Books: Phased Plan
+# Go-live review: Phases 0, 1, 3, 4, 5 and the draft book
 
-## Your findings, checked against the code
+This is a read-only review. Nothing was changed. Approving this plan does not publish anything. It only means the fixes in section 3 and the checklist can start in a later build turn.
 
-- Confirmed: process-video only sends the title and description to the AI. The prompt tells it to use "standard recipes" when no transcript exists, and it asks for at least 5 ingredients. That pushes the AI to make up content. The "transcription" cost row stores the text length, not a real cost. `raw_transcript` holds title plus description.
-- Confirmed: admin backfill picks the creator with the newest `created_at`. No schedule exists. `manual_reviewed` is never required.
-- Confirmed: a unique index on `subscriptions.razorpay_payment_id` skips only `admin_grant%` rows, so a second `free_creator_<slug>` insert fails. The insert result is never checked.
-- Confirmed: the `subscriptions` INSERT policy is `auth.uid() = user_id` with no limit on status or amount, and no UPDATE policy exists. So the user-JWT update in verify-payment updates nothing. My earlier probe already showed a user can insert an "active" row for themselves.
-- Confirmed: the /for-creators stats (10K+, 500+, 4.9★) and "Our AI watches your videos" are hardcoded.
-- Correction on install support: it is not just icons. `vite-plugin-pwa` is already active. It registers its own service worker automatically, has no guards for preview or iframe, has no `?sw=off` kill switch, and precaches HTML (so a stale screen after a deploy is possible). The manifest name is still "Creator Spoonful". `capacitor.config.ts` is unused for the web.
-- Not yet checked: the referral, creator-beta and Premium-page claims in your list. Each phase will start by checking them.
+## 1. Environments: one shared backend
 
-## Phases (effort is rough, in build turns)
+- **There is no separate Test and Live backend.** The preview and the published site (creator-spoonful.lovable.app and recipemaker.in) use the same database and the same server functions. The project settings say so: one backend serves both.
+- **Everything on the backend is already live.** That covers every database change from Phases 0, 1, 3 and 5, every server-function change, the 15-minute schedule and the Sarita's Kitchen draft book. Backend changes take effect the moment they are made. Publishing only updates the website itself.
+- **Only the website is still old.** I loaded the live site today. It still calls itself "Creator Spoonful", still starts at "/", and runs the same old code on both addresses. So Phase 4 and 5 screens (home book grid, book page, reader, offline, new admin screens) exist only in the preview.
+- **The draft book is not visible to the public.** Signed-out visitors get "not available", and the old site has no book page at all.
 
-### Phase 0: security and honesty (1–2 turns, low risk)
-- Drop the user INSERT on `subscriptions`. Only the payment functions (server key) write to it. Make verify-payment and the webhook use the server client so payments really activate.
-- Remove the free creator month (books are one-time purchases). Keep existing rows.
-- Tie the ₹299 price to a server-checked referral, or remove it. Recommendation: remove it, since books are flat ₹499.
-- Creator Beta: require a secret token (backend secret) in the link, add `noindex`, and add an expiry date check on the server.
-- /for-creators and Premium: remove the made-up stats and testimonial, and reword the AI line and any unbuilt features.
-- Risk: existing premium users are unaffected. Only new self-inserts get blocked.
+## 2. What the old live site gets wrong today (worst first)
 
-### Phase 1: recipe quality (3–4 turns, medium risk, uses credits)
-- Real transcripts: YouTube captions through a transcript provider (needs a new API key, for example Supadata or a similar service). Fallback: send the audio to a speech model (Whisper, about ₹0.5 per 10 minutes). Alternative: Gemini reading the video directly, which costs more.
-- New prompt: use only what the video says, write "unknown" for missing quantities, return a `confidence` score, and drop the 5-ingredient minimum.
-- New columns: `review_status` (draft/approved/rejected), `confidence`, `transcript_source`, and a filled `duration` from the YouTube API.
-- `public_videos` and books only show approved recipes. Existing recipes are approved as-is (decision below).
-- Backfill per chosen creator; a scheduled job (pg_cron) processes the queue every 15 minutes with a daily cap.
-- **Credits/cost flag:** reprocessing all 130 videos with real transcripts is a significant AI spend. Each phase gets its own cap.
+I checked this by reading the code the live site actually runs.
 
-### Phase 2: PayU (3 turns, high risk because it handles money)
-- New functions: `payu-initiate` (server builds the SHA-512 hash, price from the database), `payu-return` (success and failure pages, used for display only), `payu-webhook`, and `payu-verify` (calls PayU's `verify_payment` API before granting anything).
-- Idempotent by `txnid` with a unique index. Razorpay stays live until PayU passes an end-to-end test.
-- **Needed from you:** PayU Merchant Key and Salt (test and live), a business account with webhook/S2S callback enabled, and approval for the success/failure URLs on recipemaker.in. Split settlement only if you want it (decision below).
+1. **Admin "grant free membership" fails.** The old admin page writes memberships straight from the browser, and the backend now refuses that. Impact: admin only, no customer harm.
+2. **Creator Beta link is broken.** The old page sends no token, and the token secret doesn't exist yet. Everyone who opens /creator-beta gets turned away. Impact: creator demos.
+3. **The ₹299 yearly option on Premium fails.** The old Premium page still shows it, but the payment server now only accepts ₹49 and ₹499. Pressing it shows an error and no money is taken. ₹49 and ₹499 still work.
+4. **The free-month banner still shows for referred visitors.** It shows when a free creator month exists, but none are created any more, so nothing is granted. Cosmetic only.
+5. **The old Premium and For Creators wording is still live.** That includes the made-up stats and claims removed in Phase 0. This is an honesty issue, not a breakage.
+6. **Recipes awaiting review are hidden.** Only approved recipes show, and the 109 existing ones are all approved. No visible change today.
+7. **Recipe pages and the daily free unlock work normally.** The old site uses the same server checks, and they still exist.
 
-### Phase 3: books and purchases (3 turns, medium risk)
-- Tables: `books` (creator_id unique, title EN/MR, cover, price_paise default 49900, status), `book_recipes` (book_id, video_id, position, is_free_sample, max 100 enforced by a trigger), `purchases` (user, book, amount, gateway, txn_id unique, status, refunded_at), `creator_earnings` (purchase_id, share, status held/payable/paid/reversed, payable_at).
-- RPC `get_book_recipe(book, video)`: returns content only if the user owns the book or the recipe is a free sample. RPC `my_books()`.
-- Admin screen to pick and order up to 100 recipes and mark the free samples.
-- Existing subscribers: honour them until their expiry (recommendation: give them access to all books until it ends), then stop selling subscriptions.
+Nothing the old site relies on was removed. The safest order is simply: **publish the new website soon.** Waiting longer only keeps problems 1 to 5 live. There is no backend step left to sequence.
 
-### Phase 4: storefront and home (2 turns, low risk)
-- Home: the headline, subline and grid of book cards you described.
-- /c/:slug: the book page you described. This replaces the current redirect, which breaks links already shared (decision below). Visits are logged on the server in a `link_visits` table (creator, day, hashed visitor), with no personal data stored.
-- English and Marathi copy, with the existing design tokens.
+## 3. Why the book is "saritas-kitchen-2"
 
-### Phase 5: reader and offline install (3–4 turns, high risk)
-- Rebuild the install setup: guarded registration in one place, no service worker in preview or dev, `?sw=off` kill switch, network-first pages, and a manifest per book or one app that holds the buyer's books.
-- The service worker does not cache recipe content publicly. After an ownership check, the app saves the book in browser storage (IndexedDB) tied to the signed-in user. Thumbnails go into a private cache.
-- When online: on sign-in and on each app open, check ownership. If refunded or revoked, wipe the saved copy. If storage was cleared, download the book again.
-- The install banner shows only to buyers. Timers, servings, checklist and filters run on the local copy.
-- iOS Safari: there is no install prompt (users must use Share → Add to Home Screen, so we show instructions). Storage can be cleared after about 7 days without use, so we re-download. The installed app has storage separate from Safari, so the user signs in once inside it. YouTube video embeds do not work offline.
+The creators table:
 
-### Phase 6: creator dashboard and payouts (2–3 turns, medium risk)
-- Add `creators.user_id`. The admin links a creator to a login (invite by email).
-- /creator dashboard: visits, books sold, payable now, in hold, a recent sales table, and UPI edit (stored in `creator_payout_details`, visible only to that creator).
-- Admin marks payouts as paid. Refunds reverse unpaid earnings or carry a negative balance forward.
+| Name | Slug | YouTube channel | Videos | Referrals | Book |
+|---|---|---|---|---|---|
+| Sarita's Kitchen | sk | UCxxxxxxxxxxxxxx (placeholder) | 0 | 0 | none |
+| Sarita's Kitchen | saritas-kitchen-2 | UCyO4P6y_F7O7whLhPJwQUuQ (real) | 110 | 0 | draft |
+| Kitchen Cook In Tips Marathi | kcitm | UCkl-G-Z5n7LyvrSava5vqOQ | 40 | 2 | none |
 
-## Main risks
-- Changing /c/:slug breaks referral behaviour already shared. Old local referral data gets ignored.
-- Offline content protection is best effort: a buyer can always read their own saved copy.
-- Reprocessing recipes may change titles and ingredients users have already seen.
-- PayU onboarding and approval timing is outside our control.
+- **Cause:** a duplicate creator. An early test row ("sk", fake channel ID) exists alongside the real one, and the "-2" was added when the slug was generated to avoid a clash. Nobody uses the "saritas-kitchen" slug.
+- **Old links:** /c/saritas-kitchen goes to nothing today. On the new site it would show "not available". On the old site it just went to the home page. No referrals or earnings point at Sarita's Kitchen, so no money is tied to the old link.
+- **Proposed fix (not applied):**
+  1. Rename the real creator's slug to `saritas-kitchen` and the book's slug to match.
+  2. Rename the fake row's slug to `sk-unused` and mark it unused. Don't delete it.
+  3. Make /c/saritas-kitchen-2 and /c/sk forward to /c/saritas-kitchen.
+  4. Keep the PayU link as it is.
 
-## Open decisions (my recommendation for each)
-1. Share basis: 50% of the amount after GST and gateway fees. It is clearer and safer for your margin. The current code uses gross.
-2. Hold period: 15 days, matching the refund window. A refund within the hold cancels the share; after payout it is netted from the next payout.
-3. Refund wording: "Refund within 7 days if fewer than 5 recipes opened". I will update /refund to match.
-4. Free samples: 3 per book.
-5. Price per creator: allow it to vary (stored per book), default ₹499, admin-set only.
-6. Payouts: manual UPI payouts by you first. PayU split settlement later if your account supports it.
-7. GST: treat ₹499 as GST-inclusive (18% for digital services, if you are registered) and store the tax part per purchase. Please confirm with your accountant.
-8. Existing data: keep all creators and recipes. Mark current recipes "approved (legacy)" so books can start right away, and reprocess them over time.
+  Do this before you share any book link.
 
-## Questions for you
-- Do existing subscribers keep access to all books until expiry, or do they get one book each?
-- Should Creator Beta continue at all in the book model?
-- Buyers sign in with email only, or add Google too?
+## 4. Secrets and settings needed before go-live
 
-## Technical notes
-- Every new table gets grants, RLS and policies in the same migration. Payment and earnings writes happen only from the server.
-- No data is deleted. Retired columns get a "deprecated" comment.
+| Item | Exists? | If missing |
+|---|---|---|
+| CREATOR_BETA_TOKEN | No | Creator Beta link turns everyone away |
+| Creator Beta end date | No | When a token exists, beta access never ends |
+| SUPADATA_API_KEY | No | Recipe extraction is off. The 15-minute job skips and the 20 queued videos wait. Existing recipes are unaffected |
+| Gateway fee % | Default 2.36 | Creator shares use 2.36% until you change it in admin |
+| Razorpay keys | Yes | Memberships keep working |
+| PayU link on the book | Yes (draft) | Confirm in PayU that it charges ₹299 |
+| PayU API keys | No | Not needed now (manual grants) |
+| Book cover | No | Book shows a plain cover |
+
+## 5. Go-live checklist
+
+**Before publishing**
+1. Fix the book slug (section 3).
+2. In PayU, confirm the link charges ₹299. If it doesn't, keep the book in draft.
+3. Add CREATOR_BETA_TOKEN and the end date, or accept that Creator Beta stays off.
+4. Optional: add SUPADATA_API_KEY. Without it you have no new recipes, but nothing breaks.
+5. In the preview, sign in as admin and open the book page, a free sample and the reader. Confirm no errors.
+6. Run the security scan and review any critical findings.
+
+**Publish**
+
+7. Publish the website. Keep the book as a draft at first.
+   - Rollback: restore the previous version from History and publish again. The backend stays as it is.
+
+**After publishing (signed-out, then signed-in)**
+
+8. Home page: it shows "Books are on the way". The old recipe list is under Recipes.
+9. Sign up with email, then with Google, on a fresh account.
+10. Open a recipe: the daily free unlock works.
+11. Buy ₹49 with Razorpay test or live, and check that the membership turns on.
+12. Publish the book in admin.
+    - Rollback: unpublish it.
+13. Open /c/saritas-kitchen in a private window. Check the price and the 3 free samples, and open one sample signed out.
+14. As a test buyer, press Buy. The PayU tab should open and you'll see "After we confirm your payment…". In admin, grant the request with a reference such as TEST-1 and ₹299. The share should be ₹123.16.
+15. As the buyer, all 100 recipes open, and the book shows under My books.
+16. **On your phones (by hand):**
+    - Android Chrome: Install the book, add it to the home screen, turn on airplane mode, open it, change servings, run the timer and switch to Marathi.
+    - iPhone Safari: Share → Add to Home Screen first. Open it from the icon, sign in, press Install, then test in airplane mode.
+17. Refund the test purchase in admin. Open the book online on the phone. The saved copy should disappear and the share should show "reversed".
+    - Rollback: none needed. A refunded test leaves only a record.
+18. On an old phone that had the previous app installed, open the site once. It should update without a blank screen.
+    - Rollback: open the site with `?sw=off` at the end of the address.
+
+## 6. Risks and unfinished items
+
+- One backend for test and live, so any test purchase or grant is real data. Use clear references like TEST-1 and refund them.
+- One active ₹49 membership has no payment record (signed up 16 Feb 2026, active until Feb 2027). That person also gets all books free. Decide whether to keep it.
+- Creator payouts can't be marked as paid until Phase 6.
+- Payment matching is manual. People who pay with a different email need "Grant book to an email".
+- Offline copies on a phone that never goes online again survive a refund.
+- The fake "sk" creator row and the "kcitm" referrals (2) are leftovers. Harmless, but confusing.
+- Reprocessing a creator moves their recipes back to draft until they are re-approved.
+- Not tested: real iPhone, the real Android install pop-up, a real PayU payment.
+
+## Most important first
+
+Fix the duplicate creator slug and publish the new website. The live site is already running against the new backend, and the old pages are what's currently broken.
