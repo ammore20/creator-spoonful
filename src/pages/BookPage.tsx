@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppShell } from '@/components/layout/AppShell';
 import { SEO } from '@/components/SEO';
@@ -11,8 +11,20 @@ import { toast } from 'sonner';
 import { BookResponse, fetchBook, rupees, visitorId } from '@/lib/books';
 import { BookCover } from './Home';
 
+/** Old creator addresses that now point to a renamed book. */
+const SLUG_ALIASES: Record<string, string> = {
+  'saritas-kitchen-2': 'saritas-kitchen',
+  sk: 'saritas-kitchen',
+};
+
 export default function BookPage() {
   const { slug = '' } = useParams<{ slug: string }>();
+  const target = SLUG_ALIASES[slug];
+  if (target) return <Navigate to={`/c/${target}`} replace />;
+  return <BookPageInner slug={slug} />;
+}
+
+function BookPageInner({ slug }: { slug: string }) {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
   const [data, setData] = useState<BookResponse | null>(null);
