@@ -13,6 +13,7 @@ const REASONS: Record<string, string> = {
   reference_already_used: 'This PayU reference was already used for a grant.',
   already_owned: 'This account already owns the book.',
   no_account_for_email: 'No account with that email. Ask them to sign up first.',
+  invalid_code: 'That code does not exist for this book.',
   intent_not_pending: 'That request is no longer pending.',
 };
 
@@ -32,6 +33,7 @@ export const PurchasesAdmin = () => {
   const [fee, setFee] = useState('');
   const [grantEmail, setGrantEmail] = useState('');
   const [grantBook, setGrantBook] = useState('');
+  const [grantCode, setGrantCode] = useState('');
   const [payuOn, setPayuOn] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
 
@@ -64,8 +66,8 @@ export const PurchasesAdmin = () => {
   const grantByEmail = async () => {
     if (!grantEmail.trim() || !grantBook) { toast.error('Enter an email and pick a book'); return; }
     const p = askPayment(priceOf(grantBook)); if (!p) return;
-    handle(await db.rpc('admin_grant_book_to_email', { _email: grantEmail.trim(), _book_id: grantBook, _provider_ref: p.ref, _amount_paise: p.paise }));
-    setGrantEmail('');
+    handle(await db.rpc('admin_grant_book_to_email', { _email: grantEmail.trim(), _book_id: grantBook, _provider_ref: p.ref, _amount_paise: p.paise, _code: grantCode.trim() || null }));
+    setGrantEmail(''); setGrantCode('');
   };
   const refund = async (row: any) => {
     const reason = window.prompt(`Refund and lock ${row.book_title} for ${row.email}? Reason (optional)`);
@@ -125,6 +127,7 @@ export const PurchasesAdmin = () => {
               <option value="">Pick a book…</option>
               {books.map((b) => <option key={b.id} value={b.id}>{b.title_en}</option>)}
             </select>
+            <Input placeholder="Creator code (optional)" value={grantCode} onChange={(e) => setGrantCode(e.target.value)} className="w-44" />
             <Button onClick={grantByEmail}>Grant</Button>
           </div>
         </section>
