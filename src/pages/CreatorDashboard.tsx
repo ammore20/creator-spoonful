@@ -44,11 +44,11 @@ const CreatorDashboard = () => {
   };
 
   return (
-    <AppShell>
+    <AppShell language="en" onLanguageToggle={() => {}}>
       <SEO title="Creator dashboard | RecipeMaker" description="Your book sales and payouts" noindex />
       <div className="max-w-4xl mx-auto px-4 py-6">
         {data === null ? <p className="text-sm text-muted-foreground">Loading…</p> : !data.linked ? (
-          <EmptyState title="Not available" description="This page is only for creators linked to their RecipeMaker account." />
+          <EmptyState icon={<Wallet className="w-6 h-6" />} title="Not available" description="This page is only for creators linked to their RecipeMaker account." />
         ) : (
           <>
             <PageHeader eyebrow="Creator" title={data.creator_name} description="Your book sales and payouts." />
