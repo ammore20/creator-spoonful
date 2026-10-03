@@ -45,6 +45,7 @@ const RefundPolicy = lazyPage(() => import("./pages/RefundPolicy"));
 const Contact = lazyPage(() => import("./pages/Contact"));
 const ForCreators = lazyPage(() => import("./pages/ForCreators"));
 const CreatorBeta = lazyPage(() => import("./pages/CreatorBeta"));
+const CreatorDashboard = lazyPage(() => import("./pages/CreatorDashboard"));
 const NotFound = lazyPage(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -89,6 +90,7 @@ const App = () => (
             <Route path="/for-creators" element={<ForCreators />} />
             <Route path="/c/:slug" element={<BookPage />} />
             <Route path="/creator-beta" element={<CreatorBeta />} />
+            <Route path="/creator" element={<CreatorDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

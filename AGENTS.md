@@ -9,3 +9,6 @@
 - The gateway fee is a setting (`app_settings.gateway_fee_percent`), not code. Why: the real PayU rate is not confirmed yet.
 - Offline book packs come only from `get_book_offline_pack` (purchasers, admin, active Creator Beta; rate-limited) and live in IndexedDB keyed by user id + slug; `book_pack_status` drives update, restore and revocation. Why: subscribers' access must not outlive their plan, and recipe content must never enter the service-worker cache.
 - The service worker is registered only from `src/lib/pwa.ts` (never in dev, preview or iframes), precaches the app shell only, serves the shell for offline page loads, and runtime-caches only fonts and public images. Why: stale-screen and data-leak safety.
+
+- Creator payouts go only through `admin_mark_payout`, which locks exactly the payable earnings, writes one payouts row (unique reference) and marks them paid in one transaction. Why: nothing can be paid twice.
+- Creators see their own numbers only via `my_creator_dashboard` (no buyer data). Why: buyer privacy.

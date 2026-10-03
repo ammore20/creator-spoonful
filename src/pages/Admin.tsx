@@ -14,6 +14,7 @@ import { ReviewQueue } from '@/components/admin/ReviewQueue';
 import { CreatorProcessing } from '@/components/admin/CreatorProcessing';
 import { BookBuilder } from '@/components/admin/BookBuilder';
 import { PurchasesAdmin } from '@/components/admin/PurchasesAdmin';
+import { PayoutsAdmin } from "@/components/admin/PayoutsAdmin";
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -608,6 +609,8 @@ const Admin = () => {
         </Card>
 
         <PurchasesAdmin />
+
+        <PayoutsAdmin />
 
         <BookBuilder creators={creators} />
 
