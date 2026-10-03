@@ -40,6 +40,7 @@ export type Database = {
           id: string
           paid_out_at: string | null
           payable_at: string
+          payout_id: string | null
           purchase_id: string
           reversed_at: string | null
           share_paise: number
@@ -52,6 +53,7 @@ export type Database = {
           id?: string
           paid_out_at?: string | null
           payable_at: string
+          payout_id?: string | null
           purchase_id: string
           reversed_at?: string | null
           share_paise: number
@@ -64,6 +66,7 @@ export type Database = {
           id?: string
           paid_out_at?: string | null
           payable_at?: string
+          payout_id?: string | null
           purchase_id?: string
           reversed_at?: string | null
           share_paise?: number
@@ -82,6 +85,13 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_earnings_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "payouts"
             referencedColumns: ["id"]
           },
           {
@@ -290,6 +300,38 @@ export type Database = {
           },
         ]
       }
+      creator_payout_details: {
+        Row: {
+          account_holder_name: string
+          creator_id: string
+          id: string
+          updated_at: string
+          upi_id: string
+        }
+        Insert: {
+          account_holder_name: string
+          creator_id: string
+          id?: string
+          updated_at?: string
+          upi_id: string
+        }
+        Update: {
+          account_holder_name?: string
+          creator_id?: string
+          id?: string
+          updated_at?: string
+          upi_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_payout_details_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: true
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creators: {
         Row: {
           channel_id: string
@@ -298,6 +340,7 @@ export type Database = {
           name: string
           slug: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           channel_id: string
@@ -306,6 +349,7 @@ export type Database = {
           name: string
           slug?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           channel_id?: string
@@ -314,6 +358,7 @@ export type Database = {
           name?: string
           slug?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -411,6 +456,47 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payouts: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          creator_id: string
+          id: string
+          override_reason: string | null
+          paid_at: string
+          paid_by: string
+          reference: string
+        }
+        Insert: {
+          amount_paise: number
+          created_at?: string
+          creator_id: string
+          id?: string
+          override_reason?: string | null
+          paid_at?: string
+          paid_by: string
+          reference: string
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          creator_id?: string
+          id?: string
+          override_reason?: string | null
+          paid_at?: string
+          paid_by?: string
+          reference?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
             referencedColumns: ["id"]
           },
         ]
@@ -927,6 +1013,22 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_link_creator: {
+        Args: { _creator_id: string; _email: string }
+        Returns: Json
+      }
+      admin_list_payouts: {
+        Args: never
+        Returns: {
+          amount_paise: number
+          creator_name: string
+          earnings_count: number
+          id: string
+          override_reason: string
+          paid_at: string
+          reference: string
+        }[]
+      }
       admin_list_purchase_intents: {
         Args: never
         Returns: {
@@ -957,6 +1059,28 @@ export type Database = {
           share_paise: number
           status: string
           tax_paise: number
+        }[]
+      }
+      admin_mark_payout: {
+        Args: {
+          _amount_paise: number
+          _creator_id: string
+          _override_reason?: string
+          _reference: string
+        }
+        Returns: Json
+      }
+      admin_payout_summary: {
+        Args: never
+        Returns: {
+          account_holder_name: string
+          creator_id: string
+          creator_name: string
+          hold_paise: number
+          linked_email: string
+          payable_count: number
+          payable_paise: number
+          upi_id: string
         }[]
       }
       admin_refund_purchase: {
@@ -1027,6 +1151,7 @@ export type Database = {
           title_mr: string
         }[]
       }
+      my_creator_dashboard: { Args: never; Returns: Json }
       recipe_preview_json: { Args: { _j: Json }; Returns: Json }
       record_book_purchase: {
         Args: {
