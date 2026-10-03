@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppShell } from '@/components/layout/AppShell';
 import { SEO } from '@/components/SEO';
