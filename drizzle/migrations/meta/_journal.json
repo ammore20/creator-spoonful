@@ -29,6 +29,13 @@
       "when": 1791015865528,
       "tag": "0003_phase6_creator_payouts",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791016993002,
+      "tag": "0004_phase2_payu_orders",
+      "breakpoints": true
     }
   ]
 }
