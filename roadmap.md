@@ -29,3 +29,4 @@
 - [x] Offline pack RPCs, IndexedDB storage, install banner + add-to-home-screen, update/restore/revoke, safe service worker, manifest + icons
 
 ## Later (not started): Phase 2 (PayU API, needs credentials), Phase 6
+- [x] Phase 6: creator dashboard /creator, admin payouts, link creator
