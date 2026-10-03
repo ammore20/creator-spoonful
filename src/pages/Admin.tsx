@@ -15,6 +15,7 @@ import { CreatorProcessing } from '@/components/admin/CreatorProcessing';
 import { BookBuilder } from '@/components/admin/BookBuilder';
 import { PurchasesAdmin } from '@/components/admin/PurchasesAdmin';
 import { PayoutsAdmin } from "@/components/admin/PayoutsAdmin";
+import { PromoCodesAdmin } from "@/components/admin/PromoCodesAdmin";
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -611,6 +612,8 @@ const Admin = () => {
         <PurchasesAdmin />
 
         <PayoutsAdmin />
+
+        <PromoCodesAdmin creators={creators} />
 
         <BookBuilder creators={creators} />
 

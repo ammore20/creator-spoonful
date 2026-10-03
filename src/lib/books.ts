@@ -28,16 +28,18 @@ export interface BookInfo {
   title_mr: string | null;
   cover_url: string | null;
   price_paise: number;
-  list_price_paise: number;
+  list_price_paise: number | null;
   status: string;
   creator_name: string;
   has_payment_link: boolean;
+  has_promo_link?: boolean;
 }
 
 export interface BookResponse {
   found: boolean;
   owned?: boolean;
   signed_in?: boolean;
+  payu_enabled?: boolean;
   book?: BookInfo;
   recipes?: BookRecipeRow[];
 }

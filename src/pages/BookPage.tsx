@@ -33,6 +33,17 @@ function BookPageInner({ slug }: { slug: string }) {
   const en = language === 'en';
   const [params] = useSearchParams();
   const payment = params.get('payment');
+  const [codeInput, setCodeInput] = useState(params.get('code') ?? sessionStorage.getItem(`rm_code:${slug}`) ?? '');
+  const [applied, setApplied] = useState<{ code: string; price: number } | null>(null);
+  const [codeMsg, setCodeMsg] = useState('');
+  const applyCode = async (raw: string) => {
+    const c = raw.trim();
+    if (!c) return;
+    const { data: v } = await (supabase as any).rpc('validate_promo_code', { _slug: slug, _code: c });
+    if (v?.valid) { setApplied({ code: c.toUpperCase(), price: v.price_paise }); setCodeMsg(''); sessionStorage.setItem(`rm_code:${slug}`, c); }
+    else { setApplied(null); setCodeMsg(v?.reason === 'too_many_attempts' ? 'Too many tries. Please wait a few minutes.' : 'That code is not valid for this book.'); }
+  };
+  useEffect(() => { if (codeInput) applyCode(codeInput); /* eslint-disable-next-line */ }, [slug]);
 
   useEffect(() => {
     if (payment !== 'pending' && payment !== 'success') return;
@@ -84,7 +95,7 @@ function BookPageInner({ slug }: { slug: string }) {
     }
     setBuying(true);
     try {
-      const { data: order } = await supabase.functions.invoke('payu-create-order', { body: { slug, origin: window.location.origin } });
+      const { data: order } = await supabase.functions.invoke('payu-create-order', { body: { slug, origin: window.location.origin, code: applied?.code } });
       if (order?.action && order?.fields) {
         const form = document.createElement('form');
         form.method = 'POST'; form.action = order.action;
@@ -101,7 +112,7 @@ function BookPageInner({ slug }: { slug: string }) {
     // Fallback: manual PayU payment link. Open the tab synchronously so pop-up blockers allow it, then point it at the payment link.
     const tab = window.open('', '_blank');
     setBuying(true);
-    const { data: res, error } = await (supabase as any).rpc('create_purchase_intent', { _book_id: book.id });
+    const { data: res, error } = await (supabase as any).rpc('create_purchase_intent', { _book_id: book.id, _code: applied?.code ?? null });
     setBuying(false);
     if (error || !res?.ok) {
       tab?.close();
@@ -148,13 +159,24 @@ function BookPageInner({ slug }: { slug: string }) {
           ) : (
             <>
               <div className="flex items-baseline justify-center gap-2">
-                <span className="text-lg line-through text-muted-foreground">{rupees(book.list_price_paise)}</span>
-                <span className="text-3xl font-bold text-foreground">{rupees(book.price_paise)}</span>
+                {applied && <span className="text-lg line-through text-muted-foreground">{rupees(book.price_paise)}</span>}
+                <span className="text-3xl font-bold text-foreground">{rupees(applied ? applied.price : book.price_paise)}</span>
                 <span className="text-sm text-muted-foreground">{en ? 'one-time' : 'एकदाच'}</span>
               </div>
+              {applied && <p className="text-center text-sm text-primary font-medium">Code {applied.code} applied: {rupees(applied.price)}</p>}
+              <div className="flex gap-2">
+                <input value={codeInput} onChange={(e) => setCodeInput(e.target.value)} placeholder="Have a creator code?"
+                  className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm" />
+                <Button variant="outline" onClick={() => applyCode(codeInput)}>Apply</Button>
+              </div>
+              {codeMsg && <p className="text-sm text-destructive text-center">{codeMsg}</p>}
+              {(!data.payu_enabled && !(applied ? book.has_promo_link : book.has_payment_link)) ? (
+                <Button size="lg" className="w-full h-12" disabled>Payments opening soon</Button>
+              ) : (
               <Button size="lg" className="w-full h-12" onClick={buy} disabled={buying}>
                 {signed_in ? (en ? 'Buy' : 'खरेदी करा') : (en ? 'Sign in to buy' : 'खरेदीसाठी साइन इन')}
               </Button>
+              )}
               <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                 <ShieldCheck className="w-3.5 h-3.5" /> Secure payment with PayU
               </p>

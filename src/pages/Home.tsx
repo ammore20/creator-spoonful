@@ -1,5 +1,6 @@
+import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppShell } from '@/components/layout/AppShell';
 import { SEO } from '@/components/SEO';
@@ -12,7 +13,7 @@ import { rupees } from '@/lib/books';
 
 interface BookCard {
   id: string; slug: string; title_en: string; title_mr: string | null; cover_url: string | null;
-  price_paise: number; list_price_paise: number; creator_name: string; recipe_count: number;
+  price_paise: number; list_price_paise: number | null; creator_name: string; recipe_count: number;
 }
 
 export const BookCover = ({ src, title, className = '' }: { src: string | null; title: string; className?: string }) =>
@@ -23,6 +24,27 @@ export const BookCover = ({ src, title, className = '' }: { src: string | null; 
       <BookOpen className="w-10 h-10 text-primary" />
     </div>
   );
+
+function CodeBox({ en }: { en: boolean }) {
+  const nav = useNavigate();
+  const [code, setCode] = useState('');
+  const [msg, setMsg] = useState('');
+  const go = async () => {
+    const c = code.trim();
+    if (!/^[A-Za-z0-9]{4,20}$/.test(c)) { setMsg('That code is not valid.'); return; }
+    const { data } = await (supabase as any).rpc('resolve_promo_code', { _code: c });
+    if (data?.valid) nav(`/c/${data.slug}?code=${encodeURIComponent(c)}`);
+    else setMsg(data?.reason === 'too_many_attempts' ? 'Too many tries. Please wait a few minutes.' : 'That code is not valid.');
+  };
+  return (
+    <Panel className="mb-6 flex flex-wrap items-center gap-2">
+      <span className="text-sm font-semibold text-foreground">{en ? 'Have a creator code?' : 'क्रिएटर कोड आहे?'}</span>
+      <Input value={code} onChange={(e) => { setCode(e.target.value); setMsg(''); }} placeholder="CODE" className="w-36 h-9" />
+      <Button size="sm" onClick={go}>Apply</Button>
+      {msg && <span className="text-sm text-destructive w-full">{msg}</span>}
+    </Panel>
+  );
+}
 
 export default function Home() {
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
@@ -50,6 +72,8 @@ export default function Home() {
         </p>
       </section>
 
+      <CodeBox en={en} />
+
       {books === null ? (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />)}
@@ -73,7 +97,6 @@ export default function Home() {
                   <p className="font-semibold text-sm text-foreground line-clamp-1">{b.creator_name}</p>
                   <p className="text-xs text-muted-foreground">{b.recipe_count} {en ? 'recipes' : 'रेसिपी'}</p>
                   <p className="mt-auto pt-1 text-sm">
-                    <span className="line-through text-muted-foreground mr-1.5">{rupees(b.list_price_paise)}</span>
                     <span className="font-bold text-primary">{rupees(b.price_paise)}</span>
                   </p>
                 </div>

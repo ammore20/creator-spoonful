@@ -58,6 +58,20 @@ const CreatorDashboard = () => {
               <StatCard icon={<Wallet className="w-4 h-4" />} value={rupeesExact(data.payable_paise)} label="Payable now" />
               <StatCard icon={<Clock className="w-4 h-4" />} value={rupeesExact(data.hold_paise)} label="In hold" tone="neutral" />
             </div>
+            <p className="text-sm text-muted-foreground mt-3">Sales with a code: <b className="text-foreground">{data.sales_with_code}</b> · without a code: <b className="text-foreground">{data.sales_without_code}</b></p>
+            <Panel className="mt-4 space-y-2">
+              <h2 className="font-display font-semibold">Your codes</h2>
+              {data.codes.length === 0 ? <p className="text-sm text-muted-foreground">No code yet. We will set one up for you.</p> : data.codes.map((c: any) => {
+                const link = `https://recipemaker.in/c/${data.book_slug}?code=${c.code}`;
+                return (
+                  <div key={c.code} className="flex flex-wrap items-center gap-2 text-sm">
+                    <b>{c.code}</b><span className="text-muted-foreground">{rupeesExact(c.price_paise)}{c.active ? '' : ' · inactive'}</span>
+                    <span className="text-muted-foreground break-all">{link}</span>
+                    <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(link); toast.success('Link copied'); }}>Copy</Button>
+                  </div>
+                );
+              })}
+            </Panel>
             <p className="text-sm text-muted-foreground mt-3">Paid out so far: <b className="text-foreground">{rupeesExact(data.paid_paise)}</b></p>
 
             <Panel className="mt-6">
