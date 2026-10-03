@@ -36,6 +36,13 @@
       "when": 1791016993002,
       "tag": "0004_phase2_payu_orders",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791018036427,
+      "tag": "0005_phase7_promo_codes",
+      "breakpoints": true
     }
   ]
 }

@@ -144,9 +144,10 @@ export type Database = {
           created_at: string
           creator_id: string
           id: string
-          list_price_paise: number
+          list_price_paise: number | null
           payment_link_url: string | null
           price_paise: number
+          promo_payment_link_url: string | null
           slug: string
           status: string
           title_en: string
@@ -158,9 +159,10 @@ export type Database = {
           created_at?: string
           creator_id: string
           id?: string
-          list_price_paise?: number
+          list_price_paise?: number | null
           payment_link_url?: string | null
           price_paise?: number
+          promo_payment_link_url?: string | null
           slug: string
           status?: string
           title_en: string
@@ -172,9 +174,10 @@ export type Database = {
           created_at?: string
           creator_id?: string
           id?: string
-          list_price_paise?: number
+          list_price_paise?: number | null
           payment_link_url?: string | null
           price_paise?: number
+          promo_payment_link_url?: string | null
           slug?: string
           status?: string
           title_en?: string
@@ -509,6 +512,7 @@ export type Database = {
           id: string
           mihpayid: string | null
           note: string | null
+          promo_code_id: string | null
           purchase_id: string | null
           status: string
           txnid: string
@@ -522,6 +526,7 @@ export type Database = {
           id?: string
           mihpayid?: string | null
           note?: string | null
+          promo_code_id?: string | null
           purchase_id?: string | null
           status?: string
           txnid: string
@@ -535,6 +540,7 @@ export type Database = {
           id?: string
           mihpayid?: string | null
           note?: string | null
+          promo_code_id?: string | null
           purchase_id?: string | null
           status?: string
           txnid?: string
@@ -547,6 +553,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payu_orders_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
             referencedColumns: ["id"]
           },
           {
@@ -673,11 +686,71 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_attempts: {
+        Row: {
+          created_at: string
+          id: number
+          key_hash: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          key_hash: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          key_hash?: string
+        }
+        Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          creator_id: string
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          price_paise: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          creator_id: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          price_paise?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          creator_id?: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          price_paise?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_codes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_intents: {
         Row: {
           book_id: string
           created_at: string
           id: string
+          promo_code_id: string | null
           status: string
           updated_at: string
           user_id: string
@@ -686,6 +759,7 @@ export type Database = {
           book_id: string
           created_at?: string
           id?: string
+          promo_code_id?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -694,6 +768,7 @@ export type Database = {
           book_id?: string
           created_at?: string
           id?: string
+          promo_code_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -704,6 +779,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_intents_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
             referencedColumns: ["id"]
           },
         ]
@@ -722,6 +804,7 @@ export type Database = {
           intent_id: string | null
           net_paise: number
           paid_at: string
+          promo_code_id: string | null
           provider: string
           provider_ref: string | null
           refund_reason: string | null
@@ -744,6 +827,7 @@ export type Database = {
           intent_id?: string | null
           net_paise?: number
           paid_at?: string
+          promo_code_id?: string | null
           provider?: string
           provider_ref?: string | null
           refund_reason?: string | null
@@ -766,6 +850,7 @@ export type Database = {
           intent_id?: string | null
           net_paise?: number
           paid_at?: string
+          promo_code_id?: string | null
           provider?: string
           provider_ref?: string | null
           refund_reason?: string | null
@@ -788,6 +873,13 @@ export type Database = {
             columns: ["intent_id"]
             isOneToOne: false
             referencedRelation: "purchase_intents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
             referencedColumns: ["id"]
           },
         ]
@@ -1057,6 +1149,7 @@ export type Database = {
         Args: {
           _amount_paise: number
           _book_id: string
+          _code?: string
           _email: string
           _provider_ref: string
         }
@@ -1097,6 +1190,21 @@ export type Database = {
           note: string
           status: string
           txnid: string
+        }[]
+      }
+      admin_list_promo_codes: {
+        Args: never
+        Returns: {
+          active: boolean
+          code: string
+          created_at: string
+          creator_id: string
+          creator_name: string
+          expires_at: string
+          id: string
+          max_uses: number
+          price_paise: number
+          uses: number
         }[]
       }
       admin_list_purchase_intents: {
@@ -1168,7 +1276,10 @@ export type Database = {
         Args: { _name: string; _value: string }
         Returns: boolean
       }
-      create_purchase_intent: { Args: { _book_id: string }; Returns: Json }
+      create_purchase_intent: {
+        Args: { _book_id: string; _code?: string }
+        Returns: Json
+      }
       creator_beta_active: { Args: never; Returns: boolean }
       gateway_fee_percent: { Args: never; Returns: number }
       get_book: { Args: { _slug: string }; Returns: Json }
@@ -1224,6 +1335,11 @@ export type Database = {
       }
       my_creator_dashboard: { Args: never; Returns: Json }
       payu_checkout_enabled: { Args: never; Returns: boolean }
+      promo_for_book: {
+        Args: { _book_id: string; _code: string }
+        Returns: Json
+      }
+      promo_throttle_ok: { Args: never; Returns: boolean }
       recipe_preview_json: { Args: { _j: Json }; Returns: Json }
       record_book_purchase: {
         Args: {
@@ -1232,6 +1348,7 @@ export type Database = {
           _fulfilment?: string
           _granted_by?: string
           _intent_id?: string
+          _promo_code_id?: string
           _provider_ref: string
           _user_id: string
         }
@@ -1241,6 +1358,7 @@ export type Database = {
         Args: { _purchase_id: string; _reason?: string }
         Returns: Json
       }
+      resolve_promo_code: { Args: { _code: string }; Returns: Json }
       settle_payu_order: {
         Args: {
           _amount_paise: number
@@ -1251,6 +1369,10 @@ export type Database = {
         Returns: Json
       }
       unlock_daily_recipe: { Args: { _video_id: string }; Returns: Json }
+      validate_promo_code: {
+        Args: { _code: string; _slug: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "creator_beta"
