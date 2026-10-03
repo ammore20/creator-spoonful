@@ -32,6 +32,8 @@ export const PurchasesAdmin = () => {
   const [fee, setFee] = useState('');
   const [grantEmail, setGrantEmail] = useState('');
   const [grantBook, setGrantBook] = useState('');
+  const [payuOn, setPayuOn] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
 
   const load = useCallback(async () => {
     const [i, p, b, f] = await Promise.all([
@@ -40,6 +42,8 @@ export const PurchasesAdmin = () => {
     ]);
     setIntents(i.data ?? []); setPurchases(p.data ?? []); setBooks(b.data ?? []);
     if (f.data != null) setFee(String(f.data));
+    const [on, o] = await Promise.all([db.rpc('payu_checkout_enabled'), db.rpc('admin_list_payu_orders')]);
+    setPayuOn(Boolean(on.data)); setOrders(o.data ?? []);
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -79,7 +83,20 @@ export const PurchasesAdmin = () => {
             <Input type="number" step="0.01" value={fee} onChange={(e) => setFee(e.target.value)} className="w-32" />
           </label>
           <Button variant="outline" onClick={saveFee}>Save fee</Button>
+          <Button variant={payuOn ? 'default' : 'outline'} onClick={async () => handle(await db.rpc('admin_set_payu_enabled', { _enabled: !payuOn }))}>
+            PayU checkout: {payuOn ? 'ON' : 'OFF'}
+          </Button>
         </div>
+        <p className="text-xs text-muted-foreground">With PayU checkout off (or keys missing), Buy uses the payment link and you grant by hand. Refunds are manual: refund in the PayU dashboard first, then press Refund/revoke here.</p>
+
+        <section>
+          <h3 className="font-semibold mb-2">PayU orders not paid ({orders.filter((o) => o.status !== 'paid').length})</h3>
+          <ul className="space-y-1 text-xs">
+            {orders.filter((o) => o.status !== 'paid').map((o) => (
+              <li key={o.txnid}>{new Date(o.created_at).toLocaleString('en-IN')} · {o.email} · {o.book_title} · {rupeesExact(o.amount_paise)} · {o.txnid} · <Badge variant="outline">{o.status}</Badge>{o.note ? ` · ${o.note}` : ''}</li>
+            ))}
+          </ul>
+        </section>
 
         <section>
           <h3 className="font-semibold mb-2">Pending buy clicks ({intents.length})</h3>
@@ -117,7 +134,7 @@ export const PurchasesAdmin = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="text-left text-muted-foreground">
-                <tr><th className="p-1">Buyer</th><th className="p-1">Book</th><th className="p-1">Paid</th><th className="p-1">GST</th><th className="p-1">Fee</th><th className="p-1">Creator share</th><th className="p-1">Earning</th><th className="p-1">PayU ref</th><th className="p-1">Status</th><th /></tr>
+                <tr><th className="p-1">Buyer</th><th className="p-1">Book</th><th className="p-1">Paid</th><th className="p-1">GST</th><th className="p-1">Fee</th><th className="p-1">Creator share</th><th className="p-1">Earning</th><th className="p-1">Gateway</th><th className="p-1">PayU ref / payment id</th><th className="p-1">Status</th><th /></tr>
               </thead>
               <tbody>
                 {purchases.map((p) => (
@@ -126,7 +143,8 @@ export const PurchasesAdmin = () => {
                     <td className="p-1">{rupeesExact(p.amount_paise)}</td><td className="p-1">{rupeesExact(p.tax_paise)}</td>
                     <td className="p-1">{rupeesExact(p.gateway_fee_paise)}</td><td className="p-1">{rupeesExact(p.share_paise)}</td>
                     <td className="p-1"><Badge variant="outline">{p.earning_status}</Badge></td>
-                    <td className="p-1">{p.provider_ref}</td>
+                    <td className="p-1">{p.fulfilment === 'automatic' ? 'payu' : 'manual link'}</td>
+                    <td className="p-1">{p.provider_ref?.replace(/^payu:/, '')}</td>
                     <td className="p-1"><Badge variant={p.status === 'paid' ? 'default' : 'secondary'}>{p.status}</Badge></td>
                     <td className="p-1">{p.status === 'paid' && <Button size="sm" variant="outline" onClick={() => refund(p)}>Refund/revoke</Button>}</td>
                   </tr>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppShell } from '@/components/layout/AppShell';
 import { SEO } from '@/components/SEO';
@@ -31,6 +31,18 @@ function BookPageInner({ slug }: { slug: string }) {
   const [buying, setBuying] = useState(false);
   const [intentSent, setIntentSent] = useState(false);
   const en = language === 'en';
+  const [params] = useSearchParams();
+  const payment = params.get('payment');
+
+  useEffect(() => {
+    if (payment !== 'pending' && payment !== 'success') return;
+    let n = 0;
+    const t = setInterval(() => {
+      n += 1;
+      fetchBook(slug).then((d) => { setData(d); if (d.owned || n >= 7) clearInterval(t); }).catch(() => {});
+    }, 3000);
+    return () => clearInterval(t);
+  }, [payment, slug]);
 
   useEffect(() => {
     localStorage.setItem('ref_creator_slug', slug);
@@ -70,7 +82,23 @@ function BookPageInner({ slug }: { slug: string }) {
       navigate('/auth');
       return;
     }
-    // Open the tab synchronously so pop-up blockers allow it, then point it at the payment link.
+    setBuying(true);
+    try {
+      const { data: order } = await supabase.functions.invoke('payu-create-order', { body: { slug, origin: window.location.origin } });
+      if (order?.action && order?.fields) {
+        const form = document.createElement('form');
+        form.method = 'POST'; form.action = order.action;
+        Object.entries(order.fields as Record<string, string>).forEach(([k, v]) => {
+          const i = document.createElement('input'); i.type = 'hidden'; i.name = k; i.value = v; form.appendChild(i);
+        });
+        document.body.appendChild(form); form.submit();
+        return;
+      }
+      if (!order?.fallback) { setBuying(false); toast.error(en ? 'Could not start payment. Please try again.' : 'पेमेंट सुरू झाले नाही.'); return; }
+    } catch {
+      setBuying(false); toast.error(en ? 'Could not start payment. Please try again.' : 'पेमेंट सुरू झाले नाही.'); return;
+    }
+    // Fallback: manual PayU payment link. Open the tab synchronously so pop-up blockers allow it, then point it at the payment link.
     const tab = window.open('', '_blank');
     setBuying(true);
     const { data: res, error } = await (supabase as any).rpc('create_purchase_intent', { _book_id: book.id });
@@ -108,6 +136,13 @@ function BookPageInner({ slug }: { slug: string }) {
         </p>
 
         <Panel className="mt-6 space-y-3">
+          {payment && (
+            <p className="rounded-xl bg-primary/10 text-foreground text-sm p-3 text-center">
+              {owned ? 'Payment confirmed, your book is unlocked.'
+                : payment === 'failed' ? 'Payment failed, you were not charged.'
+                : 'Payment is being confirmed…'}
+            </p>
+          )}
           {owned ? (
             <Link to={`/book/${slug}`} className="block"><Button size="lg" className="w-full h-12">{en ? 'Open your book' : 'तुमचे पुस्तक उघडा'}</Button></Link>
           ) : (
