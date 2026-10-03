@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   const slug = typeof body.slug === 'string' ? body.slug : '';
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) return json({ error: 'invalid_slug' }, 400);
+  const code = typeof body.code === 'string' && /^[A-Za-z0-9]{4,20}$/.test(body.code) ? body.code : '';
   const origin = typeof body.origin === 'string' && ALLOWED_ORIGIN.test(body.origin) ? body.origin : 'https://recipemaker.in';
 
   const db = admin();
@@ -34,18 +35,26 @@ Deno.serve(async (req) => {
     .eq('user_id', user.id).eq('book_id', book.id).eq('status', 'paid');
   if (owned) return json({ error: 'already_owned' }, 409);
 
+  let amount = book.price_paise as number;
+  let promoId: string | null = null;
+  if (code) {
+    const { data: p } = await db.rpc('promo_for_book', { _book_id: book.id, _code: code });
+    if (!p?.valid) return json({ error: 'invalid_code' }, 400);
+    amount = p.price_paise; promoId = p.id;
+  }
+
   const since = new Date(Date.now() - 3600_000).toISOString();
   const { count: recent } = await db.from('payu_orders').select('id', { count: 'exact', head: true })
     .eq('user_id', user.id).gte('created_at', since);
   if ((recent ?? 0) >= 10) return json({ error: 'rate_limited' }, 429);
 
   const txnid = ('RM' + Date.now().toString(36) + crypto.randomUUID().replace(/-/g, '').slice(0, 8)).toUpperCase();
-  const { error } = await db.from('payu_orders').insert({ txnid, user_id: user.id, book_id: book.id, amount_paise: book.price_paise });
+  const { error } = await db.from('payu_orders').insert({ txnid, user_id: user.id, book_id: book.id, amount_paise: amount, promo_code_id: promoId });
   if (error) return json({ error: 'order_failed' }, 500);
 
   const ret = `${Deno.env.get('SUPABASE_URL')}/functions/v1/payu-return`;
   const fields: Record<string, string> = {
-    key: c.key, txnid, amount: (book.price_paise / 100).toFixed(2), productinfo: book.slug,
+    key: c.key, txnid, amount: (amount / 100).toFixed(2), productinfo: book.slug,
     firstname: 'Customer', email: user.email, phone: '', udf1: book.slug, udf2: origin, surl: ret, furl: ret,
   };
   fields.hash = await requestHash(fields, c.salt);
