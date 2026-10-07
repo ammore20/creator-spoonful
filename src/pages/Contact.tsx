@@ -209,9 +209,17 @@ export default function Contact() {
                   <p className="text-sm text-muted-foreground mb-2">
                     {language === 'en' ? 'General Inquiries' : 'सामान्य चौकशी'}
                   </p>
-                  <a href="mailto:support@recipemaker.com" className="text-primary hover:underline">
-                    support@recipemaker.com
+                  <a href="mailto:abhishekmore4133@gmail.com" className="text-primary hover:underline break-all">
+                    abhishekmore4133@gmail.com
                   </a>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {language === 'en' ? 'Phone / WhatsApp' : 'फोन / WhatsApp'}
+                  </p>
+                  <a href="tel:+919324405985" className="text-primary hover:underline">+91 9324405985</a>
+                  {' · '}
+                  <a href="https://wa.me/919324405985" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">WhatsApp</a>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">
