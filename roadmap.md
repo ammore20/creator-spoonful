@@ -33,5 +33,5 @@
 - [x] Phase 2: PayU checkout for books (flag payu_checkout_enabled)
 - [x] Phase 7: creator promo codes, ₹499 base price
 
-- [ ] Contact number + email on /for-creators and /contact
-- [ ] Marathi translation toggle on /for-creators
+- [x] Contact number + email on /for-creators and /contact
+- [x] Marathi translation toggle on /for-creators
