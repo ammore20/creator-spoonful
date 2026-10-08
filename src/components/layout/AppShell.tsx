@@ -90,6 +90,7 @@ export const AppShell = ({
 }: AppShellProps) => {
   const user = useCurrentUser();
   const isCreatorBeta = useCreatorBeta();
+  const { resolvedTheme, setTheme } = useTheme();
   const [query, setQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toast } = useToast();
