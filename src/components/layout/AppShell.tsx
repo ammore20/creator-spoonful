@@ -14,7 +14,10 @@ import {
   Menu,
   X,
   ChefHat,
+  Sun,
+  Moon,
 } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useCreatorBeta } from '@/hooks/useCreatorBeta';
@@ -240,6 +243,15 @@ export const AppShell = ({
                   CREATOR BETA
                 </span>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                className="px-2.5"
+                aria-label={resolvedTheme === 'dark' ? 'Light theme' : 'Black theme'}
+              >
+                {resolvedTheme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
               <Button variant="ghost" size="sm" onClick={onLanguageToggle} className="gap-1.5 px-2.5">
                 <Languages className="w-4 h-4" />
                 <span className="hidden sm:inline">{language === 'en' ? 'मराठी' : 'English'}</span>

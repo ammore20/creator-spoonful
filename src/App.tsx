@@ -66,6 +66,7 @@ const RouteFallback = () => (
 );
 
 const App = () => (
+  <ThemeProvider attribute="class" defaultTheme="light" storageKey="rm-theme">
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
