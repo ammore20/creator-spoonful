@@ -23,6 +23,7 @@ export default function BookReader() {
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState('all');
   const en = language === 'en';
+  useEffect(() => { if (recipeId) setView('book'); }, [recipeId]);
 
   useEffect(() => {
     if (!online) { setRemote('failed'); return; }

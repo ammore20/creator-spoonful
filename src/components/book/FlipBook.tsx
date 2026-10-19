@@ -101,7 +101,8 @@ export function FlipBook({ data, pack, online, slug, language, recipeId }: Props
   function pageContent(page: BookPage) {
     if (!book) return null;
     if (page.kind === 'cover') return <div className="flip-cover">
-      {book.cover_url ? <img src={book.cover_url} alt={text(book.title_en, book.title_mr ?? undefined)} className="absolute inset-0 h-full w-full object-cover" onError={e => { e.currentTarget.hidden = true; }} /> : <div className="p-8"><h2 className="text-3xl font-display font-bold">{book.creator_name}</h2><p className="mt-3">{rows.length} {en ? 'recipes' : 'रेसिपी'}</p></div>}
+      <div className="p-8"><h2 className="text-3xl font-display font-bold">{book.creator_name}</h2><p className="mt-3">{rows.length} {en ? 'recipes' : 'रेसिपी'}</p></div>
+      {book.cover_url && <img src={book.cover_url} alt={text(book.title_en, book.title_mr ?? undefined)} className="absolute inset-0 h-full w-full object-cover" onError={e => { e.currentTarget.hidden = true; }} />}
       <span className="flip-cover-hint">{en ? 'Swipe to open' : 'उघडण्यासाठी स्वाइप करा'}</span>
     </div>;
     if (page.kind === 'creator') return <div className="flip-content space-y-5">

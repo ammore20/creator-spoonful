@@ -118,7 +118,7 @@ All colors MUST be HSL.
 
 /* Phase 8: fixed-format, single-page book. Only transform and opacity animate. */
 .flip-reader { width: 100%; max-width: 420px; margin-inline: auto; }
-.flip-stage { position: relative; width: 100%; height: min(640px, 72svh); min-height: 340px; perspective: 1500px; touch-action: pan-y; }
+.flip-stage { position: relative; width: 100%; height: min(600px, 54svh); min-height: 300px; perspective: 1500px; touch-action: pan-y; }
 .flip-page { position: absolute; inset: 0; visibility: hidden; pointer-events: none; background: hsl(var(--card)); color: hsl(var(--card-foreground)); border: 1px solid hsl(var(--border)); border-radius: 3px 8px 8px 3px; box-shadow: var(--book-shadow); overflow: hidden; transform-origin: left center; backface-visibility: visible; }
 .flip-visible { visibility: visible; pointer-events: auto; }
 .flip-turning { z-index: 3; pointer-events: none; will-change: transform, opacity; }
