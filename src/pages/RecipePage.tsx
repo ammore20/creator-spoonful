@@ -325,14 +325,14 @@ const RecipePageContent = () => {
     navigate(`/?filter=${type}&value=${encodeURIComponent(tag)}`);
   };
 
-  const toggleStep = (index: number) => {
-    const newCompleted = new Set(completedSteps);
-    if (newCompleted.has(index)) {
-      newCompleted.delete(index);
+  const toggleIngredient = (index: number) => {
+    const next = new Set(checkedIngredients);
+    if (next.has(index)) {
+      next.delete(index);
     } else {
-      newCompleted.add(index);
+      next.add(index);
     }
-    setCompletedSteps(newCompleted);
+    setCheckedIngredients(next);
   };
 
   const extractTimeFromStep = (step: string): number | null => {
