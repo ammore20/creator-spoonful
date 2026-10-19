@@ -610,7 +610,7 @@ const RecipePageContent = () => {
                         </div>
                       </div>
                       <div className="flex-1">
-                        <p className={`text-foreground leading-relaxed ${completedSteps.has(index) ? 'line-through text-muted-foreground' : ''}`}>
+                        <p className="text-foreground leading-relaxed">
                           {step}
                         </p>
                         {timeInMinutes && (
