@@ -35,6 +35,7 @@ const RecipePageContent = () => {
   const [originalServings, setOriginalServings] = useState(4);
   const [user, setUser] = useState<any>(null);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
+  const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
   const [activeTimer, setActiveTimer] = useState<number | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -335,6 +336,16 @@ const RecipePageContent = () => {
     setCheckedIngredients(next);
   };
 
+  const toggleStep = (index: number) => {
+    const next = new Set(checkedSteps);
+    if (next.has(index)) {
+      next.delete(index);
+    } else {
+      next.add(index);
+    }
+    setCheckedSteps(next);
+  };
+
   const extractTimeFromStep = (step: string): number | null => {
     const timeMatch = step.match(/(\d+)\s*(min|mins|minute|minutes)/i);
     return timeMatch ? parseInt(timeMatch[1]) : null;
@@ -603,14 +614,20 @@ const RecipePageContent = () => {
                   const StepIcon = stepIcon;
                   
                   return (
-                    <li key={index} className="flex gap-4 group">
+                    <li key={index} className="flex gap-3 sm:gap-4 group">
+                      <Checkbox
+                        checked={checkedSteps.has(index)}
+                        onCheckedChange={() => toggleStep(index)}
+                        className="mt-3 shrink-0"
+                        aria-label={`${language === 'en' ? 'Step' : 'पायरी'} ${index + 1}`}
+                      />
                       <div className="flex flex-col items-center">
                         <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-bold shadow-warm">
                           <StepIcon className="w-5 h-5" />
                         </div>
                       </div>
                       <div className="flex-1">
-                        <p className="text-foreground leading-relaxed">
+                        <p className={`leading-relaxed ${checkedSteps.has(index) ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                           {step}
                         </p>
                         {timeInMinutes && (
