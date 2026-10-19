@@ -34,7 +34,7 @@ const RecipePageContent = () => {
   const [servings, setServings] = useState(4);
   const [originalServings, setOriginalServings] = useState(4);
   const [user, setUser] = useState<any>(null);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [activeTimer, setActiveTimer] = useState<number | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
