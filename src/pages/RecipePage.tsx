@@ -604,12 +604,7 @@ const RecipePageContent = () => {
                   
                   return (
                     <li key={index} className="flex gap-4 group">
-                      <div className="flex flex-col items-center gap-2">
-                        <Checkbox
-                          checked={completedSteps.has(index)}
-                          onCheckedChange={() => toggleStep(index)}
-                          className="mt-1"
-                        />
+                      <div className="flex flex-col items-center">
                         <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-bold shadow-warm">
                           <StepIcon className="w-5 h-5" />
                         </div>
