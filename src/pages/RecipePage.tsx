@@ -539,9 +539,18 @@ const RecipePageContent = () => {
 
                 <ul className="space-y-3 mb-4">
                   {scaledIngredients.map((ingredient: string, index: number) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                      <span className="text-foreground">{ingredient}</span>
+                    <li key={index}>
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={checkedIngredients.has(index)}
+                          onCheckedChange={() => toggleIngredient(index)}
+                          className="mt-1"
+                          aria-label={ingredient}
+                        />
+                        <span className={`text-foreground ${checkedIngredients.has(index) ? 'line-through text-muted-foreground' : ''}`}>
+                          {ingredient}
+                        </span>
+                      </label>
                     </li>
                   ))}
                 </ul>
