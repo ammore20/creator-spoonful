@@ -34,7 +34,7 @@ const RecipePageContent = () => {
   const [servings, setServings] = useState(4);
   const [originalServings, setOriginalServings] = useState(4);
   const [user, setUser] = useState<any>(null);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [activeTimer, setActiveTimer] = useState<number | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -325,14 +325,14 @@ const RecipePageContent = () => {
     navigate(`/?filter=${type}&value=${encodeURIComponent(tag)}`);
   };
 
-  const toggleStep = (index: number) => {
-    const newCompleted = new Set(completedSteps);
-    if (newCompleted.has(index)) {
-      newCompleted.delete(index);
+  const toggleIngredient = (index: number) => {
+    const next = new Set(checkedIngredients);
+    if (next.has(index)) {
+      next.delete(index);
     } else {
-      newCompleted.add(index);
+      next.add(index);
     }
-    setCompletedSteps(newCompleted);
+    setCheckedIngredients(next);
   };
 
   const extractTimeFromStep = (step: string): number | null => {
@@ -539,9 +539,18 @@ const RecipePageContent = () => {
 
                 <ul className="space-y-3 mb-4">
                   {scaledIngredients.map((ingredient: string, index: number) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                      <span className="text-foreground">{ingredient}</span>
+                    <li key={index}>
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={checkedIngredients.has(index)}
+                          onCheckedChange={() => toggleIngredient(index)}
+                          className="mt-1"
+                          aria-label={ingredient}
+                        />
+                        <span className={`text-foreground ${checkedIngredients.has(index) ? 'line-through text-muted-foreground' : ''}`}>
+                          {ingredient}
+                        </span>
+                      </label>
                     </li>
                   ))}
                 </ul>
@@ -595,18 +604,13 @@ const RecipePageContent = () => {
                   
                   return (
                     <li key={index} className="flex gap-4 group">
-                      <div className="flex flex-col items-center gap-2">
-                        <Checkbox
-                          checked={completedSteps.has(index)}
-                          onCheckedChange={() => toggleStep(index)}
-                          className="mt-1"
-                        />
+                      <div className="flex flex-col items-center">
                         <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-bold shadow-warm">
                           <StepIcon className="w-5 h-5" />
                         </div>
                       </div>
                       <div className="flex-1">
-                        <p className={`text-foreground leading-relaxed ${completedSteps.has(index) ? 'line-through text-muted-foreground' : ''}`}>
+                        <p className="text-foreground leading-relaxed">
                           {step}
                         </p>
                         {timeInMinutes && (
