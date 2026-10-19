@@ -28,6 +28,7 @@ export default function BookRecipe() {
   const [res, setRes] = useState<{ access: Access; recipe?: any; preview?: any; title?: string } | null>(null);
   const [servings, setServings] = useState(4);
   const [checked, setChecked] = useState<Record<number, boolean>>({});
+  const [checkedSteps, setCheckedSteps] = useState<Record<number, boolean>>({});
   const [timerMin, setTimerMin] = useState(10);
   const [showTimer, setShowTimer] = useState(false);
   const en = language === 'en';
@@ -44,6 +45,7 @@ export default function BookRecipe() {
         if (m) setTimerMin(m);
       }
       setChecked({});
+      setCheckedSteps({});
     };
     // Saved copy first (works with no connection).
     if (local) { apply({ access: 'granted', recipe: local.recipe, title: local.title }); return; }
@@ -138,9 +140,15 @@ export default function BookRecipe() {
         </div>
         <ol className="space-y-3">
           {steps.map((s, i) => (
-            <li key={i} className="flex gap-3">
+            <li key={i} className="flex items-start gap-3">
+              <Checkbox
+                checked={!!checkedSteps[i]}
+                onCheckedChange={(v) => setCheckedSteps((c) => ({ ...c, [i]: !!v }))}
+                className="mt-0.5"
+                aria-label={`${en ? 'Step' : 'पायरी'} ${i + 1}`}
+              />
               <span className="w-6 h-6 shrink-0 rounded-full bg-primary/10 text-primary text-xs font-bold grid place-items-center">{i + 1}</span>
-              <p className="text-foreground leading-relaxed">{s}</p>
+              <p className={`leading-relaxed ${checkedSteps[i] ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{s}</p>
             </li>
           ))}
         </ol>
