@@ -43,6 +43,13 @@
       "when": 1791018036427,
       "tag": "0005_phase7_promo_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792396345128,
+      "tag": "0006_phase8_creator_reader_metadata",
+      "breakpoints": true
     }
   ]
 }

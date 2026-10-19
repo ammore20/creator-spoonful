@@ -179,7 +179,7 @@ export function FlipBook({ data, pack, online, slug, language, recipeId }: Props
         const active = index === current || index === turn?.to;
         const animated = turn && (turn.direction === 1 || turn.fade ? index === turn.from : index === turn.to);
         const animation = animated ? ` ${turn?.fade ? 'flip-fade' : turn?.direction === 1 ? 'flip-forward' : 'flip-backward'}${turn?.fast ? ' flip-fast' : ''}` : '';
-        return <article key={index} className={`flip-page${active ? ' flip-visible' : ''}${animated ? ' flip-turning' : ''}${animation}`} aria-hidden={index !== current} inert={index !== current ? '' : undefined}>
+        return <article key={index} ref={element => { if (element) element.toggleAttribute('inert', index !== current); }} className={`flip-page${active ? ' flip-visible' : ''}${animated ? ' flip-turning' : ''}${animation}`} aria-hidden={index !== current}>
           <div className="flip-scroll" key={page.recipeId ? `${page.recipeId}:${page.kind}` : index}>{pageContent(page)}</div>
           <div className="flip-spine" /><div className="flip-turn-shadow" />
         </article>;
