@@ -1,7 +1,7 @@
 import type { BookRecipeRow } from './books';
 
 export type BookPage = { kind: 'cover' | 'creator' | 'contents' | 'photo' | 'ingredients' | 'steps' | 'end'; recipeId?: string; entries?: { row: BookRecipeRow; group: string }[] };
-export const CONTENTS_PER_PAGE = 10;
+export const CONTENTS_PER_PAGE = Number.MAX_SAFE_INTEGER; // whole index on one scrollable page
 export function mealGroup(meal?: string): string {
   const value = (meal || '').toLowerCase();
   if (value.includes('breakfast')) return 'breakfast';
