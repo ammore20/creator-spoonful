@@ -36,7 +36,7 @@
 - [x] Contact number + email on /for-creators and /contact
 - [x] Marathi translation toggle on /for-creators
 
-## Phase 8 (in progress)
-- [ ] Single-page flip-book with Book/List, contents jumps, cooking controls and deep links
-- [ ] Nullable creator bio/photo fields in Book builder; additive response metadata only
-- [ ] Owner, phone, offline and pagination checks; before/after credit report; no publish
+## Phase 8 (done, not published)
+- [x] Single-page flip-book with Book/List, contents jumps, cooking controls and deep links
+- [x] Nullable creator bio/photo fields in Book builder; additive response metadata only
+- [x] Owner, phone, offline and pagination checks; credit usage 156 → 162 (6 credits); no publish
