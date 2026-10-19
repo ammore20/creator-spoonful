@@ -38,6 +38,11 @@ All colors MUST be HSL.
     --ring: 18 92% 58%;
 
     --radius: 1rem;
+    --book-cover: 150 35% 17%;
+    --book-cover-foreground: 0 0% 98%;
+    --book-spine: linear-gradient(90deg, hsl(var(--foreground) / .12), transparent);
+    --book-turn-shadow: linear-gradient(90deg, transparent, hsl(var(--foreground) / .22), transparent);
+    --book-shadow: 0 8px 24px hsl(var(--foreground) / .12);
 
     --gradient-hero: linear-gradient(135deg, hsl(30 55% 97%), hsl(22 50% 95%));
     --gradient-hero-animated: linear-gradient(135deg, hsl(32 65% 97%), hsl(22 60% 95%), hsl(32 65% 97%));
@@ -110,6 +115,31 @@ All colors MUST be HSL.
     --sidebar-ring: 15 100% 60%;
   }
 }
+
+/* Phase 8: fixed-format, single-page book. Only transform and opacity animate. */
+.flip-reader { width: 100%; max-width: 420px; margin-inline: auto; }
+.flip-stage { position: relative; width: 100%; height: min(640px, 72svh); min-height: 340px; perspective: 1500px; touch-action: pan-y; }
+.flip-page { position: absolute; inset: 0; visibility: hidden; pointer-events: none; background: hsl(var(--card)); color: hsl(var(--card-foreground)); border: 1px solid hsl(var(--border)); border-radius: 3px 8px 8px 3px; box-shadow: var(--book-shadow); overflow: hidden; transform-origin: left center; backface-visibility: visible; }
+.flip-visible { visibility: visible; pointer-events: auto; }
+.flip-turning { z-index: 3; pointer-events: none; will-change: transform, opacity; }
+.flip-scroll { height: 100%; overflow-y: auto; overscroll-behavior-y: contain; overflow-wrap: anywhere; }
+.flip-content { padding: 24px 22px 32px 26px; letter-spacing: 0; }
+.flip-content h2, .flip-content h3, .flip-cover h2 { letter-spacing: 0; }
+.flip-cover { position: relative; height: 100%; background: hsl(var(--book-cover)); color: hsl(var(--book-cover-foreground)); display: flex; align-items: center; }
+.flip-cover-hint { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); max-width: 90%; text-align: center; padding: 8px 16px; background: hsl(var(--book-cover) / .9); border-radius: 4px; }
+.flip-spine { position: absolute; inset: 0 auto 0 0; width: 16px; background: var(--book-spine); pointer-events: none; }
+.flip-turn-shadow { position: absolute; inset: 0; background: var(--book-turn-shadow); opacity: 0; pointer-events: none; }
+.flip-forward { animation: book-forward .75s cubic-bezier(.32,.72,.2,1) both; }
+.flip-backward { animation: book-backward .75s cubic-bezier(.32,.72,.2,1) both; }
+.flip-fast { animation-duration: .18s; }
+.flip-fade { animation: book-fade .18s ease both; }
+.flip-forward .flip-turn-shadow, .flip-backward .flip-turn-shadow { animation: book-shade .75s ease both; }
+.flip-fast .flip-turn-shadow { animation-duration: .18s; }
+@keyframes book-forward { 0% { transform: rotateY(0); opacity: 1; } 80% { opacity: .9; } 100% { transform: rotateY(-165deg); opacity: 0; } }
+@keyframes book-backward { 0% { transform: rotateY(-165deg); opacity: 0; } 20% { opacity: .9; } 100% { transform: rotateY(0); opacity: 1; } }
+@keyframes book-fade { from { opacity: 1; } to { opacity: 0; } }
+@keyframes book-shade { 0% { transform: translateX(-60%); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateX(60%); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .flip-forward, .flip-backward { animation: book-fade .18s ease both; } .flip-turn-shadow { animation: none; } }
 
 @layer base {
   * {
