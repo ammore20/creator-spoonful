@@ -11,15 +11,19 @@ import { useBookPack } from '@/hooks/useBookPack';
 import { packToBookResponse } from '@/lib/offlineBooks';
 import { InstallBanner } from '@/components/book/InstallBanner';
 import { WifiOff } from 'lucide-react';
+import { FlipBook } from '@/components/book/FlipBook';
+import BookRecipe from '@/pages/BookRecipe';
 
 export default function BookReader() {
-  const { slug = '' } = useParams<{ slug: string }>();
+  const { slug = '', recipeId } = useParams<{ slug: string; recipeId: string }>();
+  const [view, setView] = useState<'book' | 'list'>('book');
   const [language, setLanguage] = useState<'en' | 'mr'>('en');
   const [remote, setRemote] = useState<BookResponse | null | 'failed'>(null);
   const { pack, busy, install, online, ownerId } = useBookPack(slug);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState('all');
   const en = language === 'en';
+  useEffect(() => { if (recipeId) setView('book'); }, [recipeId]);
 
   useEffect(() => {
     if (!online) { setRemote('failed'); return; }
@@ -55,6 +59,7 @@ export default function BookReader() {
   }
 
   const owned = !!data.owned;
+  if (!owned && recipeId) return <BookRecipe />;
 
   return shell(
     <>
@@ -74,6 +79,11 @@ export default function BookReader() {
           <InstallBanner installed={!!pack} count={pack?.recipes.length ?? 0} busy={busy} online={online} onInstall={install} en={en} />
         </div>
       )}
+      {owned && <div className="flex justify-end gap-1 my-3" role="group" aria-label="Book view">
+        <Button size="sm" variant={view === 'book' ? 'default' : 'ghost'} aria-pressed={view === 'book'} onClick={() => setView('book')}>{en ? 'Book' : 'पुस्तक'}</Button>
+        <Button size="sm" variant={view === 'list' ? 'default' : 'ghost'} aria-pressed={view === 'list'} onClick={() => setView('list')}>{en ? 'List' : 'यादी'}</Button>
+      </div>}
+      {owned && view === 'book' ? <FlipBook key={slug} data={data} pack={pack} online={online} slug={slug} language={language} recipeId={recipeId} /> : <>
       {!owned && (
         <div className="mt-3 rounded-xl bg-primary/10 p-3 text-sm flex items-center justify-between gap-2">
           <span>{en ? 'You can read the free samples. Buy the book to open all recipes.' : 'मोफत नमुने वाचा. सर्व रेसिपीसाठी पुस्तक खरेदी करा.'}</span>
@@ -111,6 +121,7 @@ export default function BookReader() {
         })}
         {rows.length === 0 && <li className="p-6 text-center text-sm text-muted-foreground">{en ? 'No recipes match.' : 'काही सापडले नाही.'}</li>}
       </ul>
+      </>}
     </>,
   );
 }

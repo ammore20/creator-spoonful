@@ -1,5 +1,8 @@
 # Architecture rules
 
+- Owned book display uses a virtualized single-page CSS reader shared by book and recipe deep links, loading content only from the saved pack or existing get_book_recipe RPC. Why: presentation stays separate from access, payments and offline storage.
+- Creator biography/photo metadata is additive to existing book responses and edited via an admin-checked RPC. Why: no extra reader requests or changes to entitlement checks are needed.
+
 - Subscription activation and creator earnings go only through the `activate_subscription` database function (service role). Why: one idempotent step, so earnings are recorded once whichever payment path runs first.
 - Only `review_status = 'approved'` recipes are exposed by `public_videos` and the recipe access functions. Why: AI-extracted recipes need human review before going public.
 - Recipe processing (`process-video`) only accepts the service role or an admin. Scheduled processing authenticates with a private internal key held in the database. Why: AI spend must not be triggerable by the public.

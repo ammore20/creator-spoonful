@@ -20,17 +20,21 @@ export const BookBuilder = ({ creators }: { creators: Creator[] }) => {
   const [items, setItems] = useState<Item[]>([]);
   const [form, setForm] = useState({ title_en: '', title_mr: '', cover_url: '', price: '499', list: '', link: '', promo: '' });
   const [busy, setBusy] = useState(false);
+  const [profile, setProfile] = useState({ bio_en: '', bio_mr: '', photo_url: '' });
+  const [profileBusy, setProfileBusy] = useState(false);
   const creator = creators.find((c) => c.id === creatorId);
 
   useEffect(() => {
     if (!creatorId) return;
     (async () => {
-      const [{ data: b }, { data: v }] = await Promise.all([
+      const [{ data: b }, { data: v }, { data: c }] = await Promise.all([
         db.from('books').select('*').eq('creator_id', creatorId).maybeSingle(),
         db.from('videos').select('video_id,title,thumbnail_url,extracted_recipe_json')
           .eq('creator_id', creatorId).eq('status', 'done').eq('review_status', 'approved')
           .order('published_at', { ascending: false }),
+        db.from('creators').select('bio_en,bio_mr,photo_url').eq('id', creatorId).single(),
       ]);
+      setProfile({ bio_en: c?.bio_en ?? '', bio_mr: c?.bio_mr ?? '', photo_url: c?.photo_url ?? '' });
       setVideos((v ?? []).filter((x: any) => !x.extracted_recipe_json?.no_recipe));
       setBook(b);
       setForm({
@@ -90,6 +94,15 @@ export const BookBuilder = ({ creators }: { creators: Creator[] }) => {
     toast.success(nextStatus === 'published' ? 'Book saved and published' : 'Book saved');
   };
 
+  const saveProfile = async () => {
+    if (!creator) return;
+    if (profile.photo_url && !/^https:\/\//.test(profile.photo_url.trim())) { toast.error('Photo URL must start with https://'); return; }
+    setProfileBusy(true);
+    const { error } = await db.rpc('admin_set_creator_profile', { _creator_id: creator.id, _bio_en: profile.bio_en.trim() || null, _bio_mr: profile.bio_mr.trim() || null, _photo_url: profile.photo_url.trim() || null });
+    setProfileBusy(false);
+    if (error) toast.error(error.message); else toast.success('Creator profile saved');
+  };
+
   return (
     <Card>
       <CardHeader><CardTitle>Book builder</CardTitle></CardHeader>
@@ -119,6 +132,14 @@ export const BookBuilder = ({ creators }: { creators: Creator[] }) => {
               {book?.status === 'published'
                 ? <Button variant="outline" onClick={() => save('draft')} disabled={busy}>Unpublish</Button>
                 : <Button variant="secondary" onClick={() => save('published')} disabled={busy}>Save and publish</Button>}
+            </div>
+
+            <div className="space-y-2 border-t pt-3">
+              <h3 className="font-semibold text-sm">About the creator</h3>
+              <label className="block text-xs">Photo URL<Input value={profile.photo_url} placeholder="https://…" onChange={e => setProfile({ ...profile, photo_url: e.target.value })} /></label>
+              <label className="block text-xs">Bio (English)<textarea className="w-full min-h-20 rounded-md border bg-background p-2 text-sm" value={profile.bio_en} onChange={e => setProfile({ ...profile, bio_en: e.target.value })} /></label>
+              <label className="block text-xs">Bio (Marathi)<textarea className="w-full min-h-20 rounded-md border bg-background p-2 text-sm" value={profile.bio_mr} onChange={e => setProfile({ ...profile, bio_mr: e.target.value })} /></label>
+              <Button size="sm" variant="outline" disabled={profileBusy} onClick={saveProfile}>Save creator profile</Button>
             </div>
 
             <div>
