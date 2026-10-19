@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, List, Timer, Users } from 'lucide-react';
+import { ArrowLeft, ArrowRight, List, Maximize2, Minimize2, Timer, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,6 +33,14 @@ export function FlipBook({ data, pack, online, slug, language, recipeId }: Props
   const [cooking, setCooking] = useState<Record<string, CookingState>>({});
   const [timers, setTimers] = useState<Record<string, number>>({});
   const reduced = useRef(false);
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    if (!full) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setFull(false); };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', esc);
+    return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', esc); };
+  }, [full]);
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
     reduced.current = query.matches;
@@ -164,7 +172,8 @@ export function FlipBook({ data, pack, online, slug, language, recipeId }: Props
   }
   const mounted = new Set(visiblePageIndices(current, pages.length));
   if (turn) mounted.add(turn.to);
-  return <section className="flip-reader" aria-label={en ? 'Book reader' : 'पुस्तक वाचक'}>
+  return <section className={`flip-reader${full ? ' flip-full' : ''}`} aria-label={en ? 'Book reader' : 'पुस्तक वाचक'}>
+    <div className="flex justify-end mb-2"><Button size="icon" variant="outline" onClick={() => setFull(f => !f)} aria-label={full ? (en ? 'Exit full screen' : 'पूर्ण स्क्रीन बंद') : (en ? 'Full screen' : 'पूर्ण स्क्रीन')}>{full ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</Button></div>
     <div className="flip-stage" onPointerDown={event => {
       if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0) || (event.target instanceof Element && event.target.closest(interactive))) { pointer.current = null; return; }
       pointer.current = { x: event.clientX, y: event.clientY };
