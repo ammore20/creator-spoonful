@@ -337,28 +337,37 @@ export type Database = {
       }
       creators: {
         Row: {
+          bio_en: string | null
+          bio_mr: string | null
           channel_id: string
           created_at: string | null
           id: string
           name: string
+          photo_url: string | null
           slug: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          bio_en?: string | null
+          bio_mr?: string | null
           channel_id: string
           created_at?: string | null
           id?: string
           name: string
+          photo_url?: string | null
           slug?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          bio_en?: string | null
+          bio_mr?: string | null
           channel_id?: string
           created_at?: string | null
           id?: string
           name?: string
+          photo_url?: string | null
           slug?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -1268,6 +1277,15 @@ export type Database = {
       admin_set_book_recipes: {
         Args: { _book_id: string; _items: Json }
         Returns: Json
+      }
+      admin_set_creator_profile: {
+        Args: {
+          _bio_en: string
+          _bio_mr: string
+          _creator_id: string
+          _photo_url: string
+        }
+        Returns: undefined
       }
       admin_set_gateway_fee: { Args: { _percent: number }; Returns: Json }
       admin_set_payu_enabled: { Args: { _enabled: boolean }; Returns: Json }
