@@ -31,7 +31,6 @@ export interface BookInfo {
   list_price_paise: number | null;
   status: string;
   creator_name: string;
-  creator?: { name: string; bio_en?: string | null; bio_mr?: string | null; photo_url?: string | null; channel_id?: string | null };
   has_payment_link: boolean;
   has_promo_link?: boolean;
 }

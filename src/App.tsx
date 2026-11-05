@@ -33,6 +33,7 @@ const lazyPage = (importer: () => Promise<{ default: React.ComponentType<any> }>
 const Index = lazyPage(() => import("./pages/Index"));
 const BookPage = lazyPage(() => import("./pages/BookPage"));
 const BookReader = lazyPage(() => import("./pages/BookReader"));
+const BookRecipe = lazyPage(() => import("./pages/BookRecipe"));
 const Library = lazyPage(() => import("./pages/Library"));
 const RecipePage = lazyPage(() => import("./pages/RecipePage"));
 const Admin = lazyPage(() => import("./pages/Admin"));
@@ -78,7 +79,7 @@ const App = () => (
             <Route path="/recipes" element={<Index />} />
             <Route path="/library" element={<Library />} />
             <Route path="/book/:slug" element={<BookReader />} />
-            <Route path="/book/:slug/:recipeId" element={<BookReader />} />
+            <Route path="/book/:slug/:recipeId" element={<BookRecipe />} />
             <Route path="/recipe/:id" element={<RecipePage />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/auth" element={<Auth />} />
