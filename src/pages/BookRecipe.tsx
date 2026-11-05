@@ -24,7 +24,7 @@ const minutesFrom = (t?: string) => {
 export default function BookRecipe() {
   const { slug = '', recipeId = '' } = useParams();
   const navigate = useNavigate();
-  const [language, setLanguage] = useState<'en' | 'mr'>('en');
+  const [language, setLanguage] = useState<'en' | 'mr'>('mr');
   const [res, setRes] = useState<{ access: Access; recipe?: any; preview?: any; title?: string } | null>(null);
   const [servings, setServings] = useState(4);
   const [checked, setChecked] = useState<Record<number, boolean>>({});
