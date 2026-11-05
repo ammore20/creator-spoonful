@@ -28,7 +28,7 @@ import { RecipeAccessGate, type AccessState } from '@/components/recipe/RecipeAc
 const RecipePageContent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [language, setLanguage] = useState<'en' | 'mr'>('en');
+  const [language, setLanguage] = useState<'en' | 'mr'>('mr');
   const [recipe, setRecipe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [servings, setServings] = useState(4);
