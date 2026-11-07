@@ -1,4 +1,5 @@
 import { CreatorBetaGuide } from '@/components/CreatorBetaGuide';
+import { DiwaliBanner } from '@/components/DiwaliBanner';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -273,6 +274,7 @@ export const AppShell = ({
           </div>
         </header>
 
+        <DiwaliBanner language={language} />
         <main className={cn('pb-24 lg:pb-12', contained && 'px-3 sm:px-6 py-5 sm:py-7 max-w-[1400px] mx-auto')}>
           {children}
         </main>

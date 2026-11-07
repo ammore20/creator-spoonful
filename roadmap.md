@@ -1,5 +1,9 @@
 # Roadmap
 
+## Diwali
+- [x] Add festive Diwali styling, preserving black theme
+- [x] Prioritize Diwali recipes in recipe and book browsing; test ordering and pages
+
 ## Phase 0 (done, waiting on inputs)
 - [x] Read-only report: suspicious active subscriptions
 - [x] Lock subscriptions writes to server only

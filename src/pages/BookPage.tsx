@@ -10,6 +10,7 @@ import { Infinity as InfinityIcon, WifiOff, Languages, Lock, ShieldCheck, Chevro
 import { toast } from 'sonner';
 import { BookResponse, fetchBook, rupees, visitorId } from '@/lib/books';
 import { BookCover } from './Home';
+import { diwaliFirst } from '@/lib/diwali';
 
 /** Old creator addresses that now point to a renamed book. */
 const SLUG_ALIASES: Record<string, string> = {
@@ -83,7 +84,7 @@ function BookPageInner({ slug }: { slug: string }) {
   }
 
   const { book, recipes = [], owned, signed_in } = data;
-  const samples = recipes.filter((r) => r.is_free_sample).slice(0, 3);
+  const samples = diwaliFirst(recipes.filter((r) => r.is_free_sample), r => r.preview).slice(0, 3);
   const lockedCount = Math.max(recipes.length - samples.length, 0);
   const title = `${book.creator_name}'s ${recipes.length} recipes`;
 

@@ -58,6 +58,10 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 24 18% 18%;
     --sidebar-border: 28 20% 90%;
     --sidebar-ring: 18 92% 58%;
+    --festival-background: 350 72% 21%;
+    --festival-foreground: 42 100% 94%;
+    --festival-gold: 42 90% 68%;
+    --festival-border: 38 75% 69%;
   }
 
 
@@ -109,6 +113,20 @@ All colors MUST be HSL.
     --sidebar-border: 20 18% 20%;
     --sidebar-ring: 15 100% 60%;
   }
+
+  .diwali-banner {
+    background: hsl(var(--festival-background));
+    color: hsl(var(--festival-foreground));
+    border-bottom: 2px solid hsl(var(--festival-border));
+  }
+
+  .diwali-banner-copy {
+    background: hsl(var(--festival-background) / 0.78);
+    border-radius: 8px;
+  }
+
+  .diwali-banner-copy > p:first-child,
+  .diwali-banner-copy > span { color: hsl(var(--festival-gold)); }
 }
 
 @layer base {

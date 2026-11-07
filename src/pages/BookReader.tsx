@@ -11,6 +11,7 @@ import { useBookPack } from '@/hooks/useBookPack';
 import { packToBookResponse } from '@/lib/offlineBooks';
 import { InstallBanner } from '@/components/book/InstallBanner';
 import { WifiOff } from 'lucide-react';
+import { diwaliFirst, isDiwaliRecipe } from '@/lib/diwali';
 
 export default function BookReader() {
   const { slug = '' } = useParams<{ slug: string }>();
@@ -34,8 +35,8 @@ export default function BookReader() {
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return (data?.recipes ?? []).filter((r) => matchesFilter(r, filter) && (!term ||
-      `${r.preview.title ?? ''} ${r.preview.title_mr ?? ''}`.toLowerCase().includes(term)));
+    return diwaliFirst((data?.recipes ?? []).filter((r) => matchesFilter(r, filter) && (!term ||
+      `${r.preview.title ?? ''} ${r.preview.title_mr ?? ''}`.toLowerCase().includes(term))), r => r.preview);
   }, [data, q, filter]);
 
   const shell = (children: React.ReactNode) => (
@@ -99,6 +100,7 @@ export default function BookReader() {
               <Link to={open ? `/book/${slug}/${r.video_id}` : `/c/${slug}`} className="flex items-center gap-3 p-3 hover:bg-secondary/50">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium line-clamp-1">{t}</p>
+                  {isDiwaliRecipe(r.preview) && <span className="text-[11px] text-primary">{en ? 'Diwali faral' : 'दिवाळी फराळ'}</span>}
                   {r.preview.prep_time && r.preview.prep_time !== 'unknown' && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><Clock className="w-3 h-3" />{r.preview.prep_time}</p>
                   )}
