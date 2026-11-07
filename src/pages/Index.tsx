@@ -19,6 +19,7 @@ import {
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { diwaliFirst, isDiwaliRecipe, DIWALI_PUBLIC_FILTER } from '@/lib/diwali';
 
 const FilterBar = lazy(() => import('@/components/FilterBar').then(m => ({ default: m.FilterBar })));
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -73,19 +74,30 @@ const IndexContent = () => {
       const from = currentPage * RECIPES_PER_PAGE;
       const to = from + RECIPES_PER_PAGE - 1;
 
-      const { data, error, count } = await (supabase as any)
+      const pageQuery = (supabase as any)
         .from('public_videos')
         .select(`id, video_id, title, description, thumbnail_url, published_at, recipe_preview, creator_name`, { count: 'exact' })
         .order('published_at', { ascending: false })
         .range(from, to);
 
+      const [pageResult, festiveResult] = await Promise.all([
+        pageQuery,
+        reset ? (supabase as any).from('public_videos')
+          .select('id, video_id, title, description, thumbnail_url, published_at, recipe_preview, creator_name')
+          .or(DIWALI_PUBLIC_FILTER).order('published_at', { ascending: false }).limit(100)
+          : Promise.resolve({ data: [] }),
+      ]);
+      const { data, error, count } = pageResult;
       if (error) throw error;
 
-      const transformed = data?.map((video: any) => {
+      const combined = [...(festiveResult.data ?? []), ...(data ?? [])];
+      const unique = combined.filter((video, i) => combined.findIndex(v => v.video_id === video.video_id) === i);
+      const transformed = unique.map((video: any) => {
         const recipe = (video.recipe_preview as any) || {};
         return {
           id: video.video_id,
           title: recipe.title || video.title,
+          titleMr: recipe.title_mr,
           creator: video.creator_name || 'Unknown',
           description: video.description || '',
           youtubeUrl: `https://www.youtube.com/watch?v=${video.video_id}`,
@@ -113,8 +125,8 @@ const IndexContent = () => {
         return !bad && r.ingredientCount >= 5 && r.stepCount >= 5;
       });
 
-      setRecipes(prev => reset ? valid : [...prev, ...valid]);
-      setHasMore(valid.length === RECIPES_PER_PAGE && (count || 0) > to + 1);
+      setRecipes(prev => diwaliFirst(reset ? valid : [...prev, ...valid.filter(r => !prev.some(p => p.id === r.id))], r => r));
+      setHasMore((data?.length ?? 0) === RECIPES_PER_PAGE && (count || 0) > to + 1);
       setPage(currentPage + 1);
     } catch (error) {
       logger.error('index.fetch_recipes_failed', { error: error as Error });
@@ -168,6 +180,7 @@ const IndexContent = () => {
   }, [recipes, searchQuery, filters]);
 
   const hasActiveFilters = Object.values(filters).some(a => a.length > 0);
+  const diwaliRecipes = filteredRecipes.filter(isDiwaliRecipe);
   useEffect(() => {
     if (hasActiveFilters && filteredRecipes.length < 4 && hasMore && !loading && !loadingMore) fetchRecipes(false);
   }, [filteredRecipes.length, hasActiveFilters, hasMore, loading, loadingMore]);
@@ -328,6 +341,15 @@ const IndexContent = () => {
           </div>
         ) : filteredRecipes.length > 0 ? (
           <div className="space-y-8 sm:space-y-10">
+
+            {diwaliRecipes.length > 0 && (
+              <section id="diwali-recipes" className="scroll-mt-36">
+                <SectionHeader icon={<Sparkles className="w-4 h-4" />} title={language === 'en' ? 'Diwali recipes' : 'दिवाळी फराळ रेसिपी'} />
+                <div className={grid}>
+                  {diwaliRecipes.map(r => <RecipeCard key={`diwali-${r.id}`} recipe={r} language={language} loading="lazy" />)}
+                </div>
+              </section>
+            )}
 
             {/* Featured of the day + side tiles */}
             {freeRecipe && (
